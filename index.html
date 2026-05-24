@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AT Spritpreise</title>
+
+  <!-- Leaflet 1.9.x -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+  <!-- Chart.js 4.x -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --card:      #1e2130;
+      --card2:     #252a3d;
+      --border:    #2d3452;
+      --accent:    #3b82f6;
+      --accent-h:  #60a5fa;
+      --green:     #22c55e;
+      --yellow:    #eab308;
+      --red:       #ef4444;
+      --text:      #e2e8f0;
+      --muted:     #8892a4;
+      --top-h:     52px;
+      --foot-h:    38px;
+      --sidebar-w: 340px;
+      --font:      -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+    }
+
+    /* ── Top bar ── */
+    #topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--top-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      z-index: 1000;
+      gap: 10px;
+    }
+
+    #app-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--text);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    #app-title span {
+      color: var(--accent);
+    }
+
+    /* fuel toggle */
+    #fuel-toggle {
+      display: flex;
+      gap: 4px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+      flex-shrink: 0;
+    }
+    .fuel-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .fuel-btn:hover { color: var(--text); }
+    .fuel-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* brent badge */
+    #brent-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 1px;
+      flex-shrink: 0;
+    }
+    #brent-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    #brent-prices {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #brent-change {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    #brent-change.pos { background: rgba(34,197,94,0.18); color: var(--green); }
+    #brent-change.neg { background: rgba(239,68,68,0.18);  color: var(--red); }
+    #brent-change.neu { background: rgba(139,147,174,0.18); color: var(--muted); }
+
+    /* ── Map ── */
+    #map {
+      position: fixed;
+      top: var(--top-h);
+      left: 0;
+      right: 0;
+      bottom: var(--foot-h);
+      z-index: 1;
+    }
+
+    /* Leaflet dark tiles tint */
+    .leaflet-tile { filter: brightness(0.88) saturate(0.7); }
+
+    /* ── Footer ── */
+    #footer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: var(--foot-h);
+      background: rgba(15,17,23,0.92);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 0 14px;
+      z-index: 1000;
+      opacity: 0.72;
+      gap: 1px;
+    }
+    #footer p {
+      font-size: 10px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      position: fixed;
+      top: var(--top-h);
+      right: 0;
+      width: var(--sidebar-w);
+      bottom: var(--foot-h);
+      background: var(--card);
+      border-left: 1px solid var(--border);
+      z-index: 999;
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #sidebar.open { transform: translateX(0); }
+
+    #sidebar-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    #sidebar-station-name {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: var(--text);
+    }
+    #sidebar-brand {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    #sidebar-addr {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+
+    #sidebar-close {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 16px;
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-left: 8px;
+      transition: background 0.15s, color 0.15s;
+    }
+    #sidebar-close:hover { background: var(--border); color: var(--text); }
+
+    #sidebar-body {
+      overflow-y: auto;
+      flex: 1;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    #sidebar-body::-webkit-scrollbar { width: 4px; }
+    #sidebar-body::-webkit-scrollbar-track { background: transparent; }
+    #sidebar-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* prices grid */
+    .price-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .price-card {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 8px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .price-card.active-fuel {
+      border-color: var(--accent);
+      background: rgba(59,130,246,0.08);
+    }
+    .price-card-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .price-card-value {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+    .price-card-value.na { color: var(--muted); font-size: 13px; font-weight: 400; }
+
+    /* section labels */
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    /* history chart container */
+    #history-chart-container {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--muted);
+      position: relative;
+    }
+    #history-chart-container canvas {
+      display: block;
+    }
+
+    /* signal badge container */
+    #signal-badge-container {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--muted);
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+    }
+
+    /* brent overlay container */
+    #brent-overlay-container {
+      /* reserved for future brent correlation content */
+      min-height: 0;
+    }
+
+    /* ── Loading overlay ── */
+    #loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      transition: opacity 0.4s;
+    }
+    #loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .spinner {
+      width: 44px; height: 44px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #loading-text {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ── Error state ── */
+    #error-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 9998;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 24px;
+      text-align: center;
+    }
+    #error-overlay.visible { display: flex; }
+    #error-icon { font-size: 36px; }
+    #error-title { font-size: 16px; font-weight: 700; color: var(--red); }
+    #error-msg { font-size: 13px; color: var(--muted); max-width: 420px; line-height: 1.6; }
+    #error-hint {
+      font-size: 11px;
+      color: var(--muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      max-width: 420px;
+      line-height: 1.6;
+    }
+
+    /* ── Custom marker dots ── */
+    .station-dot {
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,0.45);
+      transition: transform 0.15s;
+      cursor: pointer;
+    }
+
+    /* ── Mobile: bottom sheet ── */
+    @media (max-width: 767px) {
+      :root { --sidebar-w: 100%; }
+
+      #sidebar {
+        top: auto;
+        bottom: var(--foot-h);
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 70vh;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        border-radius: 14px 14px 0 0;
+        transform: translateY(100%);
+      }
+      #sidebar.open { transform: translateY(0); }
+
+      #app-title { font-size: 13px; }
+      .fuel-btn { font-size: 11px; padding: 5px 7px; }
+
+      #brent-badge { display: none; }
+
+      .price-card-value { font-size: 15px; }
+    }
+
+    @media (max-width: 400px) {
+      .fuel-btn { font-size: 10px; padding: 4px 5px; }
+      #app-title { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <div id="loading-text">Lade Tankstellendaten…</div>
+  </div>
+
+  <!-- Error overlay -->
+  <div id="error-overlay">
+    <div id="error-icon">⚠️</div>
+    <div id="error-title">Daten konnten nicht geladen werden</div>
+    <div id="error-msg"></div>
+    <div id="error-hint">
+      Stellen Sie sicher, dass der GitHub Actions Workflow mindestens einmal ausgeführt wurde
+      und die Dateien <code>data/stations.json</code> sowie <code>data/brent.json</code>
+      im Repository vorhanden sind.
+    </div>
+  </div>
+
+  <!-- Top bar -->
+  <div id="topbar">
+    <div id="app-title">AT <span>Spritpreise</span></div>
+
+    <div id="fuel-toggle">
+      <button class="fuel-btn active" data-code="DIE">Diesel</button>
+      <button class="fuel-btn"        data-code="SUP">Eurosuper 95</button>
+      <button class="fuel-btn"        data-code="SUP98">Super Plus 98</button>
+    </div>
+
+    <div id="brent-badge">
+      <div id="brent-label">Brent Rohöl</div>
+      <div id="brent-prices">
+        <span id="brent-usd">—</span>
+        <span id="brent-eur">—</span>
+        <span id="brent-change" class="neu">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Station sidebar -->
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <div>
+        <div id="sidebar-station-name">–</div>
+        <div id="sidebar-brand">–</div>
+        <div id="sidebar-addr">–</div>
+      </div>
+      <button id="sidebar-close" title="Schließen">✕</button>
+    </div>
+
+    <div id="sidebar-body">
+      <div>
+        <div class="section-label">Kraftstoffpreise</div>
+        <div class="price-grid">
+          <div class="price-card" id="pc-DIE">
+            <div class="price-card-label">Diesel</div>
+            <div class="price-card-value" id="pv-DIE">–</div>
+          </div>
+          <div class="price-card" id="pc-SUP">
+            <div class="price-card-label">Euro 95</div>
+            <div class="price-card-value" id="pv-SUP">–</div>
+          </div>
+          <div class="price-card" id="pc-SUP98">
+            <div class="price-card-label">Super 98</div>
+            <div class="price-card-value" id="pv-SUP98">–</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Preisverlauf</div>
+        <div id="history-chart-container">Lade Preisverlauf…</div>
+      </div>
+
+      <div>
+        <div class="section-label">Preissignal</div>
+        <div id="signal-badge-container">Lade Signal…</div>
+      </div>
+
+      <div id="brent-overlay-container"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div id="footer">
+    <p>Spritdaten: E-Control Austria · Rohöl: U.S. EIA / Stooq · Letztes Update: <span id="footer-ts">–</span></p>
+    <p>Datenquelle gesetzlich vorgeschrieben gemäß Preistransparenzgesetz</p>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* ── Constants ── */
+    const FUEL_CODES = ['DIE', 'SUP', 'SUP98'];
+    const TIER_COLORS = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
+    const AUSTRIA_BOUNDS = [[46.37, 9.53], [49.02, 17.16]];
+
+    /* ── State ── */
+    let activeFuel = 'DIE';
+    let stations   = [];    // parsed from stations.json
+    let brentData  = null;  // parsed from brent.json
+    let markers    = [];    // { layer, station } objects
+    let selectedStation = null;
+    let historyChart = null;
+
+    /* ── DOM refs ── */
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingText    = document.getElementById('loading-text');
+    const errorOverlay   = document.getElementById('error-overlay');
+    const errorMsg       = document.getElementById('error-msg');
+    const sidebar        = document.getElementById('sidebar');
+    const sidebarClose   = document.getElementById('sidebar-close');
+    const footerTs       = document.getElementById('footer-ts');
+
+    /* ── Map init ── */
+    const map = L.map('map', {
+      center: [47.5, 14.5],
+      zoom: 7,
+      maxBounds: AUSTRIA_BOUNDS,
+      maxBoundsViscosity: 0.85,
+      zoomControl: true,
+    });
+
+    // OpenStreetMap tile layer — publicly documented, no API key required
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 18,
+    }).addTo(map);
+
+    /* ── Fetch helpers ── */
+    async function fetchJSON(path) {
+      const res = await fetch(path);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} beim Laden von ${path}`);
+      }
+      return res.json();
+    }
+
+    function showError(message) {
+      loadingOverlay.classList.add('hidden');
+      errorOverlay.classList.add('visible');
+      errorMsg.textContent = message;
+    }
+
+    /* ── Data loading ── */
+    async function loadData() {
+      try {
+        loadingText.textContent = 'Lade Tankstellendaten…';
+        // Fetch both in parallel; if either rejects, the catch below handles it
+        const [stationsRaw, brentRaw] = await Promise.all([
+          fetchJSON('./data/stations.json'),
+          fetchJSON('./data/brent.json'),
+        ]);
+
+        /*
+         * ASSUMPTION — stations.json shape (array of objects):
+         * [
+         *   {
+         *     id:       string,
+         *     name:     string,
+         *     brand:    string,
+         *     city:     string,
+         *     address:  string,
+         *     lat:      number,
+         *     lng:      number,
+         *     prices: {
+         *       DIE:   number | null,
+         *       SUP:   number | null,
+         *       SUP98: number | null
+         *     }
+         *   }, ...
+         * ]
+         *
+         * ASSUMPTION — brent.json shape:
+         * {
+         *   price_usd:  number,
+         *   price_eur:  number,
+         *   change_pct: number,   // positive = up, negative = down
+         *   timestamp:  string    // ISO 8601
+         * }
+         */
+
+        stations  = stationsRaw;
+        brentData = brentRaw;
+
+        renderBrent(brentData);
+        renderMarkers();
+        hideLoading();
+      } catch (err) {
+        showError(`Fehler beim Laden der Daten. ${err.message}. Prüfen Sie, ob GitHub Actions mindestens einmal ausgeführt wurde.`);
+      }
+    }
+
+    function hideLoading() {
+      loadingOverlay.classList.add('hidden');
+    }
+
+    /* ── Brent badge ── */
+    function renderBrent(data) {
+      if (!data) return;
+
+      // ASSUMPTION: price_usd and price_eur are numbers (dollars/euros per barrel)
+      document.getElementById('brent-usd').textContent =
+        typeof data.price_usd === 'number' ? `$${data.price_usd.toFixed(2)}` : '–';
+
+      document.getElementById('brent-eur').textContent =
+        typeof data.price_eur === 'number' ? `€${data.price_eur.toFixed(2)}` : '–';
+
+      const chEl = document.getElementById('brent-change');
+      // ASSUMPTION: change_pct is a number like 1.23 meaning +1.23%
+      if (typeof data.change_pct === 'number') {
+        const sign = data.change_pct > 0 ? '+' : '';
+        chEl.textContent = `${sign}${data.change_pct.toFixed(2)}%`;
+        chEl.className   = data.change_pct > 0.01 ? 'pos'
+                         : data.change_pct < -0.01 ? 'neg'
+                         : 'neu';
+      } else {
+        chEl.textContent = '–';
+        chEl.className   = 'neu';
+      }
+
+      // ASSUMPTION: timestamp is an ISO 8601 string
+      if (data.timestamp) {
+        try {
+          const d = new Date(data.timestamp);
+          footerTs.textContent = d.toLocaleString('de-AT', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          });
+        } catch (_) {
+          footerTs.textContent = data.timestamp;
+        }
+      }
+    }
+
+    /* ── Tier calculation ── */
+    function computeTiers(fuelCode) {
+      // Collect valid (non-null, numeric) prices for this fuel code
+      const valid = stations
+        .map(s => ({ id: s.id, price: s.prices?.[fuelCode] }))
+        .filter(s => typeof s.price === 'number' && isFinite(s.price))
+        .sort((a, b) => a.price - b.price);
+
+      if (valid.length === 0) return {};
+
+      const n = valid.length;
+      const tier = {};
+      valid.forEach((s, i) => {
+        const pct = i / n; // position within sorted list
+        tier[s.id] = pct < 1/3 ? 'green' : pct < 2/3 ? 'yellow' : 'red';
+      });
+      return tier;
+    }
+
+    /* ── Markers ── */
+    function makeIcon(color) {
+      // Custom CSS class-based circle icon using DivIcon
+      return L.divIcon({
+        className: '',
+        html: `<div class="station-dot" style="width:12px;height:12px;background:${color};box-shadow:0 0 0 2px rgba(0,0,0,0.4);"></div>`,
+        iconSize: [12, 12],
+        iconAnchor: [6, 6],
+      });
+    }
+
+    function renderMarkers() {
+      // Clear existing markers
+      markers.forEach(m => map.removeLayer(m.layer));
+      markers = [];
+
+      const tiers = computeTiers(activeFuel);
+
+      stations.forEach(station => {
+        // ASSUMPTION: lat and lng are valid numbers on each station object
+        if (typeof station.lat !== 'number' || typeof station.lng !== 'number') return;
+
+        const tier  = tiers[station.id] ?? 'yellow'; // default mid if no price
+        const color = TIER_COLORS[tier];
+        const layer = L.marker([station.lat, station.lng], {
+          icon: makeIcon(color),
+          title: station.name || '',
+        });
+
+        layer.on('click', () => openSidebar(station));
+        layer.addTo(map);
+        markers.push({ layer, station, tier });
+      });
+    }
+
+    function recolorMarkers() {
+      const tiers = computeTiers(activeFuel);
+      markers.forEach(m => {
+        const tier  = tiers[m.station.id] ?? 'yellow';
+        const color = TIER_COLORS[tier];
+        m.layer.setIcon(makeIcon(color));
+        m.tier = tier;
+      });
+    }
+
+    /* ── Sidebar ── */
+    function openSidebar(station) {
+      selectedStation = station;
+
+      document.getElementById('sidebar-station-name').textContent = station.name    || '–';
+      document.getElementById('sidebar-brand').textContent         = station.brand   || '';
+      document.getElementById('sidebar-addr').textContent =
+        [station.address, station.city].filter(Boolean).join(', ') || '–';
+
+      // Prices
+      FUEL_CODES.forEach(code => {
+        const val = station.prices?.[code];
+        const el  = document.getElementById(`pv-${code}`);
+        const pc  = document.getElementById(`pc-${code}`);
+        if (typeof val === 'number' && isFinite(val)) {
+          el.textContent = `€\u00A0${val.toFixed(3)}`;
+          el.classList.remove('na');
+        } else {
+          el.textContent = 'N/A';
+          el.classList.add('na');
+        }
+        pc.classList.toggle('active-fuel', code === activeFuel);
+      });
+
+      // Placeholder content for history chart (backend not available)
+      const histEl = document.getElementById('history-chart-container');
+      histEl.innerHTML = '<span style="color:var(--muted);font-size:12px;">Preisverlauf: Backend-Dienst erforderlich</span>';
+
+      // Placeholder content for signal badge (backend not available)
+      const sigEl = document.getElementById('signal-badge-container');
+      sigEl.innerHTML = '<span>Preissignal: Backend-Dienst erforderlich</span>';
+
+      sidebar.classList.add('open');
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      selectedStation = null;
+    }
+
+    sidebarClose.addEventListener('click', closeSidebar);
+
+    // Close sidebar on map click (outside a marker)
+    map.on('click', () => closeSidebar());
+
+    /* ── Fuel toggle ── */
+    document.querySelectorAll('.fuel-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const code = btn.dataset.code;
+        if (code === activeFuel) return;
+
+        activeFuel = code;
+        document.querySelectorAll('.fuel-btn').forEach(b =>
+          b.classList.toggle('active', b.dataset.code === activeFuel)
+        );
+
+        recolorMarkers();
+
+        // Update sidebar price highlights if open
+        if (selectedStation) {
+          FUEL_CODES.forEach(c => {
+            document.getElementById(`pc-${c}`)?.classList.toggle('active-fuel', c === activeFuel);
+          });
+        }
+      });
+    });
+
+    /* ── Boot ── */
+    loadData();
+
+  })();
+  </script>
+</body>
+</html>
