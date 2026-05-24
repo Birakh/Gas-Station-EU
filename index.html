@@ -29,6 +29,7 @@
       --text:      #e2e8f0;
       --muted:     #8892a4;
       --top-h:     52px;
+      --brent-h:   0px;   /* updated by JS when panel expands/collapses */
       --foot-h:    38px;
       --sidebar-w: 340px;
       --font:      -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -94,7 +95,7 @@
     .fuel-btn:hover { color: var(--text); }
     .fuel-btn.active { background: var(--accent); color: #fff; }
 
-    /* brent badge */
+    /* brent badge (top bar) */
     #brent-badge {
       display: flex;
       flex-direction: column;
@@ -127,13 +128,141 @@
     #brent-change.neg { background: rgba(239,68,68,0.18);   color: var(--red); }
     #brent-change.neu { background: rgba(139,147,174,0.18); color: var(--muted); }
 
-    /* ── Map ── */
-    #map {
+    /* ── Brent history panel ── */
+    #brent-panel {
       position: fixed;
       top: var(--top-h);
       left: 0; right: 0;
+      z-index: 998;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      /* height is driven by the inner content div via JS */
+    }
+
+    #brent-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      height: 36px;
+      cursor: pointer;
+      user-select: none;
+      flex-shrink: 0;
+      gap: 8px;
+    }
+    #brent-panel-header:hover { background: rgba(255,255,255,0.03); }
+
+    #brent-panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    #brent-panel-toggle-icon {
+      font-size: 11px;
+      color: var(--muted);
+      transition: transform 0.25s;
+    }
+    /* When panel is expanded the chevron points up */
+    #brent-panel.expanded #brent-panel-toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    /* The body that slides open/closed */
+    #brent-panel-body {
+      /* height is controlled by JS via max-height transition trick */
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    #brent-panel.expanded #brent-panel-body {
+      /* Large enough to never clip content; JS measures actual height for --brent-h */
+      max-height: 280px;
+    }
+
+    #brent-panel-inner {
+      padding: 0 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* API key prompt */
+    #brent-key-prompt {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 8px 0 2px;
+    }
+    #brent-key-prompt label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    #brent-key-row {
+      display: flex;
+      gap: 6px;
+    }
+    #brent-api-key-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 12px;
+      padding: 5px 9px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    #brent-api-key-input:focus { border-color: var(--accent); }
+    #brent-key-save {
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    #brent-key-save:hover { background: var(--accent-h); }
+
+    /* Brent chart area */
+    #brent-chart-area {
+      position: relative;
+    }
+    #brent-chart-area canvas {
+      display: block;
+      width: 100% !important;
+    }
+    #brent-chart-area.loading,
+    #brent-chart-area.message {
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #brent-chart-message {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ── Map ── */
+    #map {
+      position: fixed;
+      top: calc(var(--top-h) + var(--brent-h));
+      left: 0; right: 0;
       bottom: var(--foot-h);
       z-index: 1;
+      transition: top 0.3s cubic-bezier(0.4,0,0.2,1);
     }
 
     /* Leaflet dark tiles tint */
@@ -165,7 +294,7 @@
     /* ── Sidebar ── */
     #sidebar {
       position: fixed;
-      top: var(--top-h);
+      top: calc(var(--top-h) + var(--brent-h));
       right: 0;
       width: var(--sidebar-w);
       bottom: var(--foot-h);
@@ -173,7 +302,8 @@
       border-left: 1px solid var(--border);
       z-index: 999;
       transform: translateX(100%);
-      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1),
+                  top 0.3s cubic-bezier(0.4,0,0.2,1);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -281,7 +411,7 @@
       margin-bottom: 6px;
     }
 
-    /* history chart container */
+    /* history chart container (sidebar, 30-day pump price) */
     #history-chart-container {
       background: var(--card2);
       border: 1px solid var(--border);
@@ -294,9 +424,7 @@
       font-size: 12px;
       color: var(--muted);
       position: relative;
-      /* When the canvas is rendered we want it to fill the container */
     }
-    /* When a canvas is present, let the container be height-driven by the canvas */
     #history-chart-container.has-chart {
       display: block;
       padding: 10px;
@@ -328,10 +456,29 @@
       align-items: center;
     }
 
-    /* brent overlay container */
+    /* brent overlay container (inside sidebar) */
     #brent-overlay-container {
-      /* reserved for future brent correlation content */
-      min-height: 0;
+      display: none; /* shown by JS when brent data + station data both available */
+    }
+    #brent-overlay-container.visible {
+      display: block;
+    }
+    #brent-overlay-chart-wrap {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    #brent-overlay-chart-wrap canvas {
+      display: block;
+      width: 100% !important;
+    }
+    #brent-overlay-note {
+      margin-top: 7px;
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-style: italic;
     }
 
     /* ── Loading overlay ── */
@@ -399,11 +546,10 @@
     .station-dot {
       border-radius: 50%;
       border: 2px solid rgba(0,0,0,0.45);
-      transition: transform 0.15s;
       cursor: pointer;
     }
 
-    /* ── Mobile: bottom sheet ── */
+    /* ── Mobile: bottom sheet + collapsed brent panel ── */
     @media (max-width: 767px) {
       :root { --sidebar-w: 100%; }
 
@@ -417,6 +563,8 @@
         border-top: 1px solid var(--border);
         border-radius: 14px 14px 0 0;
         transform: translateY(100%);
+        /* Override the top transition — mobile sidebar anchors to bottom */
+        transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
       }
       #sidebar.open { transform: translateY(0); }
 
@@ -472,6 +620,30 @@
     </div>
   </div>
 
+  <!-- Brent history panel (collapsible, below top bar) -->
+  <div id="brent-panel">
+    <div id="brent-panel-header" role="button" aria-expanded="false" aria-controls="brent-panel-body" tabindex="0">
+      <span id="brent-panel-title">Rohöl Brent — 90 Tage</span>
+      <span id="brent-panel-toggle-icon">▼</span>
+    </div>
+    <div id="brent-panel-body" role="region">
+      <div id="brent-panel-inner">
+        <!-- API key prompt; replaced by chart once key is saved -->
+        <div id="brent-key-prompt">
+          <label for="brent-api-key-input">EIA API-Schlüssel eingeben (kostenlos unter eia.gov):</label>
+          <div id="brent-key-row">
+            <input id="brent-api-key-input" type="text" placeholder="Ihr API-Schlüssel…" autocomplete="off" spellcheck="false" />
+            <button id="brent-key-save">Speichern</button>
+          </div>
+        </div>
+        <!-- Chart area; shown once key exists -->
+        <div id="brent-chart-area" style="display:none;">
+          <div id="brent-chart-message"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Map -->
   <div id="map"></div>
 
@@ -515,7 +687,16 @@
         <div id="signal-badge-container">Preissignal: Backend-Dienst erforderlich</div>
       </div>
 
-      <div id="brent-overlay-container"></div>
+      <!-- Brent vs. pump overlay — shown when station open AND brent data loaded -->
+      <div id="brent-overlay-container">
+        <div class="section-label">Brent vs. Pumpenpreis</div>
+        <div id="brent-overlay-chart-wrap">
+          <canvas id="brent-overlay-canvas" height="140"></canvas>
+        </div>
+        <div id="brent-overlay-note">
+          Österreich: Brent schlägt sich typisch nach 3–7 Tagen auf Pumpenpreise durch.
+        </div>
+      </div>
     </div>
   </div>
 
@@ -530,32 +711,112 @@
     'use strict';
 
     /* ── Constants ── */
-    const FUEL_CODES   = ['DIE', 'SUP', 'SUP98'];
-    const TIER_COLORS  = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
+    const FUEL_CODES     = ['DIE', 'SUP', 'SUP98'];
+    const TIER_COLORS    = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
     const AUSTRIA_BOUNDS = [[46.37, 9.53], [49.02, 17.16]];
-    const HISTORY_DAYS = 30;
+    const HISTORY_DAYS   = 30;
+    const BRENT_DAYS     = 90;
+    const LS_KEY_EIA     = 'eia_api_key';
+
+    /*
+     * EIA API v2 endpoint for Brent spot price (RBRTE series).
+     * Documented at: https://www.eia.gov/opendata/documentation.php
+     * The base URL and all parameter names below match the v2 spec exactly.
+     */
+    const EIA_ENDPOINT = 'https://api.eia.gov/v2/petroleum/pri/spt/data/';
 
     /* ── State ── */
     let activeFuel      = 'DIE';
-    let stations        = [];    // parsed from stations.json
-    let brentData       = null;  // parsed from brent.json
-    let markers         = [];    // { layer, station, tier }
+    let stations        = [];
+    let brentData       = null;
+    let markers         = [];
     let selectedStation = null;
-    let historyChart    = null;  // Chart.js instance; destroyed before re-creating
 
-    // Tracks which async history load is "current" so stale results from a
-    // previous station click are ignored if a new click arrives mid-flight.
-    let historyLoadToken = 0;
+    // Chart.js instances — destroyed before re-creating
+    let historyChart      = null;   // sidebar 30-day pump price chart
+    let brentPanelChart   = null;   // brent panel 90-day chart
+    let overlayChart      = null;   // sidebar brent-vs-pump dual-axis chart
+
+    // Brent 90-day data fetched from EIA: array of { date: 'YYYY-MM-DD', value: number }
+    // sorted oldest → newest. Null means not yet loaded or load failed.
+    let brentHistory = null;
+
+    // Race-condition guards
+    let historyLoadToken = 0;  // for station pump-price history
+    let overlayToken     = 0;  // for overlay chart (combination of brent + station)
 
     /* ── DOM refs ── */
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const loadingText    = document.getElementById('loading-text');
-    const errorOverlay   = document.getElementById('error-overlay');
-    const errorMsg       = document.getElementById('error-msg');
-    const sidebar        = document.getElementById('sidebar');
-    const sidebarClose   = document.getElementById('sidebar-close');
-    const footerTs       = document.getElementById('footer-ts');
-    const histEl         = document.getElementById('history-chart-container');
+    const loadingOverlay  = document.getElementById('loading-overlay');
+    const loadingText     = document.getElementById('loading-text');
+    const errorOverlay    = document.getElementById('error-overlay');
+    const errorMsg        = document.getElementById('error-msg');
+    const sidebar         = document.getElementById('sidebar');
+    const sidebarClose    = document.getElementById('sidebar-close');
+    const footerTs        = document.getElementById('footer-ts');
+    const histEl          = document.getElementById('history-chart-container');
+    const brentPanel      = document.getElementById('brent-panel');
+    const brentPanelBody  = document.getElementById('brent-panel-body');
+    const brentPanelInner = document.getElementById('brent-panel-inner');
+    const brentKeyPrompt  = document.getElementById('brent-key-prompt');
+    const brentKeyInput   = document.getElementById('brent-api-key-input');
+    const brentKeySave    = document.getElementById('brent-key-save');
+    const brentChartArea  = document.getElementById('brent-chart-area');
+    const brentChartMsg   = document.getElementById('brent-chart-message');
+    const overlayContainer = document.getElementById('brent-overlay-container');
+    const overlayCanvas   = document.getElementById('brent-overlay-canvas');
+
+    /* ─────────────────────────────────────────────────────────────────────────
+     * BRENT PANEL — collapse / expand
+     * The panel has a header-only height when collapsed; the body slides open.
+     * We keep --brent-h updated so the map and sidebar top edges follow.
+     * ───────────────────────────────────────────────────────────────────────── */
+
+    // Returns the full rendered height of the panel (header + body content)
+    function brentPanelTotalHeight() {
+      return brentPanel.getBoundingClientRect().height;
+    }
+
+    function setBrentHeightVar(px) {
+      document.documentElement.style.setProperty('--brent-h', `${px}px`);
+    }
+
+    // isMobile: treat <768px as mobile for default collapsed state
+    function isMobile() {
+      return window.innerWidth < 768;
+    }
+
+    function expandBrentPanel() {
+      brentPanel.classList.add('expanded');
+      brentPanel.setAttribute('aria-expanded', 'true');
+      // After the CSS transition completes, measure and set --brent-h
+      setTimeout(() => {
+        setBrentHeightVar(brentPanelTotalHeight());
+        map.invalidateSize(); // tell Leaflet the map container changed size
+      }, 310); // slightly longer than the 0.3s CSS transition
+    }
+
+    function collapseBrentPanel() {
+      brentPanel.classList.remove('expanded');
+      brentPanel.setAttribute('aria-expanded', 'false');
+      setTimeout(() => {
+        setBrentHeightVar(brentPanelTotalHeight());
+        map.invalidateSize();
+      }, 310);
+    }
+
+    function toggleBrentPanel() {
+      if (brentPanel.classList.contains('expanded')) {
+        collapseBrentPanel();
+      } else {
+        expandBrentPanel();
+      }
+    }
+
+    document.getElementById('brent-panel-header').addEventListener('click', toggleBrentPanel);
+    // Keyboard accessibility: space/enter also toggles
+    document.getElementById('brent-panel-header').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleBrentPanel(); }
+    });
 
     /* ── Map init ── */
     const map = L.map('map', {
@@ -566,18 +827,16 @@
       zoomControl: true,
     });
 
-    // OpenStreetMap tile layer — publicly documented, no API key required
+    // OpenStreetMap — publicly documented, no API key required
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 18,
     }).addTo(map);
 
-    /* ── Fetch helpers ── */
+    /* ── Generic fetch helper (throws on non-ok) ── */
     async function fetchJSON(path) {
       const res = await fetch(path);
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status} beim Laden von ${path}`);
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status} beim Laden von ${path}`);
       return res.json();
     }
 
@@ -588,143 +847,505 @@
     }
 
     /* ─────────────────────────────────────────────────────────────────────────
-     * loadStationHistory(stationId, fuelCode)
+     * EIA BRENT HISTORY — fetch 90-day daily spot price from EIA API v2
      *
-     * Builds the last HISTORY_DAYS UTC date strings (YYYY-MM-DD), fetches all
-     * corresponding history files in parallel with Promise.allSettled(), extracts
-     * the price for the given station and fuel code from each successful response,
-     * and returns a sorted array of { date, price } objects.
+     * Endpoint documented at: https://www.eia.gov/opendata/documentation.php
+     *
+     * ASSUMPTION — successful EIA API v2 response shape:
+     * {
+     *   response: {
+     *     data: [
+     *       { period: "YYYY-MM-DD", value: number, ... },
+     *       ...
+     *     ]
+     *   }
+     * }
+     * The `period` field is the date string; `value` is the USD spot price per barrel.
+     * Results come back newest-first (sort[0][direction]=desc), so we reverse them.
+     *
+     * ASSUMPTION — error response shape (EIA returns HTTP 200 with error body):
+     * {
+     *   error: "some error string"  OR
+     *   response: { errors: [...] }
+     * }
+     * We check for both and surface a readable message.
+     * ───────────────────────────────────────────────────────────────────────── */
+    async function fetchBrentHistory(apiKey) {
+      const url = new URL(EIA_ENDPOINT);
+      url.searchParams.set('api_key',              apiKey);
+      url.searchParams.set('frequency',            'daily');
+      url.searchParams.append('data[]',            'value');
+      url.searchParams.append('facets[series][]',  'RBRTE');
+      url.searchParams.append('sort[0][column]',   'period');
+      url.searchParams.append('sort[0][direction]','desc');
+      url.searchParams.set('length',               String(BRENT_DAYS));
+
+      let res;
+      try {
+        res = await fetch(url.toString());
+      } catch (networkErr) {
+        throw new Error(`Netzwerkfehler beim Laden der EIA-Daten: ${networkErr.message}`);
+      }
+
+      if (!res.ok) {
+        // EIA sometimes returns 403 for bad keys, 429 for rate-limit, etc.
+        const statusText = {
+          400: 'Ungültige Anfrage (400)',
+          403: 'Ungültiger API-Schlüssel (403)',
+          429: 'API-Anfragelimit überschritten (429)',
+          500: 'EIA-Serverfehler (500)',
+        }[res.status] || `HTTP-Fehler ${res.status}`;
+        throw new Error(statusText);
+      }
+
+      let json;
+      try {
+        json = await res.json();
+      } catch (_) {
+        throw new Error('Ungültige JSON-Antwort von EIA');
+      }
+
+      // EIA v2 can return HTTP 200 with an error body
+      if (json.error) {
+        throw new Error(`EIA-Fehler: ${json.error}`);
+      }
+
+      // Validate the expected shape before accessing nested properties
+      if (!json.response || !Array.isArray(json.response.data)) {
+        console.error('Unerwartetes EIA-Antwortformat:', json);
+        throw new Error('UNEXPECTED_SHAPE');
+      }
+
+      // Build sorted oldest→newest array of { date, value }
+      const points = [];
+      for (const row of json.response.data) {
+        // ASSUMPTION: each row has `period` (YYYY-MM-DD string) and `value` (number)
+        if (typeof row.period !== 'string' || typeof row.value !== 'number') continue;
+        points.push({ date: row.period, value: row.value });
+      }
+      // API returns newest-first; reverse to oldest-first
+      points.reverse();
+      return points;
+    }
+
+    /* ── Brent panel: key management + chart lifecycle ── */
+
+    function showBrentKeyPrompt() {
+      brentKeyPrompt.style.display = '';
+      brentChartArea.style.display = 'none';
+    }
+
+    function showBrentChartArea() {
+      brentKeyPrompt.style.display = 'none';
+      brentChartArea.style.display = '';
+    }
+
+    function setBrentChartMessage(html) {
+      // Destroy existing chart so canvas is freed
+      if (brentPanelChart) { brentPanelChart.destroy(); brentPanelChart = null; }
+      // Remove canvas if present
+      const existingCanvas = brentChartArea.querySelector('canvas');
+      if (existingCanvas) existingCanvas.remove();
+      brentChartMsg.innerHTML = html;
+      brentChartMsg.style.display = '';
+    }
+
+    function renderBrentPanelChart(points) {
+      // Destroy previous instance
+      if (brentPanelChart) { brentPanelChart.destroy(); brentPanelChart = null; }
+      brentChartMsg.style.display = 'none';
+
+      // Remove any old canvas
+      const old = brentChartArea.querySelector('canvas');
+      if (old) old.remove();
+
+      const canvas = document.createElement('canvas');
+      canvas.height = 130;
+      brentChartArea.appendChild(canvas);
+
+      const labels = points.map(p => {
+        const [, m, d] = p.date.split('-');
+        return `${d}.${m}`;
+      });
+      const values = points.map(p => p.value);
+
+      brentPanelChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Brent (USD/Barrel)',
+            data: values,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.12)',
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            fill: true,
+            tension: 0.3,
+          }],
+        },
+        options: {
+          responsive: false,
+          animation: { duration: 300 },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => `$${ctx.parsed.y.toFixed(2)}/Barrel`,
+              },
+            },
+          },
+          scales: {
+            x: {
+              ticks: {
+                color: '#8892a4',
+                font: { size: 10, family: 'var(--font)' },
+                maxTicksLimit: 9,
+                maxRotation: 0,
+              },
+              grid: { color: 'rgba(45,52,82,0.6)' },
+              border: { color: 'rgba(45,52,82,0.6)' },
+            },
+            y: {
+              ticks: {
+                color: '#8892a4',
+                font: { size: 10, family: 'var(--font)' },
+                callback: val => `$${val.toFixed(0)}`,
+                maxTicksLimit: 5,
+              },
+              grid: { color: 'rgba(45,52,82,0.6)' },
+              border: { color: 'rgba(45,52,82,0.6)' },
+            },
+          },
+        },
+      });
+
+      // Re-measure panel height after canvas is painted
+      setTimeout(() => {
+        if (brentPanel.classList.contains('expanded')) {
+          setBrentHeightVar(brentPanelTotalHeight());
+          map.invalidateSize();
+        }
+      }, 60);
+    }
+
+    // Main entry point for loading + rendering brent panel chart
+    async function loadBrentPanel(apiKey) {
+      showBrentChartArea();
+      setBrentChartMessage('<span style="display:inline-flex;align-items:center;gap:8px;"><span class="chart-spinner" style="width:20px;height:20px;border-width:2px;"></span> Lade EIA-Daten…</span>');
+
+      let points;
+      try {
+        points = await fetchBrentHistory(apiKey);
+      } catch (err) {
+        brentHistory = null;
+        if (err.message === 'UNEXPECTED_SHAPE') {
+          setBrentChartMessage('Unerwartetes Datenformat von EIA — siehe Browser-Konsole.');
+        } else {
+          setBrentChartMessage(
+            `Fehler beim Laden: ${err.message}`
+          );
+        }
+        // Ensure panel is large enough to show the error message
+        setTimeout(() => {
+          if (brentPanel.classList.contains('expanded')) {
+            setBrentHeightVar(brentPanelTotalHeight());
+            map.invalidateSize();
+          }
+        }, 60);
+        return;
+      }
+
+      if (points.length === 0) {
+        brentHistory = null;
+        setBrentChartMessage('Keine Daten von EIA erhalten.');
+        return;
+      }
+
+      brentHistory = points;
+      renderBrentPanelChart(points);
+
+      // If a station is already open, render the overlay now that we have data
+      if (selectedStation) {
+        renderOverlayChart(selectedStation, activeFuel);
+      }
+    }
+
+    /* ── API key save button ── */
+    brentKeySave.addEventListener('click', () => {
+      const key = brentKeyInput.value.trim();
+      if (!key) return;
+      try {
+        localStorage.setItem(LS_KEY_EIA, key);
+      } catch (_) {
+        // localStorage may be unavailable in some browser configs; still proceed
+      }
+      loadBrentPanel(key);
+    });
+
+    // Allow Enter key in input
+    brentKeyInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') brentKeySave.click();
+    });
+
+    /* ─────────────────────────────────────────────────────────────────────────
+     * OVERLAY CHART — Brent (USD, left Y) vs. pump price (EUR, right Y)
+     * Shown inside #brent-overlay-container in the sidebar when:
+     *   - A station is open
+     *   - brentHistory is loaded (non-null)
+     *   - station pump history has >= 2 points
+     *
+     * Uses Chart.js dual Y-axis: yAxisID 'yUSD' (left) and 'yEUR' (right).
+     * Both are documented Chart.js 4.x features (scales with arbitrary IDs).
+     * ───────────────────────────────────────────────────────────────────────── */
+    async function renderOverlayChart(station, fuelCode) {
+      // Gate: need brent history
+      if (!brentHistory || brentHistory.length === 0) {
+        overlayContainer.classList.remove('visible');
+        return;
+      }
+
+      const myToken = ++overlayToken;
+
+      // Load station pump history (last 30 days)
+      let pumpPoints;
+      try {
+        pumpPoints = await loadStationHistory(station.id, fuelCode);
+      } catch (_) {
+        // loadStationHistory doesn't throw; guard anyway
+        if (myToken !== overlayToken) return;
+        overlayContainer.classList.remove('visible');
+        return;
+      }
+
+      if (myToken !== overlayToken) return;
+
+      if (pumpPoints.length < 2) {
+        overlayContainer.classList.remove('visible');
+        return;
+      }
+
+      // Build a merged date set from both series
+      // Use the pump price date range as the X axis (last 30 days);
+      // align brent values to those same dates where available.
+      const brentByDate = {};
+      for (const b of brentHistory) {
+        brentByDate[b.date] = b.value;
+      }
+
+      // Union of dates from pump history; brent may be missing some (weekends, holidays)
+      // We show brent as null (gap) for those dates — Chart.js renders gaps by default.
+      const allDates = pumpPoints.map(p => p.date);
+
+      const brentAligned = allDates.map(d => brentByDate[d] ?? null);
+      const pumpAligned  = pumpPoints.map(p => p.price);
+
+      const labels = allDates.map(d => {
+        const [, m, day] = d.split('-');
+        return `${day}.${m}`;
+      });
+
+      // Destroy previous overlay chart
+      if (overlayChart) { overlayChart.destroy(); overlayChart = null; }
+
+      const tierColor = stationTierColor(station.id);
+
+      overlayChart = new Chart(overlayCanvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Brent (USD)',
+              data: brentAligned,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59,130,246,0.08)',
+              borderWidth: 2,
+              pointRadius: 0,
+              pointHoverRadius: 4,
+              fill: false,
+              tension: 0.3,
+              yAxisID: 'yUSD',
+              // null values render as gaps — Chart.js 4.x default behaviour
+              spanGaps: false,
+            },
+            {
+              label: 'Pumpenpreis EUR',
+              data: pumpAligned,
+              borderColor: tierColor,
+              backgroundColor: 'transparent',
+              borderWidth: 2,
+              pointRadius: 0,
+              pointHoverRadius: 4,
+              fill: false,
+              tension: 0.3,
+              yAxisID: 'yEUR',
+            },
+          ],
+        },
+        options: {
+          responsive: false,
+          animation: { duration: 250 },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              align: 'end',
+              labels: {
+                color: '#8892a4',
+                font: { size: 10, family: 'var(--font)' },
+                boxWidth: 14,
+                boxHeight: 2,
+                padding: 8,
+              },
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              callbacks: {
+                label: ctx => {
+                  if (ctx.dataset.yAxisID === 'yUSD') {
+                    return ctx.parsed.y !== null
+                      ? `Brent: $${ctx.parsed.y.toFixed(2)}`
+                      : 'Brent: –';
+                  }
+                  return `Pumpe: €${ctx.parsed.y.toFixed(3)}`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              ticks: {
+                color: '#8892a4',
+                font: { size: 10, family: 'var(--font)' },
+                maxTicksLimit: 8,
+                maxRotation: 0,
+              },
+              grid: { color: 'rgba(45,52,82,0.5)' },
+              border: { color: 'rgba(45,52,82,0.5)' },
+            },
+            // Left Y: Brent in USD
+            yUSD: {
+              type: 'linear',
+              position: 'left',
+              ticks: {
+                color: '#3b82f6',
+                font: { size: 10, family: 'var(--font)' },
+                callback: val => `$${val.toFixed(0)}`,
+                maxTicksLimit: 5,
+              },
+              grid: { color: 'rgba(45,52,82,0.5)' },
+              border: { color: 'rgba(45,52,82,0.5)' },
+            },
+            // Right Y: pump price in EUR
+            yEUR: {
+              type: 'linear',
+              position: 'right',
+              ticks: {
+                color: tierColor,
+                font: { size: 10, family: 'var(--font)' },
+                callback: val => `€${val.toFixed(3)}`,
+                maxTicksLimit: 5,
+              },
+              // Don't draw grid lines for the right axis to avoid double grid
+              grid: { drawOnChartArea: false },
+              border: { color: 'rgba(45,52,82,0.5)' },
+            },
+          },
+        },
+      });
+
+      overlayContainer.classList.add('visible');
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────────
+     * loadStationHistory(stationId, fuelCode)
+     * (unchanged from previous version — documented assumptions kept)
      *
      * ASSUMPTION — each daily history file at ./data/history/YYYY-MM-DD.json
-     * is an array of station snapshot objects shaped like:
+     * is an array of station snapshot objects:
      * [
      *   {
-     *     id:     string,          // matches station id in stations.json
-     *     prices: {
-     *       DIE:   number | null,
-     *       SUP:   number | null,
-     *       SUP98: number | null
-     *     }
+     *     id:     string,
+     *     prices: { DIE: number|null, SUP: number|null, SUP98: number|null }
      *   }, ...
      * ]
-     *
-     * A 404 (or any non-ok response) for a date means no data was collected that
-     * day — this is normal and is silently skipped.
+     * 404 = no data collected that day → silently skipped.
      * ───────────────────────────────────────────────────────────────────────── */
     async function loadStationHistory(stationId, fuelCode) {
-      // Build list of the last HISTORY_DAYS UTC date strings going backwards
-      // from today. We use UTC methods so the dates are timezone-independent.
       const dates = [];
       const now   = new Date();
 
       for (let i = 0; i < HISTORY_DAYS; i++) {
-        // Create a new Date each iteration so we don't mutate 'now'
-        const d = new Date(Date.UTC(
-          now.getUTCFullYear(),
-          now.getUTCMonth(),
-          now.getUTCDate() - i
-        ));
-        // Zero-pad month and day to produce YYYY-MM-DD
+        const d    = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
         const yyyy = d.getUTCFullYear();
         const mm   = String(d.getUTCMonth() + 1).padStart(2, '0');
         const dd   = String(d.getUTCDate()).padStart(2, '0');
         dates.push(`${yyyy}-${mm}-${dd}`);
       }
 
-      // Fetch all 30 files in parallel. Promise.allSettled never rejects,
-      // so a network error or 404 on any individual file won't abort the rest.
       const fetchPromises = dates.map(async (date) => {
-        const path = `./data/history/${date}.json`;
         let res;
         try {
-          res = await fetch(path);
-        } catch (networkErr) {
-          // Network failure (e.g. offline) — treat like missing file
+          res = await fetch(`./data/history/${date}.json`);
+        } catch (_) {
           return { date, data: null };
         }
-        if (!res.ok) {
-          // 404 or other HTTP error — silently skip this date
-          return { date, data: null };
-        }
+        if (!res.ok) return { date, data: null };
         try {
-          const json = await res.json();
-          return { date, data: json };
-        } catch (parseErr) {
-          // Malformed JSON in the file — skip this date rather than crashing
+          return { date, data: await res.json() };
+        } catch (_) {
           return { date, data: null };
         }
       });
 
       const settled = await Promise.allSettled(fetchPromises);
-
-      // Collect data points where:
-      // 1. The promise fulfilled (it always should, since we caught inside)
-      // 2. The file was found and parsed (data !== null)
-      // 3. A station with matching id exists in the file
-      // 4. The price for the requested fuelCode is a finite number
-      const points = [];
+      const points  = [];
 
       for (const result of settled) {
-        if (result.status !== 'fulfilled') continue; // shouldn't happen, but guard
+        if (result.status !== 'fulfilled') continue;
         const { date, data } = result.value;
-        if (!Array.isArray(data)) continue;          // file was null or not an array
-
-        // ASSUMPTION: history file is an array; find the entry by station id
+        if (!Array.isArray(data)) continue;
         const entry = data.find(s => s.id === stationId);
         if (!entry) continue;
-
         const price = entry.prices?.[fuelCode];
         if (typeof price !== 'number' || !isFinite(price)) continue;
-
         points.push({ date, price });
       }
 
-      // Sort oldest → newest (dates are YYYY-MM-DD so lexicographic sort works)
       points.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-
       return points;
     }
 
-    /* ── History chart rendering ── */
+    /* ── Station pump history chart (sidebar) ── */
 
     function setHistorySpinner() {
-      // Destroy any existing Chart.js instance to free its canvas
       destroyHistoryChart();
-      histEl.className = ''; // remove 'has-chart' if set
+      histEl.className = '';
       histEl.innerHTML = '<div class="chart-spinner"></div>';
     }
 
     function destroyHistoryChart() {
-      if (historyChart) {
-        historyChart.destroy();
-        historyChart = null;
-      }
+      if (historyChart) { historyChart.destroy(); historyChart = null; }
     }
 
-    // tierColor: one of the TIER_COLORS hex strings for the current station
     async function loadAndRenderHistory(station, fuelCode, tierColor) {
-      // Issue a new token. If another call arrives before we finish,
-      // our token will no longer match historyLoadToken and we bail out.
       const myToken = ++historyLoadToken;
-
       setHistorySpinner();
 
       let points;
       try {
         points = await loadStationHistory(station.id, fuelCode);
       } catch (err) {
-        // loadStationHistory itself doesn't throw (all errors caught internally),
-        // but guard here in case of an unexpected runtime error.
         if (myToken !== historyLoadToken) return;
         destroyHistoryChart();
         histEl.className = '';
-        histEl.innerHTML =
-          '<span style="color:var(--muted);font-size:12px;">Fehler beim Laden des Verlaufs.</span>';
+        histEl.innerHTML = '<span style="color:var(--muted);font-size:12px;">Fehler beim Laden des Verlaufs.</span>';
         return;
       }
 
-      // By the time the async work finishes, the user may have opened a
-      // different station. If so, discard this result.
       if (myToken !== historyLoadToken) return;
 
       if (points.length < 2) {
@@ -736,32 +1357,23 @@
         return;
       }
 
-      // Build chart
       destroyHistoryChart();
       histEl.className = 'has-chart';
 
-      // Create a fresh canvas each time so Chart.js starts with a clean state
       const canvas  = document.createElement('canvas');
-      // Fix the pixel height; width is 100% via CSS
       canvas.height = 120;
       histEl.innerHTML = '';
       histEl.appendChild(canvas);
 
       const labels = points.map(p => {
-        // Format date as DD.MM (Austrian convention)
-        // Date string is YYYY-MM-DD, so split is safe and avoids timezone issues
-        const [, month, day] = p.date.split('-');
-        return `${day}.${month}`;
+        const [, m, d] = p.date.split('-');
+        return `${d}.${m}`;
       });
-
       const prices = points.map(p => p.price);
 
-      // Derive a semi-transparent fill from the tier color
-      // tierColor is a 6-digit hex string like '#22c55e'
       const r = parseInt(tierColor.slice(1, 3), 16);
       const g = parseInt(tierColor.slice(3, 5), 16);
       const b = parseInt(tierColor.slice(5, 7), 16);
-      const fillColor = `rgba(${r},${g},${b},0.15)`;
 
       historyChart = new Chart(canvas, {
         type: 'line',
@@ -770,32 +1382,26 @@
           datasets: [{
             data: prices,
             borderColor: tierColor,
-            backgroundColor: fillColor,
+            backgroundColor: `rgba(${r},${g},${b},0.15)`,
             borderWidth: 2,
-            pointRadius: points.length <= 10 ? 3 : 0, // hide dots when dense
+            pointRadius: points.length <= 10 ? 3 : 0,
             pointHoverRadius: 4,
             fill: true,
             tension: 0.3,
           }],
         },
         options: {
-          responsive: false,   // we control size via canvas.height + CSS width
+          responsive: false,
           animation: { duration: 300 },
           plugins: {
-            legend: { display: false }, // no legend needed (single line)
-            tooltip: {
-              callbacks: {
-                // Y-axis tooltip: "€ 1.599"
-                label: ctx => `€ ${ctx.parsed.y.toFixed(3)}`,
-              },
-            },
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => `€ ${ctx.parsed.y.toFixed(3)}` } },
           },
           scales: {
             x: {
               ticks: {
                 color: '#8892a4',
-                font: { size: 10, family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
-                // Limit X tick density to avoid overlap when 30 dates are shown
+                font: { size: 10 },
                 maxTicksLimit: 8,
                 maxRotation: 0,
               },
@@ -805,8 +1411,7 @@
             y: {
               ticks: {
                 color: '#8892a4',
-                font: { size: 10, family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
-                // Format Y-axis labels as "€ 1.599"
+                font: { size: 10 },
                 callback: val => `€ ${val.toFixed(3)}`,
                 maxTicksLimit: 5,
               },
@@ -818,42 +1423,19 @@
       });
     }
 
-    /* ── Data loading ── */
+    /* ── Data loading (stations.json + brent.json) ── */
     async function loadData() {
       try {
         loadingText.textContent = 'Lade Tankstellendaten…';
-        // Fetch both in parallel; if either rejects, the catch handles it
         const [stationsRaw, brentRaw] = await Promise.all([
           fetchJSON('./data/stations.json'),
           fetchJSON('./data/brent.json'),
         ]);
 
         /*
-         * ASSUMPTION — stations.json shape (array of objects):
-         * [
-         *   {
-         *     id:      string,
-         *     name:    string,
-         *     brand:   string,
-         *     city:    string,
-         *     address: string,
-         *     lat:     number,
-         *     lng:     number,
-         *     prices: {
-         *       DIE:   number | null,
-         *       SUP:   number | null,
-         *       SUP98: number | null
-         *     }
-         *   }, ...
-         * ]
-         *
-         * ASSUMPTION — brent.json shape:
-         * {
-         *   price_usd:  number,
-         *   price_eur:  number,
-         *   change_pct: number,   // e.g. 1.23 means +1.23%
-         *   timestamp:  string    // ISO 8601
-         * }
+         * ASSUMPTION — stations.json: array of { id, name, brand, city, address,
+         *   lat, lng, prices: { DIE, SUP, SUP98 } (number|null) }
+         * ASSUMPTION — brent.json: { price_usd, price_eur, change_pct, timestamp }
          */
 
         stations  = stationsRaw;
@@ -862,6 +1444,10 @@
         renderBrent(brentData);
         renderMarkers();
         hideLoading();
+
+        // Initialise brent panel after map is ready
+        initBrentPanel();
+
       } catch (err) {
         showError(
           `Fehler beim Laden der Daten. ${err.message}. ` +
@@ -874,21 +1460,43 @@
       loadingOverlay.classList.add('hidden');
     }
 
-    /* ── Brent badge ── */
+    /* ── Brent panel init (called after page data loads) ── */
+    function initBrentPanel() {
+      // Set --brent-h to header-only height before any expansion
+      setBrentHeightVar(brentPanelTotalHeight());
+
+      const savedKey = (() => {
+        try { return localStorage.getItem(LS_KEY_EIA); } catch (_) { return null; }
+      })();
+
+      if (savedKey) {
+        // Key exists: show chart area, start fetch
+        showBrentChartArea();
+        loadBrentPanel(savedKey);
+        // Desktop: expand by default
+        if (!isMobile()) expandBrentPanel();
+      } else {
+        // No key: show prompt
+        showBrentKeyPrompt();
+        // Desktop: expand to show prompt; mobile: collapsed
+        if (!isMobile()) expandBrentPanel();
+      }
+    }
+
+    /* ── Brent badge (top bar) ── */
     function renderBrent(data) {
       if (!data) return;
 
       // ASSUMPTION: price_usd and price_eur are numbers (USD/EUR per barrel)
       document.getElementById('brent-usd').textContent =
         typeof data.price_usd === 'number' ? `$${data.price_usd.toFixed(2)}` : '–';
-
       document.getElementById('brent-eur').textContent =
         typeof data.price_eur === 'number' ? `€${data.price_eur.toFixed(2)}` : '–';
 
       const chEl = document.getElementById('brent-change');
-      // ASSUMPTION: change_pct is a number like 1.23 meaning +1.23%
+      // ASSUMPTION: change_pct is a number e.g. 1.23 = +1.23%
       if (typeof data.change_pct === 'number') {
-        const sign   = data.change_pct > 0 ? '+' : '';
+        const sign = data.change_pct > 0 ? '+' : '';
         chEl.textContent = `${sign}${data.change_pct.toFixed(2)}%`;
         chEl.className   = data.change_pct > 0.01  ? 'pos'
                          : data.change_pct < -0.01 ? 'neg'
@@ -898,7 +1506,7 @@
         chEl.className   = 'neu';
       }
 
-      // ASSUMPTION: timestamp is an ISO 8601 string
+      // ASSUMPTION: timestamp is ISO 8601
       if (data.timestamp) {
         try {
           const d = new Date(data.timestamp);
@@ -914,18 +1522,16 @@
 
     /* ── Tier calculation ── */
     function computeTiers(fuelCode) {
-      // Collect valid (non-null, finite) prices for this fuel code
       const valid = stations
         .map(s => ({ id: s.id, price: s.prices?.[fuelCode] }))
         .filter(s => typeof s.price === 'number' && isFinite(s.price))
         .sort((a, b) => a.price - b.price);
 
       if (valid.length === 0) return {};
-
       const n    = valid.length;
       const tier = {};
       valid.forEach((s, i) => {
-        const pct  = i / n; // position within sorted list
+        const pct  = i / n;
         tier[s.id] = pct < 1/3 ? 'green' : pct < 2/3 ? 'yellow' : 'red';
       });
       return tier;
@@ -942,25 +1548,19 @@
     }
 
     function renderMarkers() {
-      // Clear existing markers
       markers.forEach(m => map.removeLayer(m.layer));
       markers = [];
-
       const tiers = computeTiers(activeFuel);
 
       stations.forEach(station => {
-        // ASSUMPTION: lat and lng are valid numbers on each station object
+        // ASSUMPTION: lat and lng are finite numbers
         if (typeof station.lat !== 'number' || typeof station.lng !== 'number') return;
-
-        const tier  = tiers[station.id] ?? 'yellow'; // default mid tier if no price
+        const tier  = tiers[station.id] ?? 'yellow';
         const color = TIER_COLORS[tier];
         const layer = L.marker([station.lat, station.lng], {
-          icon:  makeIcon(color),
-          title: station.name || '',
+          icon: makeIcon(color), title: station.name || '',
         });
-
         layer.on('click', (e) => {
-          // Stop the click bubbling to the map so closeSidebar isn't triggered
           L.DomEvent.stopPropagation(e);
           openSidebar(station);
         });
@@ -979,10 +1579,9 @@
       });
     }
 
-    /* Returns the tier color hex for a given station under the active fuel */
     function stationTierColor(stationId) {
-      const markerEntry = markers.find(m => m.station.id === stationId);
-      return markerEntry ? TIER_COLORS[markerEntry.tier] : TIER_COLORS.yellow;
+      const m = markers.find(m => m.station.id === stationId);
+      return m ? TIER_COLORS[m.tier] : TIER_COLORS.yellow;
     }
 
     /* ── Sidebar ── */
@@ -994,7 +1593,6 @@
       document.getElementById('sidebar-addr').textContent =
         [station.address, station.city].filter(Boolean).join(', ') || '–';
 
-      // Prices
       FUEL_CODES.forEach(code => {
         const val = station.prices?.[code];
         const el  = document.getElementById(`pv-${code}`);
@@ -1009,10 +1607,9 @@
         pc.classList.toggle('active-fuel', code === activeFuel);
       });
 
-      // Kick off the history load. stationTierColor uses the markers array which
-      // is already populated by the time a user can click a marker.
       const tierColor = stationTierColor(station.id);
       loadAndRenderHistory(station, activeFuel, tierColor);
+      renderOverlayChart(station, activeFuel);
 
       sidebar.classList.add('open');
     }
@@ -1020,17 +1617,22 @@
     function closeSidebar() {
       sidebar.classList.remove('open');
       selectedStation = null;
-      // Invalidate any in-flight history request so its result is discarded
+
+      // Invalidate in-flight loads
       historyLoadToken++;
-      // Reset the container to its idle state
+      overlayToken++;
+
+      // Reset pump-price chart container
       destroyHistoryChart();
       histEl.className = '';
       histEl.textContent = 'Lade Preisverlauf…';
+
+      // Hide overlay
+      if (overlayChart) { overlayChart.destroy(); overlayChart = null; }
+      overlayContainer.classList.remove('visible');
     }
 
     sidebarClose.addEventListener('click', closeSidebar);
-
-    // Close sidebar when the map background is clicked
     map.on('click', () => closeSidebar());
 
     /* ── Fuel toggle ── */
@@ -1046,16 +1648,23 @@
 
         recolorMarkers();
 
-        // If a station is already open, update price card highlights and
-        // reload history for the new fuel type.
         if (selectedStation) {
           FUEL_CODES.forEach(c => {
             document.getElementById(`pc-${c}`)?.classList.toggle('active-fuel', c === activeFuel);
           });
           const tierColor = stationTierColor(selectedStation.id);
           loadAndRenderHistory(selectedStation, activeFuel, tierColor);
+          renderOverlayChart(selectedStation, activeFuel);
         }
       });
+    });
+
+    /* ── Resize handler — keep --brent-h accurate if window resizes ── */
+    window.addEventListener('resize', () => {
+      if (brentPanel.classList.contains('expanded')) {
+        setBrentHeightVar(brentPanelTotalHeight());
+        map.invalidateSize();
+      }
     });
 
     /* ── Boot ── */
