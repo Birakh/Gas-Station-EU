@@ -1,0 +1,51 @@
+# .github/workflows/fetch-prices.yml
+# Fetches energy/currency prices on a schedule and commits any changes to data/
+
+name: Fetch Prices
+
+on:
+  schedule:
+    - cron: "0 * * * *" # Runs every hour on the hour (UTC)
+  workflow_dispatch: # Allows manual trigger from the Actions tab
+
+jobs:
+  fetch-and-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the full repo history so git operations (diff, push) work correctly
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history needed for git operations
+
+      # Step 2: Set up Node 20, which includes native fetch() — no npm install needed for the script
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20 # Node 20 has native fetch, no npm install needed
+
+      # Step 3: Run the price-fetching script; writes output files into data/
+      # EIA_API_KEY is stored as a repository secret and injected here as an env var
+      # The script is responsible for fetching E-Control, EIA/Stooq, ECB and writing to data/
+      - name: Fetch prices
+        run: node scripts/fetch-prices.js
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }} # Fetches E-Control, EIA/Stooq, ECB and writes to data/
+
+      # Step 4: Check whether any files inside data/ were modified by the script
+      # If there are changes, sets the CHANGES env var to "true" for the next step
+      # If nothing changed, the variable is never set and the commit step is skipped
+      - name: Detect changes in data/
+        run: git diff --quiet data/ || echo "CHANGES=true" >> $GITHUB_ENV # Skips commit step if nothing changed
+
+      # Step 5: Only runs when CHANGES=true — commits and pushes the updated data/ files
+      # GITHUB_TOKEN is automatically provided by Actions; no manual secret needed for push
+      - name: Commit and push price data
+        if: env.CHANGES == 'true'
+        run: |
+          git config user.email "pricebot@noreply.github.com"
+          git config user.name "PriceBot"
+          git add data/
+          git commit -m "Price update $(date -u '+%Y-%m-%d %H:%M') UTC"
+          git push # Push uses the GITHUB_TOKEN secret automatically provided by Actions
