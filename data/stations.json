@@ -1,5 +1,135 @@
 [
   {
+    "id": 414544,
+    "name": "Shell Austria",
+    "lat": 48.1790148559,
+    "lng": 16.3580035648,
+    "address": "TRIESTERSTRASSE 6A-8",
+    "city": "WIEN",
+    "brand": "",
+    "prices": {
+      "DIE": 1.884,
+      "SUP": 1.804
+    }
+  },
+  {
+    "id": 35725,
+    "name": "BP",
+    "lat": 48.183485,
+    "lng": 16.373405,
+    "address": "Laxenburgerstrasse 2a ",
+    "city": "Wien",
+    "brand": "",
+    "prices": {
+      "DIE": 1.899,
+      "SUP": 1.799
+    }
+  },
+  {
+    "id": 35717,
+    "name": "BP",
+    "lat": 48.1875841,
+    "lng": 16.3394844,
+    "address": "Gaudenzdorfer Guertel 77 ",
+    "city": "Wien",
+    "brand": "",
+    "prices": {
+      "DIE": 1.909,
+      "SUP": 1.819
+    }
+  },
+  {
+    "id": 6083,
+    "name": "Turmöl Quick",
+    "lat": 48.2266238,
+    "lng": 16.3504673,
+    "address": "Währinger Gürtel 116",
+    "city": "Wien",
+    "brand": "",
+    "prices": {
+      "DIE": 1.924,
+      "SUP": 1.817
+    }
+  },
+  {
+    "id": 1135,
+    "name": "NNB BRUNNENTANKSTELLE",
+    "lat": 48.20462,
+    "lng": 16.334813,
+    "address": "Brunnengasse 4",
+    "city": "WIEN",
+    "brand": "",
+    "prices": {
+      "DIE": 1.939,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1474280,
+    "name": "eni",
+    "lat": 48.193838,
+    "lng": 16.396971,
+    "address": "Oberzellergasse 2a",
+    "city": "Wien",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": 1.839
+    }
+  },
+  {
+    "id": 427017,
+    "name": "Shell Austria",
+    "lat": 48.21777,
+    "lng": 16.39464,
+    "address": "AUSSTELLUNGSSTRASSE 4",
+    "city": "WIEN",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 35687,
+    "name": "BP",
+    "lat": 48.201209,
+    "lng": 16.403575,
+    "address": "Erdbergerlaende 30 ",
+    "city": "Wien",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1354901,
+    "name": "AVANTI - Wien Gaussplatz 1",
+    "lat": 48.22588,
+    "lng": 16.3708,
+    "address": "Gaussplatz 1",
+    "city": "Wien",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 35750,
+    "name": "BP",
+    "lat": 48.2165742,
+    "lng": 16.4171484,
+    "address": "Handelskai 276-280 ",
+    "city": "Wien",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
     "id": 43486,
     "name": "Wildenhofer Diesel Tankstelle",
     "lat": 47.8157985,
@@ -8,23 +138,47 @@
     "city": "Salzburg",
     "brand": "",
     "prices": {
-      "Diesel": 1.856,
-      "Eurosuper 95": null,
-      "Super Plus 98": null
+      "DIE": 1.856,
+      "SUP": null
     }
   },
   {
-    "id": 1474751,
-    "name": "Turmöl",
-    "lat": 47.797131,
-    "lng": 13.067715,
-    "address": "Aignerstraße 22",
+    "id": 1473588,
+    "name": "Diskont Tankstelle",
+    "lat": 47.83,
+    "lng": 13.0822,
+    "address": "Wiener Bundesstrasse 3 (am HOFER Parkplatz)",
+    "city": "Hallwang",
+    "brand": "",
+    "prices": {
+      "DIE": 1.876,
+      "SUP": 1.776
+    }
+  },
+  {
+    "id": 437493,
+    "name": "Shell Austria",
+    "lat": 47.80136,
+    "lng": 13.01418,
+    "address": "INNSBRUCKER BUNDESSTR 96",
+    "city": "SALZBURG",
+    "brand": "",
+    "prices": {
+      "DIE": 1.879,
+      "SUP": 1.769
+    }
+  },
+  {
+    "id": 277,
+    "name": "OMV - Salzburg Innsbrucker Bundesstraße 142",
+    "lat": 47.79796,
+    "lng": 13.00609,
+    "address": "Innsbrucker Bundesstrasse 142",
     "city": "Salzburg",
     "brand": "",
     "prices": {
-      "Diesel": 1.872,
-      "Eurosuper 95": 1.772,
-      "Super Plus 98": null
+      "DIE": 1.889,
+      "SUP": 1.789
     }
   },
   {
@@ -36,23 +190,8 @@
     "city": "Salzburg",
     "brand": "",
     "prices": {
-      "Diesel": 1.899,
-      "Eurosuper 95": 1.799,
-      "Super Plus 98": null
-    }
-  },
-  {
-    "id": 279,
-    "name": "OMV - Salzburg Vogelweider Straße 86",
-    "lat": 47.81696,
-    "lng": 13.05364,
-    "address": "Vogelweider Strasse 86",
-    "city": "Salzburg",
-    "brand": "",
-    "prices": {
-      "Diesel": 1.899,
-      "Eurosuper 95": 1.799,
-      "Super Plus 98": null
+      "DIE": 1.899,
+      "SUP": 1.799
     }
   },
   {
@@ -64,9 +203,8 @@
     "city": "SALZBURG",
     "brand": "",
     "prices": {
-      "Diesel": 1.899,
-      "Eurosuper 95": 1.799,
-      "Super Plus 98": null
+      "DIE": 1.899,
+      "SUP": 1.799
     }
   },
   {
@@ -78,51 +216,8 @@
     "city": "SALZBURG",
     "brand": "",
     "prices": {
-      "Diesel": 1.899,
-      "Eurosuper 95": 1.799,
-      "Super Plus 98": null
-    }
-  },
-  {
-    "id": 322,
-    "name": "OMV - Salzburg Schiller Straße 28",
-    "lat": 47.82232,
-    "lng": 13.03982,
-    "address": "Schiller Strasse 28",
-    "city": "Salzburg",
-    "brand": "",
-    "prices": {
-      "Diesel": null,
-      "Eurosuper 95": null,
-      "Super Plus 98": null
-    }
-  },
-  {
-    "id": 1472087,
-    "name": "BP",
-    "lat": 47.808452859338956,
-    "lng": 13.053064141303482,
-    "address": "Sterneckstraße 16",
-    "city": "Salzburg",
-    "brand": "",
-    "prices": {
-      "Diesel": null,
-      "Eurosuper 95": null,
-      "Super Plus 98": null
-    }
-  },
-  {
-    "id": 58370,
-    "name": "OMV - Salzburg Minnesheimstraße 10",
-    "lat": 47.81309,
-    "lng": 13.0695,
-    "address": "Minnesheimstrasse 10",
-    "city": "Salzburg",
-    "brand": "",
-    "prices": {
-      "Diesel": null,
-      "Eurosuper 95": null,
-      "Super Plus 98": null
+      "DIE": 1.899,
+      "SUP": 1.799
     }
   },
   {
@@ -134,37 +229,892 @@
     "city": "Salzburg",
     "brand": "",
     "prices": {
-      "Diesel": null,
-      "Eurosuper 95": null,
-      "Super Plus 98": null
+      "DIE": null,
+      "SUP": null
     }
   },
   {
-    "id": 654998,
+    "id": 223,
+    "name": "OMV - Bergheim Berg-Sam 22a",
+    "lat": 47.83065,
+    "lng": 13.06571,
+    "address": "Berg-Sam 22a",
+    "city": "Bergheim",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1474150,
+    "name": "eni",
+    "lat": 47.838788,
+    "lng": 13.076291,
+    "address": "A1 Soellheim, Söllheimerberg 11",
+    "city": "Hallwang",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 35643,
     "name": "BP",
-    "lat": 47.8043229,
-    "lng": 13.0283246,
-    "address": "Aiglhofstraße 20",
+    "lat": 47.844393,
+    "lng": 13.050127,
+    "address": "Lamprechtshauserner B156 ",
+    "city": "Bergheim / Lengfelden",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 37386,
+    "name": "OMV - Salzburg Münchner Bundesstraße 85",
+    "lat": 47.82773,
+    "lng": 13.00872,
+    "address": "Münchner Bundesstrasse 85",
     "city": "Salzburg",
     "brand": "",
     "prices": {
-      "Diesel": null,
-      "Eurosuper 95": 1.789,
-      "Super Plus 98": null
+      "DIE": null,
+      "SUP": null
     }
   },
   {
-    "id": 431253,
-    "name": "Shell Austria",
-    "lat": 47.79307,
-    "lng": 13.05987,
-    "address": "ALPENSTRASSE 2",
-    "city": "SALZBURG",
+    "id": 1338037,
+    "name": "Turmöl Quick",
+    "lat": 47.0591358,
+    "lng": 15.4265899,
+    "address": "Fabrikgasse 29",
+    "city": "Graz",
     "brand": "",
     "prices": {
-      "Diesel": null,
-      "Eurosuper 95": 1.799,
-      "Super Plus 98": null
+      "DIE": 1.832,
+      "SUP": 1.738
+    }
+  },
+  {
+    "id": 766270,
+    "name": "Rumpold",
+    "lat": 47.052683,
+    "lng": 15.443402,
+    "address": "Kasernstraße 14",
+    "city": "Graz",
+    "brand": "",
+    "prices": {
+      "DIE": 1.834,
+      "SUP": 1.74
+    }
+  },
+  {
+    "id": 40407,
+    "name": "F. LEITNER - SPRINT",
+    "lat": 47.06724476911472,
+    "lng": 15.42748404724715,
+    "address": "Elisabethinergasse 39",
+    "city": "Graz",
+    "brand": "",
+    "prices": {
+      "DIE": 1.841,
+      "SUP": 1.754
+    }
+  },
+  {
+    "id": 386713,
+    "name": "Sprint - Kärntner Straße 30",
+    "lat": 47.060542316479136,
+    "lng": 15.421137487628185,
+    "address": "Kärntner Straße 30",
+    "city": "Graz",
+    "brand": "",
+    "prices": {
+      "DIE": 1.841,
+      "SUP": 1.754
+    }
+  },
+  {
+    "id": 1474490,
+    "name": "Diskont Tankstelle",
+    "lat": 47.05646,
+    "lng": 15.42804,
+    "address": "Karlauerguertel 4 (am HOFER Parkplatz)",
+    "city": "Graz Karlau",
+    "brand": "",
+    "prices": {
+      "DIE": 1.845,
+      "SUP": 1.751
+    }
+  },
+  {
+    "id": 1468346,
+    "name": "M3 Energy",
+    "lat": 47.060424,
+    "lng": 15.430359,
+    "address": "Karlauerstraße 42",
+    "city": "Graz",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1136811,
+    "name": "SPRITKÖNIG",
+    "lat": 47.0775241,
+    "lng": 15.46176,
+    "address": "Elisabethstraße 78",
+    "city": "Graz",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 4176,
+    "name": "F. LEITNER",
+    "lat": 47.062528766908926,
+    "lng": 15.423171549885915,
+    "address": "Kärntner Straße 4",
+    "city": "Graz",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": 1.752
+    }
+  },
+  {
+    "id": 33417,
+    "name": "SOCAR Eggenbergergürtel",
+    "lat": 47.065671,
+    "lng": 15.420501,
+    "address": "Eggenbergergürtel 70",
+    "city": "Graz",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 35592,
+    "name": "BP",
+    "lat": 47.05580667,
+    "lng": 15.44821175,
+    "address": "Froehlichgasse 45 ",
+    "city": "Graz",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 716608,
+    "name": "Turmöl Quick",
+    "lat": 48.312442,
+    "lng": 14.2412365,
+    "address": "Hammerschmiede 3",
+    "city": "Puchenau",
+    "brand": "",
+    "prices": {
+      "DIE": 1.818,
+      "SUP": 1.724
+    }
+  },
+  {
+    "id": 1473432,
+    "name": "Turmöl",
+    "lat": 48.300474,
+    "lng": 14.2974598,
+    "address": "Dinghoferstraße 35-37",
+    "city": "Linz",
+    "brand": "",
+    "prices": {
+      "DIE": 1.823,
+      "SUP": 1.729
+    }
+  },
+  {
+    "id": 650274,
+    "name": "PINK - so pink, so clever",
+    "lat": 48.3070145,
+    "lng": 14.3245113,
+    "address": "Pummererstraße 22",
+    "city": "Linz",
+    "brand": "",
+    "prices": {
+      "DIE": 1.828,
+      "SUP": 1.734
+    }
+  },
+  {
+    "id": 462,
+    "name": "AVANTI - Linz Unionstraße 71a",
+    "lat": 48.28312,
+    "lng": 14.28828,
+    "address": "Unionstrasse 71a",
+    "city": "Linz",
+    "brand": "",
+    "prices": {
+      "DIE": 1.836,
+      "SUP": 1.737
+    }
+  },
+  {
+    "id": 40086,
+    "name": "AVANTI - Linz-Urfahr Linke Brückenstraße 32",
+    "lat": 48.32105,
+    "lng": 14.28817,
+    "address": "Linke Brückenstrasse 32",
+    "city": "Linz-Urfahr",
+    "brand": "",
+    "prices": {
+      "DIE": 1.859,
+      "SUP": 1.765
+    }
+  },
+  {
+    "id": 1221668,
+    "name": "eni AUTOMATIC-Tankstelle 0-24h bei Washplex Linz/Industriezeile",
+    "lat": 48.307117,
+    "lng": 14.315913,
+    "address": "Industriezeile 58",
+    "city": "Linz",
+    "brand": "",
+    "prices": {
+      "DIE": 1.859,
+      "SUP": 1.765
+    }
+  },
+  {
+    "id": 39846,
+    "name": "speed-DISKONT-automatic Linz/Urfahr",
+    "lat": 48.3275086,
+    "lng": 14.3045974,
+    "address": "Freistädter Straße 231",
+    "city": "Linz",
+    "brand": "",
+    "prices": {
+      "DIE": 1.859,
+      "SUP": 1.765
+    }
+  },
+  {
+    "id": 308856,
+    "name": "BP Linz, Stahlstraße",
+    "lat": 48.28488999,
+    "lng": 14.32048995,
+    "address": "Stahlstraße 5",
+    "city": "Linz",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 284,
+    "name": "OMV - Linz Hafenstraße 8",
+    "lat": 48.31554,
+    "lng": 14.30166,
+    "address": "Hafenstrasse 8",
+    "city": "Linz",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 35684,
+    "name": "BP",
+    "lat": 48.3145882,
+    "lng": 14.2859221,
+    "address": "Wildbergstrasse 16 ",
+    "city": "Linz-Urfahr",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 4136,
+    "name": "DISK",
+    "lat": 47.265578,
+    "lng": 11.425008,
+    "address": "Andechsstraße (Langer Weg 8)",
+    "city": "Innsbruck",
+    "brand": "",
+    "prices": {
+      "DIE": 1.884,
+      "SUP": 1.784
+    }
+  },
+  {
+    "id": 1354675,
+    "name": "AVANTI - Innsbruck Andechsstraße West 86",
+    "lat": 47.26533,
+    "lng": 11.42537,
+    "address": "Andechsstrasse West 86",
+    "city": "Innsbruck",
+    "brand": "",
+    "prices": {
+      "DIE": 1.884,
+      "SUP": 1.784
+    }
+  },
+  {
+    "id": 1473208,
+    "name": "Diskont Tankstelle",
+    "lat": 47.27889,
+    "lng": 11.42069,
+    "address": "Hallerstrasse 93 (am HOFER Parkplatz)",
+    "city": "Innsbruck",
+    "brand": "",
+    "prices": {
+      "DIE": 1.889,
+      "SUP": 1.789
+    }
+  },
+  {
+    "id": 4137,
+    "name": "DISK",
+    "lat": 47.282639,
+    "lng": 11.41024,
+    "address": "Anton Rauch Straße 8",
+    "city": "Innsbruck",
+    "brand": "",
+    "prices": {
+      "DIE": 1.894,
+      "SUP": 1.794
+    }
+  },
+  {
+    "id": 1492975,
+    "name": "Shell",
+    "lat": 47.26187,
+    "lng": 11.42314,
+    "address": "Amraser See Straße 29",
+    "city": "Innsbruck",
+    "brand": "",
+    "prices": {
+      "DIE": 1.894,
+      "SUP": 1.794
+    }
+  },
+  {
+    "id": 1475411,
+    "name": "ENI Gutmann",
+    "lat": 47.25423,
+    "lng": 11.39921,
+    "address": "Leopoldstraße 67",
+    "city": "Innsbruck",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1354689,
+    "name": "OMV - Innsbruck Egger-Lienz-Straße 3d",
+    "lat": 47.25633,
+    "lng": 11.38869,
+    "address": "Egger-Lienz-Strasse 3d",
+    "city": "Innsbruck",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 450179,
+    "name": "Shell Austria",
+    "lat": 47.26338,
+    "lng": 11.42971,
+    "address": "AMRASERSEE-STRASSE 56",
+    "city": "INNSBRUCK",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1474070,
+    "name": "eni",
+    "lat": 47.26347,
+    "lng": 11.43327,
+    "address": "Amraser Seestrasse 64",
+    "city": "Innsbruck-Amras",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 7825,
+    "name": "Unser Lagerhaus",
+    "lat": 47.2533315,
+    "lng": 11.3942247,
+    "address": "Duilestr. 20",
+    "city": "Innsbruck",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 35633,
+    "name": "BP",
+    "lat": 47.26456624,
+    "lng": 11.36583292,
+    "address": "Kranebitter Allee 30 ",
+    "city": "Innsbruck",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1157935,
+    "name": "AVANTI - Klagenfurt Görtschitztal Straße 22",
+    "lat": 46.63785,
+    "lng": 14.37077,
+    "address": "Görtschitztal Strasse 22",
+    "city": "Klagenfurt",
+    "brand": "",
+    "prices": {
+      "DIE": 1.839,
+      "SUP": 1.747
+    }
+  },
+  {
+    "id": 824526,
+    "name": "Turmöl Quick",
+    "lat": 46.6086948,
+    "lng": 14.299279,
+    "address": "Rosentalerstraße 138",
+    "city": "Klagenfurt",
+    "brand": "",
+    "prices": {
+      "DIE": 1.843,
+      "SUP": 1.751
+    }
+  },
+  {
+    "id": 42586,
+    "name": "AVANTI - Klagenfurt Kohldorferstraße 101",
+    "lat": 46.62048,
+    "lng": 14.26865,
+    "address": "Kohldorferstrasse 101",
+    "city": "Klagenfurt",
+    "brand": "",
+    "prices": {
+      "DIE": 1.849,
+      "SUP": 1.756
+    }
+  },
+  {
+    "id": 492,
+    "name": "AVANTI - Klagenfurt St.Veiter Straße 258",
+    "lat": 46.65337,
+    "lng": 14.31387,
+    "address": "St.Veiter Strasse 258",
+    "city": "Klagenfurt",
+    "brand": "",
+    "prices": {
+      "DIE": 1.85,
+      "SUP": 1.756
+    }
+  },
+  {
+    "id": 1474413,
+    "name": "Diskont Tankstelle",
+    "lat": 46.64932,
+    "lng": 14.28436,
+    "address": "Feldkirchner Strasse 221 (am HOFER Parkplatz)",
+    "city": "Klagenfurt",
+    "brand": "",
+    "prices": {
+      "DIE": 1.865,
+      "SUP": 1.756
+    }
+  },
+  {
+    "id": 267,
+    "name": "AVANTI - Klagenfurt Feldkirchnerstraße 275",
+    "lat": 46.65383,
+    "lng": 14.28047,
+    "address": "Feldkirchnerstrasse 275",
+    "city": "Klagenfurt",
+    "brand": "",
+    "prices": {
+      "DIE": 1.865,
+      "SUP": 1.756
+    }
+  },
+  {
+    "id": 1474203,
+    "name": "eni",
+    "lat": 46.6359,
+    "lng": 14.3118,
+    "address": "St. Veiter-Strasse 61",
+    "city": "Klagenfurt",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 33385,
+    "name": "SOCAR Klagenfurt-St.Veiter-Straße",
+    "lat": 46.6359198,
+    "lng": 14.3126125,
+    "address": "St. Veiter Straße 94",
+    "city": "Klagenfurt",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1474187,
+    "name": "eni",
+    "lat": 46.6199,
+    "lng": 14.2825,
+    "address": "Villacher Strasse 143",
+    "city": "Klagenfurt",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1474191,
+    "name": "eni",
+    "lat": 46.6035,
+    "lng": 14.29695,
+    "address": "Rosentaler Strasse 196",
+    "city": "Klagenfurt",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1214419,
+    "name": "CP - so günstig wie möglich",
+    "lat": 47.8449265,
+    "lng": 16.50778,
+    "address": "Wiener Straße 36-38",
+    "city": "Eisenstadt",
+    "brand": "",
+    "prices": {
+      "DIE": 1.857,
+      "SUP": 1.767
+    }
+  },
+  {
+    "id": 1471167,
+    "name": "Direct",
+    "lat": 47.8359,
+    "lng": 16.52446,
+    "address": "Mattersburger Straße 5",
+    "city": "Eisenstadt",
+    "brand": "",
+    "prices": {
+      "DIE": 1.858,
+      "SUP": 1.768
+    }
+  },
+  {
+    "id": 1474414,
+    "name": "Diskont Tankstelle",
+    "lat": 47.825,
+    "lng": 16.5319,
+    "address": "Haidäckerstrasse 4 (am HOFER Parkplatz)",
+    "city": "Eisenstadt",
+    "brand": "",
+    "prices": {
+      "DIE": 1.863,
+      "SUP": 1.768
+    }
+  },
+  {
+    "id": 1173509,
+    "name": "Turmöl Quick",
+    "lat": 47.84214,
+    "lng": 16.46347,
+    "address": "Wiener Straße 43",
+    "city": "Müllendorf",
+    "brand": "",
+    "prices": {
+      "DIE": 1.863,
+      "SUP": 1.768
+    }
+  },
+  {
+    "id": 1448506,
+    "name": "Turmöl Quick",
+    "lat": 47.8510135,
+    "lng": 16.629086,
+    "address": "Eisenstädter Straße 3",
+    "city": "Schützen am Gebirge",
+    "brand": "",
+    "prices": {
+      "DIE": 1.863,
+      "SUP": 1.768
+    }
+  },
+  {
+    "id": 399023,
+    "name": "Turmöl Quick",
+    "lat": 47.7577602,
+    "lng": 16.5385952,
+    "address": "Wienerstraße 100",
+    "city": "Klingenbach",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 42886,
+    "name": "Tanke Blaguss",
+    "lat": 47.8328353,
+    "lng": 16.5336044,
+    "address": "Industriestraße",
+    "city": "Eisenstadt",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1467530,
+    "name": "GENOL-Lagerhaustankstelle - Stöttera",
+    "lat": 47.769764,
+    "lng": 16.463945,
+    "address": "Hauptstrasse 76",
+    "city": "STÖTTERA",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1477281,
+    "name": "Shell Austria",
+    "lat": 47.7779,
+    "lng": 16.52619,
+    "address": "CHAPEAU-PARK 1/TOP1",
+    "city": "SIEGENDORF",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 866141,
+    "name": "Diesel, Eurosuper",
+    "lat": 47.75624,
+    "lng": 16.55126,
+    "address": "Ödenburger Strasse 50",
+    "city": "Klingenbach",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1055611,
+    "name": "Diesel, Super",
+    "lat": 47.750796,
+    "lng": 16.540982,
+    "address": "Ödenburger Straße, Einreise aus Ungarn",
+    "city": "Klingenbach",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1469666,
+    "name": "BayWa Tankstelle",
+    "lat": 47.46296,
+    "lng": 9.72747,
+    "address": "Scheibenstraße 2",
+    "city": "Lauterach",
+    "brand": "",
+    "prices": {
+      "DIE": 1.888,
+      "SUP": 1.798
+    }
+  },
+  {
+    "id": 34747,
+    "name": "Schindele, Hörbranz",
+    "lat": 47.5333189,
+    "lng": 9.7393838,
+    "address": "Seestr. 14a",
+    "city": "Hörbranz",
+    "brand": "",
+    "prices": {
+      "DIE": 1.929,
+      "SUP": null
+    }
+  },
+  {
+    "id": 33764,
+    "name": "Deuring",
+    "lat": 47.534922,
+    "lng": 9.7377447,
+    "address": "Seestrasse 10",
+    "city": "Hörbranz",
+    "brand": "",
+    "prices": {
+      "DIE": 1.929,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1474169,
+    "name": "eni",
+    "lat": 47.4985,
+    "lng": 9.73258,
+    "address": "Rheinstrasse 4",
+    "city": "Bregenz",
+    "brand": "",
+    "prices": {
+      "DIE": 1.939,
+      "SUP": 1.839
+    }
+  },
+  {
+    "id": 1474108,
+    "name": "eni",
+    "lat": 47.488611,
+    "lng": 9.702186,
+    "address": "Rheinstrasse 20",
+    "city": "Bregenz-Hard",
+    "brand": "",
+    "prices": {
+      "DIE": 1.939,
+      "SUP": 1.839
+    }
+  },
+  {
+    "id": 35735,
+    "name": "BP",
+    "lat": 47.5111513,
+    "lng": 9.7530777,
+    "address": "Bregenzerstr. 63 ",
+    "city": "Bregenz/Lochau",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1462649,
+    "name": "Schindele Autobahnraststätte",
+    "lat": 47.543157,
+    "lng": 9.744761,
+    "address": "Autobahn 2 R",
+    "city": "Hörbranz",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 167790,
+    "name": "Oberti - Dieselkraftstoff",
+    "lat": 47.4440815,
+    "lng": 9.6708614,
+    "address": "Rasis Bündt 13",
+    "city": "Lustenau",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1354863,
+    "name": "OMV - Bregenz Arlbergstraße 135",
+    "lat": 47.48778,
+    "lng": 9.73324,
+    "address": "Arlbergstrasse 135",
+    "city": "Bregenz",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 34368,
+    "name": "Diesel",
+    "lat": 47.5043091,
+    "lng": 9.7178389,
+    "address": "Seglerweg 1",
+    "city": "Bregenz",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": null
+    }
+  },
+  {
+    "id": 1354872,
+    "name": "AVANTI - Lustenau Bahnhofstraße 8",
+    "lat": 47.43888,
+    "lng": 9.65664,
+    "address": "Bahnhofstrasse 8",
+    "city": "Lustenau",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": 1.784
+    }
+  },
+  {
+    "id": 1354857,
+    "name": "OMV - Dornbirn Schwefel 53",
+    "lat": 47.42804,
+    "lng": 9.73995,
+    "address": "Schwefel 53",
+    "city": "Dornbirn",
+    "brand": "",
+    "prices": {
+      "DIE": null,
+      "SUP": 1.799
     }
   }
 ]
