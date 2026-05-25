@@ -23,6 +23,26 @@ const FUEL_LABEL = {
   SUP98: 'Super Plus 98',
 };
 
+// ─── Coverage grid: 8 points spread across all Austrian federal states ────────
+// The E-Control endpoint returns stations within a radius of the given point.
+// One central point only covered the Salzburg area; these 8 points ensure
+// every populated region of Austria is included.  Duplicate station IDs that
+// fall inside more than one radius are removed during the merge step below.
+const LOCATIONS = [
+  { lat: 48.2082, lng: 16.3738, label: 'Vienna'      },
+  { lat: 47.8095, lng: 13.0550, label: 'Salzburg'    },
+  { lat: 47.0707, lng: 15.4395, label: 'Graz'        },
+  { lat: 48.3069, lng: 14.2858, label: 'Linz'        },
+  { lat: 47.2692, lng: 11.4041, label: 'Innsbruck'   },
+  { lat: 46.6228, lng: 14.3050, label: 'Klagenfurt'  },
+  { lat: 47.8233, lng: 16.5353, label: 'Eisenstadt'  },
+  { lat: 47.4968, lng:  9.7332, label: 'Bregenz'     },
+];
+
+// Fuel types to request.  SUP98 is kept alongside DIE and SUP so that the
+// stations.json schema from the original spec remains intact.
+const FUEL_TYPES = ['DIE', 'SUP', 'SUP98'];
+
 // ─── Low-level fetch helpers ─────────────────────────────────────────────────
 
 /**
@@ -66,38 +86,64 @@ async function fetchText(url, options = {}) {
 // ─── Step 1: E-Control Austria ───────────────────────────────────────────────
 //
 // Documented at: https://api.e-control.at/sprit/1.0/doc/
-// We fetch three fuel types separately then merge by station ID.
+//
+// Strategy:
+//   Build one fetch task per (location, fuelType) combination — 8 × 3 = 24
+//   tasks — and fire them all in parallel with Promise.all().
+//   Each task returns an array of station objects for that query.
+//   After all tasks resolve, merge into a Map keyed by station ID so that
+//   any station appearing in multiple radius results is stored exactly once.
 
 async function fetchEControl() {
-  console.log('[Step 1] Fetching E-Control fuel station prices…');
+  console.log(
+    `[Step 1] Fetching E-Control prices — ` +
+    `${LOCATIONS.length} locations × ${FUEL_TYPES.length} fuel types ` +
+    `= ${LOCATIONS.length * FUEL_TYPES.length} parallel requests…`
+  );
 
-  const BASE_URL   = 'https://api.e-control.at/sprit/1.0/search/gas-stations/by-address';
-  const COMMON_QS  = 'latitude=47.8095&longitude=13.0550&includeClosed=false';
-  const FUEL_TYPES = ['DIE', 'SUP'];
+  const BASE_URL = 'https://api.e-control.at/sprit/1.0/search/gas-stations/by-address';
 
-  // Fetch each fuel type; collect raw arrays keyed by code.
-  const rawByType = {};
+  // Build the full task list: one entry per (location, fuelType) pair.
+  // We keep the metadata on each task so error messages are readable.
+  const tasks = [];
+  for (const loc of LOCATIONS) {
+    for (const fuelType of FUEL_TYPES) {
+      const url =
+        `${BASE_URL}` +
+        `?latitude=${loc.lat}` +
+        `&longitude=${loc.lng}` +
+        `&fuelType=${fuelType}` +
+        `&includeClosed=false`;
 
-  for (const fuelType of FUEL_TYPES) {
-    const url = `${BASE_URL}?${COMMON_QS}&fuelType=${fuelType}`;
-    let data;
-    try {
-      data = await fetchJSON(url);
-    } catch (err) {
-      throw new Error(
-        `[Step 1] E-Control request failed for fuelType=${fuelType}: ${err.message}`
-      );
+      tasks.push({ url, fuelType, label: loc.label });
     }
-
-    if (!Array.isArray(data)) {
-      throw new Error(
-        `[Step 1] Expected an array from E-Control (fuelType=${fuelType}), ` +
-        `got: ${typeof data}. Raw: ${JSON.stringify(data).slice(0, 200)}`
-      );
-    }
-
-    rawByType[fuelType] = data;
   }
+
+  // Fire all requests in parallel.  If any single request fails the entire
+  // Promise.all rejects, which the caller (main) will catch and exit(1).
+  let rawResults;
+  try {
+    rawResults = await Promise.all(
+      tasks.map(({ url, fuelType, label }) =>
+        fetchJSON(url).then(data => {
+          if (!Array.isArray(data)) {
+            throw new Error(
+              `[Step 1] Expected array for fuelType=${fuelType} / ${label}, ` +
+              `got: ${typeof data}. Raw: ${JSON.stringify(data).slice(0, 200)}`
+            );
+          }
+          // Tag each result with the fuel type so the merge step knows which
+          // price slot to fill.  The array elements themselves are not mutated.
+          return { fuelType, data };
+        })
+      )
+    );
+  } catch (err) {
+    // Re-throw with a [Step 1] prefix so main()'s catch block labels it correctly.
+    throw new Error(`[Step 1] Parallel fetch failed: ${err.message}`);
+  }
+
+  console.log(`[Step 1] All ${tasks.length} requests completed.`);
 
   // ── SHAPE ASSUMPTIONS ────────────────────────────────────────────────────
   // The E-Control API is not fully publicly documented.
@@ -119,24 +165,34 @@ async function fetchEControl() {
   //     ]
   //   }
   //
-  // Log the first DIE result so you can verify the actual shape in CI logs.
-  if (rawByType['DIE'].length > 0) {
+  // Log the first station from the first DIE result to verify the shape.
+  const firstDIEResult = rawResults.find(r => r.fuelType === 'DIE');
+  if (firstDIEResult && firstDIEResult.data.length > 0) {
     console.log(
       '[Step 1] First DIE station sample (verify shape):',
-      JSON.stringify(rawByType['DIE'][0], null, 2)
+      JSON.stringify(firstDIEResult.data[0], null, 2)
     );
   }
   // ─────────────────────────────────────────────────────────────────────────
 
-  // Merge all three arrays into a single Map keyed by station ID.
+  // Merge all results into a single Map keyed by station ID.
+  //
+  // Iteration order:
+  //   rawResults is an array of { fuelType, data[] } objects in task order.
+  //   For each result, we iterate its data array.  If a station ID is already
+  //   in the map (seen from an earlier location query), we skip re-creating the
+  //   base record but still update the price slot for this fuelType — provided
+  //   the slot is still null, meaning we keep the first price seen per fuel type
+  //   (prices for the same station should be identical across radius queries).
+
   const stationMap = new Map();
 
-  for (const fuelType of FUEL_TYPES) {
-    for (const station of rawByType[fuelType]) {
+  for (const { fuelType, data } of rawResults) {
+    for (const station of data) {
       const id = station.id;
 
       if (!stationMap.has(id)) {
-        // ASSUMPTION: location data lives in station.location (see above).
+        // ASSUMPTION: location data lives in station.location (see shape above).
         const loc = station.location ?? {};
         stationMap.set(id, {
           id,
@@ -146,23 +202,27 @@ async function fetchEControl() {
           address: loc.address   ?? '',
           city:    loc.city      ?? '',
           brand:   station.brand ?? '',
-          // Raw price slots; filled in as we iterate.
+          // All three price slots start as null; filled in below as results arrive.
           _prices: { DIE: null, SUP: null, SUP98: null },
         });
       }
 
-      // ASSUMPTION: prices is an array of { fuelType, amount }.
-      // We look for an entry whose fuelType matches the current loop code.
-      // If not found (e.g. station unexpectedly lacks the price), store null.
+      // ASSUMPTION: station.prices is an array of { fuelType, amount }.
+      // We look for the entry matching the current fuel type code.
+      // Only write the slot if it is still null (first-seen wins; avoids
+      // overwriting a valid price with a duplicate query's result).
       const entry = stationMap.get(id);
-      if (Array.isArray(station.prices) && station.prices.length > 0) {
+      if (entry._prices[fuelType] === null && Array.isArray(station.prices)) {
         const priceRow = station.prices.find(p => p.fuelType === fuelType);
-        entry._prices[fuelType] = priceRow ? (priceRow.amount ?? null) : null;
+        if (priceRow != null) {
+          entry._prices[fuelType] = priceRow.amount ?? null;
+        }
       }
     }
   }
 
-  // Shape the final station array.
+  // Shape the final station array, replacing internal _prices keys with the
+  // human-readable Austrian fuel type labels defined at the top of the file.
   const stations = Array.from(stationMap.values()).map(s => ({
     id:      s.id,
     name:    s.name,
@@ -178,7 +238,7 @@ async function fetchEControl() {
     },
   }));
 
-  console.log(`[Step 1] Merged ${stations.length} unique stations.`);
+  console.log(`[Step 1] Deduplicated to ${stations.length} unique stations across Austria.`);
   return stations;
 }
 
@@ -250,16 +310,17 @@ async function fetchEIA() {
     );
   }
 
-  const previous_price_usd = previous != null ? parseFloat(previous.value) : null;
+  const previous_price_usd =
+    previous != null && !isNaN(parseFloat(previous.value))
+      ? parseFloat(previous.value)
+      : null;
 
-  console.log(
-    `[Step 2] EIA: period=${latest.period}, price_usd=${price_usd}`
-  );
+  console.log(`[Step 2] EIA: period=${latest.period}, price_usd=${price_usd}`);
 
   return {
     date:               latest.period, // "YYYY-MM-DD"
     price_usd,
-    previous_price_usd: (!isNaN(previous_price_usd) ? previous_price_usd : null),
+    previous_price_usd,
     source:             'EIA',
   };
 }
@@ -322,14 +383,12 @@ async function fetchStooq() {
   // Previous row (second-to-last) for change calculation.
   let previous_price_usd = null;
   if (lines.length >= 3) {
-    const prevFields   = lines[lines.length - 2].split(',');
-    const prevClose    = parseFloat(prevFields[closeIdx]?.trim());
+    const prevFields = lines[lines.length - 2].split(',');
+    const prevClose  = parseFloat(prevFields[closeIdx]?.trim());
     previous_price_usd = isNaN(prevClose) ? null : prevClose;
   }
 
-  console.log(
-    `[Step 3] Stooq: date=${date}, close=${price_usd}`
-  );
+  console.log(`[Step 3] Stooq: date=${date}, close=${price_usd}`);
 
   return { date, price_usd, previous_price_usd, source: 'Stooq' };
 }
