@@ -1,0 +1,15 @@
+{
+  "name": "AT Spritpreise",
+  "short_name": "ATSprit",
+  "description": "Österreichische Kraftstoffpreise und Rohöl-Tracker",
+  "start_url": "/fuel-prices-austria/",
+  "scope": "/fuel-prices-austria/",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#3b82f6",
+  "lang": "de-AT",
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
