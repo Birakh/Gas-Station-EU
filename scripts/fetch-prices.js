@@ -73,7 +73,7 @@ async function fetchEControl() {
 
   const BASE_URL   = 'https://api.e-control.at/sprit/1.0/search/gas-stations/by-address';
   const COMMON_QS  = 'latitude=47.8095&longitude=13.0550&includeClosed=false';
-  const FUEL_TYPES = ['DIE', 'SUP', 'SUP98'];
+  const FUEL_TYPES = ['DIE', 'SUP'];
 
   // Fetch each fuel type; collect raw arrays keyed by code.
   const rawByType = {};
