@@ -33,19 +33,17 @@ jobs:
         env:
           EIA_API_KEY: ${{ secrets.EIA_API_KEY }} # Fetches E-Control, EIA/Stooq, ECB and writes to data/
 
-      # Step 4: Check whether any files inside data/ were modified by the script
-      # If there are changes, sets the CHANGES env var to "true" for the next step
-      # If nothing changed, the variable is never set and the commit step is skipped
-      - name: Detect changes in data/
-        run: git diff --quiet data/ || echo "CHANGES=true" >> $GITHUB_ENV # Skips commit step if nothing changed
-
-      # Step 5: Only runs when CHANGES=true — commits and pushes the updated data/ files
-      # GITHUB_TOKEN is automatically provided by Actions; no manual secret needed for push
-      - name: Commit and push price data
-        if: env.CHANGES == 'true'
+      # Step 4: Stage data/ first so both new (untracked) and modified files are visible to git diff.
+      # --staged compares the index against HEAD, which correctly catches brand-new files that
+      # git diff --quiet data/ (which compares working tree to index) would silently miss.
+      # If nothing is staged after git add, prints a message and exits 0 — workflow never fails.
+      # If something is staged, commits and pushes. GITHUB_TOKEN is automatically provided by Actions.
+      - name: Commit and push data
         run: |
           git config user.email "pricebot@noreply.github.com"
           git config user.name "PriceBot"
           git add data/
-          git commit -m "Price update $(date -u '+%Y-%m-%d %H:%M') UTC"
-          git push # Push uses the GITHUB_TOKEN secret automatically provided by Actions
+          git diff --staged --quiet && echo "No changes to commit" || (
+            git commit -m "Price update $(date -u '+%Y-%m-%d %H:%M') UTC" &&
+            git push
+          )
