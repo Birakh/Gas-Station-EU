@@ -16,20 +16,26 @@ const HISTORY_DIR = path.join(DATA_DIR, 'history');
 // Today's UTC date string used for the history filename.
 const TODAY_UTC = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
 
-// ─── Coverage grid: 8 points spread across all Austrian federal states ────────
+// ─── Coverage grid: 12 points spread across all Austrian federal states ───────
 // The E-Control endpoint returns stations within a radius of the given point.
-// One central point only covered the Salzburg area; these 8 points ensure
-// every populated region of Austria is included.  Duplicate station IDs that
-// fall inside more than one radius are removed during the merge step below.
+// Each request uses radius=70 (km).  12 overlapping circles cover Austria
+// end-to-end; duplicate station IDs from overlapping areas are removed during
+// the merge step below.
 const LOCATIONS = [
-  { lat: 48.2082, lng: 16.3738, label: 'Vienna'      },
-  { lat: 47.8095, lng: 13.0550, label: 'Salzburg'    },
-  { lat: 47.0707, lng: 15.4395, label: 'Graz'        },
-  { lat: 48.3069, lng: 14.2858, label: 'Linz'        },
-  { lat: 47.2692, lng: 11.4041, label: 'Innsbruck'   },
-  { lat: 46.6228, lng: 14.3050, label: 'Klagenfurt'  },
-  { lat: 47.8233, lng: 16.5353, label: 'Eisenstadt'  },
-  { lat: 47.4968, lng:  9.7332, label: 'Bregenz'     },
+  // Original 8 — one per federal state capital
+  { lat: 48.2082, lng: 16.3738, label: 'Vienna'              },
+  { lat: 47.8095, lng: 13.0550, label: 'Salzburg'            },
+  { lat: 47.0707, lng: 15.4395, label: 'Graz'                },
+  { lat: 48.3069, lng: 14.2858, label: 'Linz'                },
+  { lat: 47.2692, lng: 11.4041, label: 'Innsbruck'           },
+  { lat: 46.6228, lng: 14.3050, label: 'Klagenfurt'          },
+  { lat: 47.8233, lng: 16.5353, label: 'Eisenstadt'          },
+  { lat: 47.4968, lng:  9.7332, label: 'Bregenz'             },
+  // 4 gap-filling points for sparsely covered interior regions
+  { lat: 47.5162, lng: 14.5501, label: 'Steyr/central-AT'    },
+  { lat: 48.6167, lng: 15.6167, label: 'Krems/lower-AT-N'    },
+  { lat: 46.8167, lng: 15.8667, label: 'Gleisdorf/E-Styria'  },
+  { lat: 47.2000, lng: 13.1833, label: 'Radstadt/central-SB' },
 ];
 
 // Valid E-Control fuel type codes.
@@ -82,11 +88,17 @@ async function fetchText(url, options = {}) {
 // Documented at: https://api.e-control.at/sprit/1.0/doc/
 //
 // Strategy:
-//   Build one fetch task per (location, fuelType) combination — 8 × 3 = 24
+//   Build one fetch task per (location, fuelType) combination — 12 × 2 = 24
 //   tasks — and fire them all in parallel with Promise.all().
-//   Each task returns an array of station objects for that query.
-//   After all tasks resolve, merge into a Map keyed by station ID so that
-//   any station appearing in multiple radius results is stored exactly once.
+//   Each task requests a 70 km radius so the circles overlap and every part
+//   of Austria is covered.  After all tasks resolve, merge into a Map keyed
+//   by station ID so that any station appearing in multiple radius results is
+//   stored exactly once.
+//
+// NOTE: The E-Control API docs list a `radius` parameter (integer, kilometres).
+//   radius=70 is assumed to be valid based on the documented parameter list.
+//   If the API silently ignores the parameter or caps it at a lower value the
+//   station count in the summary line will reveal this on the first CI run.
 
 async function fetchEControl() {
   console.log(
@@ -107,7 +119,8 @@ async function fetchEControl() {
         `?latitude=${loc.lat}` +
         `&longitude=${loc.lng}` +
         `&fuelType=${fuelType}` +
-        `&includeClosed=false`;
+        `&includeClosed=false` +
+        `&radius=70`;
 
       tasks.push({ url, fuelType, label: loc.label });
     }
