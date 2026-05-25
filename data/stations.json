@@ -14,30 +14,16 @@
     }
   },
   {
-    "id": 437493,
-    "name": "Shell Austria",
-    "lat": 47.80136,
-    "lng": 13.01418,
-    "address": "INNSBRUCKER BUNDESSTR 96",
-    "city": "SALZBURG",
+    "id": 1474751,
+    "name": "Turmöl",
+    "lat": 47.797131,
+    "lng": 13.067715,
+    "address": "Aignerstraße 22",
+    "city": "Salzburg",
     "brand": "",
     "prices": {
-      "Diesel": 1.879,
-      "Eurosuper 95": 1.777,
-      "Super Plus 98": null
-    }
-  },
-  {
-    "id": 1473588,
-    "name": "Diskont Tankstelle",
-    "lat": 47.83,
-    "lng": 13.0822,
-    "address": "Wiener Bundesstrasse 3 (am HOFER Parkplatz)",
-    "city": "Hallwang",
-    "brand": "",
-    "prices": {
-      "Diesel": 1.884,
-      "Eurosuper 95": 1.784,
+      "Diesel": 1.872,
+      "Eurosuper 95": 1.772,
       "Super Plus 98": null
     }
   },
@@ -47,6 +33,20 @@
     "lat": 47.810199,
     "lng": 13.046559,
     "address": "Gabelsbergerstrasse 1",
+    "city": "Salzburg",
+    "brand": "",
+    "prices": {
+      "Diesel": 1.899,
+      "Eurosuper 95": 1.799,
+      "Super Plus 98": null
+    }
+  },
+  {
+    "id": 279,
+    "name": "OMV - Salzburg Vogelweider Straße 86",
+    "lat": 47.81696,
+    "lng": 13.05364,
+    "address": "Vogelweider Strasse 86",
     "city": "Salzburg",
     "brand": "",
     "prices": {
@@ -84,16 +84,44 @@
     }
   },
   {
-    "id": 277,
-    "name": "OMV - Salzburg Innsbrucker Bundesstraße 142",
-    "lat": 47.79796,
-    "lng": 13.00609,
-    "address": "Innsbrucker Bundesstrasse 142",
+    "id": 322,
+    "name": "OMV - Salzburg Schiller Straße 28",
+    "lat": 47.82232,
+    "lng": 13.03982,
+    "address": "Schiller Strasse 28",
     "city": "Salzburg",
     "brand": "",
     "prices": {
-      "Diesel": 1.899,
-      "Eurosuper 95": 1.799,
+      "Diesel": null,
+      "Eurosuper 95": null,
+      "Super Plus 98": null
+    }
+  },
+  {
+    "id": 1472087,
+    "name": "BP",
+    "lat": 47.808452859338956,
+    "lng": 13.053064141303482,
+    "address": "Sterneckstraße 16",
+    "city": "Salzburg",
+    "brand": "",
+    "prices": {
+      "Diesel": null,
+      "Eurosuper 95": null,
+      "Super Plus 98": null
+    }
+  },
+  {
+    "id": 58370,
+    "name": "OMV - Salzburg Minnesheimstraße 10",
+    "lat": 47.81309,
+    "lng": 13.0695,
+    "address": "Minnesheimstrasse 10",
+    "city": "Salzburg",
+    "brand": "",
+    "prices": {
+      "Diesel": null,
+      "Eurosuper 95": null,
       "Super Plus 98": null
     }
   },
@@ -112,58 +140,30 @@
     }
   },
   {
-    "id": 223,
-    "name": "OMV - Bergheim Berg-Sam 22a",
-    "lat": 47.83065,
-    "lng": 13.06571,
-    "address": "Berg-Sam 22a",
-    "city": "Bergheim",
-    "brand": "",
-    "prices": {
-      "Diesel": null,
-      "Eurosuper 95": null,
-      "Super Plus 98": null
-    }
-  },
-  {
-    "id": 1474150,
-    "name": "eni",
-    "lat": 47.838788,
-    "lng": 13.076291,
-    "address": "A1 Soellheim, Söllheimerberg 11",
-    "city": "Hallwang",
-    "brand": "",
-    "prices": {
-      "Diesel": null,
-      "Eurosuper 95": null,
-      "Super Plus 98": null
-    }
-  },
-  {
-    "id": 35643,
+    "id": 654998,
     "name": "BP",
-    "lat": 47.844393,
-    "lng": 13.050127,
-    "address": "Lamprechtshauserner B156 ",
-    "city": "Bergheim / Lengfelden",
-    "brand": "",
-    "prices": {
-      "Diesel": null,
-      "Eurosuper 95": null,
-      "Super Plus 98": null
-    }
-  },
-  {
-    "id": 37386,
-    "name": "OMV - Salzburg Münchner Bundesstraße 85",
-    "lat": 47.82773,
-    "lng": 13.00872,
-    "address": "Münchner Bundesstrasse 85",
+    "lat": 47.8043229,
+    "lng": 13.0283246,
+    "address": "Aiglhofstraße 20",
     "city": "Salzburg",
     "brand": "",
     "prices": {
       "Diesel": null,
-      "Eurosuper 95": null,
+      "Eurosuper 95": 1.789,
+      "Super Plus 98": null
+    }
+  },
+  {
+    "id": 431253,
+    "name": "Shell Austria",
+    "lat": 47.79307,
+    "lng": 13.05987,
+    "address": "ALPENSTRASSE 2",
+    "city": "SALZBURG",
+    "brand": "",
+    "prices": {
+      "Diesel": null,
+      "Eurosuper 95": 1.799,
       "Super Plus 98": null
     }
   }
