@@ -32,9 +32,10 @@ const LOCATIONS = [
   { lat: 47.4968, lng:  9.7332, label: 'Bregenz'     },
 ];
 
-// Fuel types to request.  SUP98 is kept alongside DIE and SUP so that the
-// stations.json schema from the original spec remains intact.
-const FUEL_TYPES = ['DIE', 'SUP', 'SUP98'];
+// Valid E-Control fuel type codes.
+// The "Super Plus 98" code is intentionally omitted — the API returns
+// HTTP 400 for it.  Only DIE and SUP are accepted.
+const FUEL_TYPES = ['DIE', 'SUP'];
 
 // ─── Low-level fetch helpers ─────────────────────────────────────────────────
 
@@ -154,7 +155,7 @@ async function fetchEControl() {
   //     },
   //     brand:    string | null,
   //     prices: [
-  //       { fuelType: "DIE" | "SUP" | "SUP98", amount: number }
+  //       { fuelType: "DIE" | "SUP", amount: number }
   //     ]
   //   }
   //
@@ -196,7 +197,7 @@ async function fetchEControl() {
           city:    loc.city      ?? '',
           brand:   station.brand ?? '',
           // All three price slots start as null; filled in below as results arrive.
-          _prices: { DIE: null, SUP: null, SUP98: null },
+          _prices: { DIE: null, SUP: null },
         });
       }
 
@@ -214,9 +215,8 @@ async function fetchEControl() {
     }
   }
 
-  // Shape the final station array.
-  // Price keys are the raw E-Control fuel type codes (DIE, SUP, SUP98) so
-  // the browser can read them as prices.DIE and prices.SUP without any mapping.
+  // Price keys are the raw E-Control fuel type codes (DIE, SUP) so
+  // the browser can read them as prices.DIE and prices.SUP directly.
   const stations = Array.from(stationMap.values()).map(s => ({
     id:      s.id,
     name:    s.name,
@@ -226,9 +226,8 @@ async function fetchEControl() {
     city:    s.city,
     brand:   s.brand,
     prices: {
-      DIE:   s._prices.DIE,
-      SUP:   s._prices.SUP,
-      SUP98: s._prices.SUP98,
+      DIE: s._prices.DIE,
+      SUP: s._prices.SUP,
     },
   }));
 
