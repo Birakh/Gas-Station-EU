@@ -607,7 +607,6 @@
     <div id="fuel-toggle">
       <button class="fuel-btn active" data-code="DIE">Diesel</button>
       <button class="fuel-btn"        data-code="SUP">Eurosuper 95</button>
-      <button class="fuel-btn"        data-code="SUP98">Super Plus 98</button>
     </div>
 
     <div id="brent-badge">
@@ -670,10 +669,6 @@
             <div class="price-card-label">Euro 95</div>
             <div class="price-card-value" id="pv-SUP">–</div>
           </div>
-          <div class="price-card" id="pc-SUP98">
-            <div class="price-card-label">Super 98</div>
-            <div class="price-card-value" id="pv-SUP98">–</div>
-          </div>
         </div>
       </div>
 
@@ -711,7 +706,7 @@
     'use strict';
 
     /* ── Constants ── */
-    const FUEL_CODES     = ['DIE', 'SUP', 'SUP98'];
+    const FUEL_CODES     = ['DIE', 'SUP'];
     const TIER_COLORS    = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
     const AUSTRIA_BOUNDS = [[46.37, 9.53], [49.02, 17.16]];
     const HISTORY_DAYS   = 30;
@@ -1434,7 +1429,7 @@
 
         /*
          * ASSUMPTION — stations.json: array of { id, name, brand, city, address,
-         *   lat, lng, prices: { DIE, SUP, SUP98 } (number|null) }
+         *   lat, lng, prices: { DIE, SUP } (number|null) }
          * ASSUMPTION — brent.json: { price_usd, price_eur, change_pct, timestamp }
          */
 
