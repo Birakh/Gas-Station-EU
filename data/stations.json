@@ -1,0 +1,170 @@
+[
+  {
+    "id": 43486,
+    "name": "Wildenhofer Diesel Tankstelle",
+    "lat": 47.8157985,
+    "lng": 13.0497956,
+    "address": "Gniglerstraße 5-7",
+    "city": "Salzburg",
+    "brand": "",
+    "prices": {
+      "Diesel": 1.856,
+      "Eurosuper 95": null,
+      "Super Plus 98": null
+    }
+  },
+  {
+    "id": 437493,
+    "name": "Shell Austria",
+    "lat": 47.80136,
+    "lng": 13.01418,
+    "address": "INNSBRUCKER BUNDESSTR 96",
+    "city": "SALZBURG",
+    "brand": "",
+    "prices": {
+      "Diesel": 1.879,
+      "Eurosuper 95": 1.777,
+      "Super Plus 98": null
+    }
+  },
+  {
+    "id": 1473588,
+    "name": "Diskont Tankstelle",
+    "lat": 47.83,
+    "lng": 13.0822,
+    "address": "Wiener Bundesstrasse 3 (am HOFER Parkplatz)",
+    "city": "Hallwang",
+    "brand": "",
+    "prices": {
+      "Diesel": 1.884,
+      "Eurosuper 95": 1.784,
+      "Super Plus 98": null
+    }
+  },
+  {
+    "id": 1474159,
+    "name": "eni",
+    "lat": 47.810199,
+    "lng": 13.046559,
+    "address": "Gabelsbergerstrasse 1",
+    "city": "Salzburg",
+    "brand": "",
+    "prices": {
+      "Diesel": 1.899,
+      "Eurosuper 95": 1.799,
+      "Super Plus 98": null
+    }
+  },
+  {
+    "id": 448800,
+    "name": "Shell Austria",
+    "lat": 47.8109,
+    "lng": 13.04281,
+    "address": "ST.JULIEN-STRASSE 33A",
+    "city": "SALZBURG",
+    "brand": "",
+    "prices": {
+      "Diesel": 1.899,
+      "Eurosuper 95": 1.799,
+      "Super Plus 98": null
+    }
+  },
+  {
+    "id": 422466,
+    "name": "Shell Austria",
+    "lat": 47.820006,
+    "lng": 13.053319,
+    "address": "VOGELWEIDERSTRASSE 108",
+    "city": "SALZBURG",
+    "brand": "",
+    "prices": {
+      "Diesel": 1.899,
+      "Eurosuper 95": 1.799,
+      "Super Plus 98": null
+    }
+  },
+  {
+    "id": 277,
+    "name": "OMV - Salzburg Innsbrucker Bundesstraße 142",
+    "lat": 47.79796,
+    "lng": 13.00609,
+    "address": "Innsbrucker Bundesstrasse 142",
+    "city": "Salzburg",
+    "brand": "",
+    "prices": {
+      "Diesel": 1.899,
+      "Eurosuper 95": 1.799,
+      "Super Plus 98": null
+    }
+  },
+  {
+    "id": 36086,
+    "name": "dts Trading  GmbH",
+    "lat": 47.816757,
+    "lng": 13.059568,
+    "address": "Gnigler Strasse 52",
+    "city": "Salzburg",
+    "brand": "",
+    "prices": {
+      "Diesel": null,
+      "Eurosuper 95": null,
+      "Super Plus 98": null
+    }
+  },
+  {
+    "id": 223,
+    "name": "OMV - Bergheim Berg-Sam 22a",
+    "lat": 47.83065,
+    "lng": 13.06571,
+    "address": "Berg-Sam 22a",
+    "city": "Bergheim",
+    "brand": "",
+    "prices": {
+      "Diesel": null,
+      "Eurosuper 95": null,
+      "Super Plus 98": null
+    }
+  },
+  {
+    "id": 1474150,
+    "name": "eni",
+    "lat": 47.838788,
+    "lng": 13.076291,
+    "address": "A1 Soellheim, Söllheimerberg 11",
+    "city": "Hallwang",
+    "brand": "",
+    "prices": {
+      "Diesel": null,
+      "Eurosuper 95": null,
+      "Super Plus 98": null
+    }
+  },
+  {
+    "id": 35643,
+    "name": "BP",
+    "lat": 47.844393,
+    "lng": 13.050127,
+    "address": "Lamprechtshauserner B156 ",
+    "city": "Bergheim / Lengfelden",
+    "brand": "",
+    "prices": {
+      "Diesel": null,
+      "Eurosuper 95": null,
+      "Super Plus 98": null
+    }
+  },
+  {
+    "id": 37386,
+    "name": "OMV - Salzburg Münchner Bundesstraße 85",
+    "lat": 47.82773,
+    "lng": 13.00872,
+    "address": "Münchner Bundesstrasse 85",
+    "city": "Salzburg",
+    "brand": "",
+    "prices": {
+      "Diesel": null,
+      "Eurosuper 95": null,
+      "Super Plus 98": null
+    }
+  }
+]
