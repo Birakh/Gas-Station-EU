@@ -16,13 +16,6 @@ const HISTORY_DIR = path.join(DATA_DIR, 'history');
 // Today's UTC date string used for the history filename.
 const TODAY_UTC = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
 
-// ─── Fuel type human-readable labels (Austrian convention) ───────────────────
-const FUEL_LABEL = {
-  DIE:   'Diesel',
-  SUP:   'Eurosuper 95',
-  SUP98: 'Super Plus 98',
-};
-
 // ─── Coverage grid: 8 points spread across all Austrian federal states ────────
 // The E-Control endpoint returns stations within a radius of the given point.
 // One central point only covered the Salzburg area; these 8 points ensure
@@ -221,8 +214,9 @@ async function fetchEControl() {
     }
   }
 
-  // Shape the final station array, replacing internal _prices keys with the
-  // human-readable Austrian fuel type labels defined at the top of the file.
+  // Shape the final station array.
+  // Price keys are the raw E-Control fuel type codes (DIE, SUP, SUP98) so
+  // the browser can read them as prices.DIE and prices.SUP without any mapping.
   const stations = Array.from(stationMap.values()).map(s => ({
     id:      s.id,
     name:    s.name,
@@ -232,9 +226,9 @@ async function fetchEControl() {
     city:    s.city,
     brand:   s.brand,
     prices: {
-      [FUEL_LABEL.DIE]:   s._prices.DIE,
-      [FUEL_LABEL.SUP]:   s._prices.SUP,
-      [FUEL_LABEL.SUP98]: s._prices.SUP98,
+      DIE:   s._prices.DIE,
+      SUP:   s._prices.SUP,
+      SUP98: s._prices.SUP98,
     },
   }));
 
