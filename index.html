@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#3b82f6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>AT Spritpreise</title>
 
   <!-- Leaflet 1.9.x -->
@@ -140,7 +144,6 @@
     #brent-panel-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
       padding: 0 14px;
       height: 36px;
       cursor: pointer;
@@ -155,11 +158,27 @@
       letter-spacing: 0.07em;
       text-transform: uppercase;
       color: var(--muted);
+      flex: 1;
     }
+    /* FIX 2: ⚙ reset-key button sits in the header row */
+    #brent-key-reset {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      line-height: 1;
+      transition: color 0.15s;
+      /* stop click bubbling to the header toggle */
+    }
+    #brent-key-reset:hover { color: var(--text); }
     #brent-panel-toggle-icon {
       font-size: 11px;
       color: var(--muted);
       transition: transform 0.25s;
+      flex-shrink: 0;
     }
     #brent-panel.expanded #brent-panel-toggle-icon { transform: rotate(180deg); }
     #brent-panel-body {
@@ -167,20 +186,26 @@
       overflow: hidden;
       transition: max-height 0.3s cubic-bezier(0.4,0,0.2,1);
     }
-    #brent-panel.expanded #brent-panel-body { max-height: 280px; }
+    #brent-panel.expanded #brent-panel-body { max-height: 300px; }
     #brent-panel-inner {
       padding: 0 14px 12px;
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
+
+    /* FIX 2: key prompt — always visible inside the expanded panel body */
     #brent-key-prompt {
       display: flex;
       flex-direction: column;
       gap: 6px;
-      padding: 8px 0 2px;
+      padding: 8px 0 4px;
     }
-    #brent-key-prompt label { font-size: 11px; color: var(--muted); }
+    #brent-key-prompt label {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
     #brent-key-row { display: flex; gap: 6px; }
     #brent-api-key-input {
       flex: 1;
@@ -190,9 +215,11 @@
       color: var(--text);
       font-family: var(--font);
       font-size: 12px;
-      padding: 5px 9px;
+      padding: 6px 9px;
       outline: none;
       transition: border-color 0.15s;
+      /* visible height so it doesn't collapse */
+      min-height: 30px;
     }
     #brent-api-key-input:focus { border-color: var(--accent); }
     #brent-key-save {
@@ -203,12 +230,14 @@
       font-family: var(--font);
       font-size: 12px;
       font-weight: 600;
-      padding: 5px 12px;
+      padding: 6px 14px;
       cursor: pointer;
       white-space: nowrap;
       transition: background 0.15s;
+      min-height: 30px;
     }
     #brent-key-save:hover { background: var(--accent-h); }
+
     #brent-chart-area { position: relative; }
     #brent-chart-area canvas { display: block; width: 100% !important; }
     #brent-chart-message {
@@ -217,6 +246,10 @@
       text-align: center;
       line-height: 1.5;
       padding: 12px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
     /* ── Map ── */
@@ -328,7 +361,7 @@
     /* prices grid */
     .price-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
     .price-card {
@@ -394,6 +427,7 @@
       border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 0.75s linear infinite;
+      flex-shrink: 0;
     }
 
     /* ── Preis-Signal badge ── */
@@ -403,7 +437,6 @@
       border-radius: 8px;
       overflow: hidden;
     }
-    /* main badge row */
     .signal-main {
       display: flex;
       align-items: center;
@@ -415,9 +448,7 @@
       line-height: 1;
       flex-shrink: 0;
     }
-    .signal-text {
-      flex: 1;
-    }
+    .signal-text { flex: 1; }
     .signal-strength {
       font-size: 18px;
       font-weight: 800;
@@ -429,7 +460,6 @@
       color: var(--muted);
       margin-top: 2px;
     }
-    /* "Warum?" toggle */
     .signal-why-btn {
       background: transparent;
       border: 1px solid var(--border);
@@ -444,7 +474,6 @@
       white-space: nowrap;
     }
     .signal-why-btn:hover { border-color: var(--accent); color: var(--text); }
-    /* expandable "Warum?" detail */
     .signal-why-body {
       max-height: 0;
       overflow: hidden;
@@ -452,9 +481,8 @@
     }
     .signal-why-body.open { max-height: 200px; }
     .signal-why-inner {
-      padding: 0 12px 10px;
+      padding: 9px 12px 10px;
       border-top: 1px solid var(--border);
-      padding-top: 9px;
       display: flex;
       flex-direction: column;
       gap: 4px;
@@ -471,7 +499,6 @@
       min-width: 56px;
     }
     .signal-why-val { color: var(--text); }
-    /* disclaimer */
     .signal-disclaimer {
       padding: 6px 12px 9px;
       font-size: 9px;
@@ -553,11 +580,6 @@
     }
 
     /* ── Custom marker dots with signal mini-badge ── */
-    /*
-     * Each marker is a 20×20 container.  The price-tier circle (14px) is centred;
-     * the signal mini-badge (8px) sits in the bottom-right corner so both are
-     * visible without overlapping other elements.
-     */
     .marker-wrap {
       position: relative;
       width: 20px;
@@ -584,7 +606,6 @@
       line-height: 1;
       border: 1px solid rgba(0,0,0,0.4);
       cursor: pointer;
-      /* font-weight bold so the arrow glyph is legible at tiny size */
       font-weight: 900;
     }
 
@@ -641,7 +662,6 @@
     <div id="fuel-toggle">
       <button class="fuel-btn active" data-code="DIE">Diesel</button>
       <button class="fuel-btn"        data-code="SUP">Eurosuper 95</button>
-      <button class="fuel-btn"        data-code="SUP98">Super Plus 98</button>
     </div>
     <div id="brent-badge">
       <div id="brent-label">Brent Rohöl</div>
@@ -655,19 +675,29 @@
 
   <!-- Brent history panel -->
   <div id="brent-panel">
+    <!--
+      FIX 2: Header row contains title, ⚙ reset button, and chevron.
+      The reset button click is stopped from bubbling so it doesn't toggle the panel.
+    -->
     <div id="brent-panel-header" role="button" aria-expanded="false" aria-controls="brent-panel-body" tabindex="0">
       <span id="brent-panel-title">Rohöl Brent — 90 Tage</span>
+      <button id="brent-key-reset" title="API-Schlüssel zurücksetzen" style="display:none;">⚙</button>
       <span id="brent-panel-toggle-icon">▼</span>
     </div>
     <div id="brent-panel-body" role="region">
       <div id="brent-panel-inner">
+        <!--
+          FIX 2: Key prompt — always rendered in the DOM; shown/hidden via display.
+          Label text updated to match specification.
+        -->
         <div id="brent-key-prompt">
-          <label for="brent-api-key-input">EIA API-Schlüssel eingeben (kostenlos unter eia.gov):</label>
+          <label for="brent-api-key-input">EIA API-Schlüssel (kostenlos: eia.gov)</label>
           <div id="brent-key-row">
-            <input id="brent-api-key-input" type="text" placeholder="Ihr API-Schlüssel…" autocomplete="off" spellcheck="false" />
+            <input id="brent-api-key-input" type="text" placeholder="Schlüssel eingeben…" autocomplete="off" spellcheck="false" />
             <button id="brent-key-save">Speichern</button>
           </div>
         </div>
+        <!-- Chart area: hidden until a key is saved and the fetch succeeds -->
         <div id="brent-chart-area" style="display:none;">
           <div id="brent-chart-message"></div>
         </div>
@@ -701,10 +731,6 @@
             <div class="price-card-label">Euro 95</div>
             <div class="price-card-value" id="pv-SUP">–</div>
           </div>
-          <div class="price-card" id="pc-SUP98">
-            <div class="price-card-label">Super 98</div>
-            <div class="price-card-value" id="pv-SUP98">–</div>
-          </div>
         </div>
       </div>
 
@@ -713,15 +739,17 @@
         <div id="history-chart-container">Lade Preisverlauf…</div>
       </div>
 
-      <!-- Preis-Signal -->
+      <!--
+        FIX 3: Signal section has NO placeholder text. renderSignalBadge() populates
+        this immediately and synchronously when a station is clicked — no backend,
+        no async, no fetch. The container starts empty and is filled on click.
+      -->
       <div>
         <div class="section-label">Preis-Signal</div>
-        <div id="signal-badge-container">
-          <!-- populated by renderSignalBadge() -->
-        </div>
+        <div id="signal-badge-container"></div>
       </div>
 
-      <!-- Brent vs. pump overlay -->
+      <!-- Brent vs. pump overlay — shown only when brent history is loaded -->
       <div id="brent-overlay-container">
         <div class="section-label">Brent vs. Pumpenpreis</div>
         <div id="brent-overlay-chart-wrap">
@@ -745,16 +773,14 @@
     'use strict';
 
     /* ── Constants ── */
-    const FUEL_CODES     = ['DIE', 'SUP', 'SUP98'];
+    const FUEL_CODES     = ['DIE', 'SUP'];
     const TIER_COLORS    = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
     const AUSTRIA_BOUNDS = [[46.37, 9.53], [49.02, 17.16]];
     const HISTORY_DAYS   = 30;
     const BRENT_DAYS     = 90;
     const LS_KEY_EIA     = 'eia_api_key';
 
-    /*
-     * EIA API v2 endpoint — documented at https://www.eia.gov/opendata/documentation.php
-     */
+    /* EIA API v2 — documented at https://www.eia.gov/opendata/documentation.php */
     const EIA_ENDPOINT = 'https://api.eia.gov/v2/petroleum/pri/spt/data/';
 
     /* Signal direction constants */
@@ -762,30 +788,28 @@
     const SIG_DOWN   = 'DOWN';
     const SIG_STABLE = 'STABLE';
 
-    /* Day-of-week numbers (Date.getDay()): 0=Sun … 4=Thu … 1=Mon */
     const DOW_THURSDAY = 4;
     const DOW_MONDAY   = 1;
-
-    /* German day names for display */
-    const DOW_NAMES = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+    const DOW_NAMES    = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 
     /* ── State ── */
     let activeFuel      = 'DIE';
     let stations        = [];
-    let brentData       = null;   // from brent.json
-    let markers         = [];     // { layer, station, tier, signal }
+    let brentData       = null;
+    let markers         = [];
     let selectedStation = null;
 
-    // Chart.js instances — always destroyed before re-creating
     let historyChart    = null;
     let brentPanelChart = null;
     let overlayChart    = null;
 
-    // EIA 90-day Brent history, sorted oldest→newest, or null if not loaded
-    // ASSUMPTION: each element is { date: 'YYYY-MM-DD', value: number }
+    /*
+     * brentHistory: EIA 90-day data, sorted oldest→newest.
+     * ASSUMPTION: each element is { date: 'YYYY-MM-DD', value: number (USD/barrel) }
+     * null = not yet loaded or load failed.
+     */
     let brentHistory = null;
 
-    // Race-condition tokens
     let historyLoadToken = 0;
     let overlayToken     = 0;
 
@@ -802,6 +826,7 @@
     const brentKeyPrompt   = document.getElementById('brent-key-prompt');
     const brentKeyInput    = document.getElementById('brent-api-key-input');
     const brentKeySave     = document.getElementById('brent-key-save');
+    const brentKeyReset    = document.getElementById('brent-key-reset');
     const brentChartArea   = document.getElementById('brent-chart-area');
     const brentChartMsg    = document.getElementById('brent-chart-message');
     const overlayContainer = document.getElementById('brent-overlay-container');
@@ -809,194 +834,106 @@
     const signalContainer  = document.getElementById('signal-badge-container');
 
     /* ═══════════════════════════════════════════════════════════════════════════
-     * PREIS-SIGNAL — deterministic rule engine
+     * FIX 3 — PREIS-SIGNAL: deterministic rule engine, no backend, no fetch.
      *
-     * NOT machine learning. No Math.random(). Rules applied top-to-bottom;
-     * first match wins.
-     *
-     * Inputs:
-     *   brent3dayChange  — actual % change computed from EIA history if available;
-     *                      falls back to brent.json change_pct (1-day proxy)
-     *   dayOfWeek        — 0..6 from new Date().getDay()
-     *   stationId        — string; charCodeAt(0) used for deterministic confidence
+     * NOT machine learning. No Math.random(). Runs synchronously from:
+     *   - brentData (loaded from brent.json, always available when sidebar opens)
+     *   - brentHistory (EIA 90-day, used if loaded; falls back to brent.json otherwise)
+     *   - new Date().getDay() — day of week from the browser
+     *   - stationId.charCodeAt(0) — deterministic confidence offset
      *
      * Returns:
-     *   {
-     *     direction:   'UP' | 'DOWN' | 'STABLE',
-     *     confidence:  number (integer percent, e.g. 74),
-     *     ruleNumber:  number (1..7),
-     *     inputDesc:   string  — human-readable description of the deciding input
-     *     usedFallback: boolean — true if change_pct proxy used instead of EIA 3-day
-     *   }
+     *   { direction, confidence, ruleNumber, inputDesc, usedFallback, dowName? }
      * ═══════════════════════════════════════════════════════════════════════════ */
     function computeSignal(stationId) {
-      // Step 1: compute brent 3-day change
-      let brent3day   = null;
+      let brent3day    = null;
       let usedFallback = false;
 
       if (brentHistory && brentHistory.length >= 4) {
-        // Use actual EIA data: compare most-recent value vs. value 3 trading days ago.
-        // brentHistory is sorted oldest→newest; last element is most recent.
+        // Actual 3-trading-day change from EIA history (sorted oldest→newest)
         const last  = brentHistory[brentHistory.length - 1].value;
-        const prior = brentHistory[brentHistory.length - 4].value; // 3 steps back
+        const prior = brentHistory[brentHistory.length - 4].value;
         if (prior > 0) {
           brent3day = ((last - prior) / prior) * 100;
         }
       }
 
       if (brent3day === null) {
-        // Fall back to brent.json change_pct (1-day, not 3-day — noted in inputDesc)
-        // ASSUMPTION: brentData.change_pct is a number; we guard with typeof
+        // Fallback: use brent.json change_pct (1-day proxy, not 3-day)
+        // ASSUMPTION: brentData.change_pct is a number, e.g. 1.23 = +1.23%
         if (brentData && typeof brentData.change_pct === 'number') {
           brent3day    = brentData.change_pct;
           usedFallback = true;
         } else {
-          // No brent data at all — skip to calendar rules
-          brent3day = 0;
+          // No brent data available at all — use 0 to fall through to calendar rules
+          brent3day    = 0;
           usedFallback = true;
         }
       }
 
-      const dow = new Date().getDay(); // 0=Sun … 6=Sat
+      const dow = new Date().getDay(); // 0=Sun, 1=Mon, …, 4=Thu, …, 6=Sat
 
-      // Deterministic confidence picker: value within [bandMin, bandMax)
-      // Uses charCodeAt(0) of the first character of stationId.
-      // Falls back to 0 if stationId is empty/non-string.
+      // Deterministic confidence within band: same station always same value,
+      // different stations show slightly different values. No Math.random().
       const stationSeed = (typeof stationId === 'string' && stationId.length > 0)
         ? stationId.charCodeAt(0)
         : 0;
-
       function pickConfidence(bandMin, bandMax) {
-        const spread = bandMax - bandMin; // e.g. 6 for a 72–78 band
-        return bandMin + (stationSeed % spread);
+        return bandMin + (stationSeed % (bandMax - bandMin));
       }
 
-      // Format the brent change for display
-      const brentSign      = brent3day >= 0 ? '+' : '';
+      const sign           = brent3day >= 0 ? '+' : '';
       const brentDisplayed = usedFallback
-        ? `Brent ${brentSign}${brent3day.toFixed(2)}% (Tageswert, kein 3-Tage-Verlauf)`
-        : `Brent ${brentSign}${brent3day.toFixed(2)}% über 3 Tage`;
+        ? `Brent ${sign}${brent3day.toFixed(2)}% (Tageswert, kein 3-Tage-Verlauf)`
+        : `Brent ${sign}${brent3day.toFixed(2)}% über 3 Tage`;
 
-      // Rules applied in the specified order — first match wins
-      if (brent3day > 3.0) {
-        return {
-          direction:    SIG_UP,
-          confidence:   pickConfidence(72, 78),
-          ruleNumber:   1,
-          inputDesc:    brentDisplayed,
-          usedFallback,
-        };
-      }
-      if (brent3day > 1.0) {
-        return {
-          direction:    SIG_UP,
-          confidence:   pickConfidence(58, 65),
-          ruleNumber:   2,
-          inputDesc:    brentDisplayed,
-          usedFallback,
-        };
-      }
-      if (brent3day < -3.0) {
-        return {
-          direction:    SIG_DOWN,
-          confidence:   pickConfidence(72, 78),
-          ruleNumber:   3,
-          inputDesc:    brentDisplayed,
-          usedFallback,
-        };
-      }
-      if (brent3day < -1.0) {
-        return {
-          direction:    SIG_DOWN,
-          confidence:   pickConfidence(58, 65),
-          ruleNumber:   4,
-          inputDesc:    brentDisplayed,
-          usedFallback,
-        };
-      }
-      if (dow === DOW_THURSDAY) {
-        return {
-          direction:    SIG_UP,
-          confidence:   pickConfidence(48, 54),
-          ruleNumber:   5,
-          inputDesc:    'Donnerstag-Muster (österr. Preiserhöhung)',
-          usedFallback,
-          dowName:      DOW_NAMES[dow],
-        };
-      }
-      if (dow === DOW_MONDAY) {
-        return {
-          direction:    SIG_DOWN,
-          confidence:   pickConfidence(48, 54),
-          ruleNumber:   6,
-          inputDesc:    'Montag-Muster (Wochenend-Rückgang)',
-          usedFallback,
-          dowName:      DOW_NAMES[dow],
-        };
-      }
-      // Default rule
-      return {
-        direction:    SIG_STABLE,
-        confidence:   pickConfidence(44, 50),
-        ruleNumber:   7,
-        inputDesc:    brentDisplayed,
-        usedFallback,
-      };
+      // Rules — first match wins, applied in this exact order
+      if (brent3day > 3.0)        return { direction: SIG_UP,     confidence: pickConfidence(72, 78), ruleNumber: 1, inputDesc: brentDisplayed, usedFallback };
+      if (brent3day > 1.0)        return { direction: SIG_UP,     confidence: pickConfidence(58, 65), ruleNumber: 2, inputDesc: brentDisplayed, usedFallback };
+      if (brent3day < -3.0)       return { direction: SIG_DOWN,   confidence: pickConfidence(72, 78), ruleNumber: 3, inputDesc: brentDisplayed, usedFallback };
+      if (brent3day < -1.0)       return { direction: SIG_DOWN,   confidence: pickConfidence(58, 65), ruleNumber: 4, inputDesc: brentDisplayed, usedFallback };
+      if (dow === DOW_THURSDAY)   return { direction: SIG_UP,     confidence: pickConfidence(48, 54), ruleNumber: 5, inputDesc: 'Donnerstag-Muster (österr. Preiserhöhung)', usedFallback, dowName: DOW_NAMES[dow] };
+      if (dow === DOW_MONDAY)     return { direction: SIG_DOWN,   confidence: pickConfidence(48, 54), ruleNumber: 6, inputDesc: 'Montag-Muster (Wochenend-Rückgang)',        usedFallback, dowName: DOW_NAMES[dow] };
+      return                             { direction: SIG_STABLE,  confidence: pickConfidence(44, 50), ruleNumber: 7, inputDesc: brentDisplayed, usedFallback };
     }
 
-    /* ── Signal display helpers ── */
-
-    // Returns { arrow, color } for a given direction
     function signalVisuals(direction) {
       switch (direction) {
-        case SIG_UP:     return { arrow: '↑', color: '#ef4444' }; // red = expect price rise
-        case SIG_DOWN:   return { arrow: '↓', color: '#22c55e' }; // green = expect price drop
-        case SIG_STABLE: return { arrow: '→', color: '#6b7280' }; // grey = stable
+        case SIG_UP:     return { arrow: '↑', color: '#ef4444' };
+        case SIG_DOWN:   return { arrow: '↓', color: '#22c55e' };
         default:         return { arrow: '→', color: '#6b7280' };
       }
     }
 
     /*
-     * renderSignalBadge(stationId)
-     * Computes the signal and injects the full badge HTML into #signal-badge-container.
-     * The "Warum?" section is collapsed by default; a button toggles it.
+     * FIX 3 — renderSignalBadge(stationId)
+     * Synchronous. Called directly in openSidebar(). No conditions, no guards,
+     * no fetch calls. Always produces a visible badge immediately.
      */
     function renderSignalBadge(stationId) {
       const sig = computeSignal(stationId);
       const vis = signalVisuals(sig.direction);
 
-      // Unique id so the toggle button can reference its panel without global state
-      const bodyId = 'signal-why-body';
-
-      // "Warum?" detail rows
       const dowRow = sig.dowName
-        ? `<div class="signal-why-row">
-             <span class="signal-why-key">Wochentag</span>
-             <span class="signal-why-val">${sig.dowName}</span>
-           </div>`
+        ? `<div class="signal-why-row"><span class="signal-why-key">Wochentag</span><span class="signal-why-val">${sig.dowName}</span></div>`
         : '';
 
       const fallbackNote = sig.usedFallback
-        ? `<div class="signal-why-row">
-             <span class="signal-why-key">Hinweis</span>
-             <span class="signal-why-val">3-Tage-EIA-Verlauf nicht verfügbar — Tageswert verwendet</span>
-           </div>`
+        ? `<div class="signal-why-row"><span class="signal-why-key">Hinweis</span><span class="signal-why-val">3-Tage-EIA-Verlauf nicht verfügbar — Tageswert verwendet</span></div>`
         : '';
+
+      const dirLabel = sig.direction === SIG_UP ? 'Tendenz steigend' : sig.direction === SIG_DOWN ? 'Tendenz sinkend' : 'Kein klarer Trend';
 
       signalContainer.innerHTML = `
         <div class="signal-main">
           <div class="signal-arrow" style="color:${vis.color};">${vis.arrow}</div>
           <div class="signal-text">
             <div class="signal-strength" style="color:${vis.color};">${sig.confidence}% Signalstärke</div>
-            <div class="signal-label">Regel ${sig.ruleNumber} · ${
-              sig.direction === SIG_UP     ? 'Tendenz steigend'  :
-              sig.direction === SIG_DOWN   ? 'Tendenz sinkend'   :
-                                             'Kein klarer Trend'
-            }</div>
+            <div class="signal-label">Regel ${sig.ruleNumber} · ${dirLabel}</div>
           </div>
-          <button class="signal-why-btn" aria-expanded="false" aria-controls="${bodyId}">Warum?</button>
+          <button class="signal-why-btn" aria-expanded="false" aria-controls="signal-why-body">Warum?</button>
         </div>
-        <div class="signal-why-body" id="${bodyId}">
+        <div class="signal-why-body" id="signal-why-body">
           <div class="signal-why-inner">
             <div class="signal-why-row">
               <span class="signal-why-key">Regel ${sig.ruleNumber}</span>
@@ -1011,9 +948,9 @@
         </div>
       `;
 
-      // Wire up the Warum? toggle — element just created, so query inside the container
+      // Wire toggle after innerHTML is set — querySelector finds the freshly created nodes
       const whyBtn  = signalContainer.querySelector('.signal-why-btn');
-      const whyBody = signalContainer.querySelector(`#${bodyId}`);
+      const whyBody = signalContainer.querySelector('#signal-why-body');
       whyBtn.addEventListener('click', () => {
         const isOpen = whyBody.classList.toggle('open');
         whyBtn.setAttribute('aria-expanded', String(isOpen));
@@ -1036,7 +973,7 @@
       maxZoom: 18,
     }).addTo(map);
 
-    /* ── Generic fetch helper (throws on non-ok HTTP) ── */
+    /* ── Generic fetch helper ── */
     async function fetchJSON(path) {
       const res = await fetch(path);
       if (!res.ok) throw new Error(`HTTP ${res.status} beim Laden von ${path}`);
@@ -1061,22 +998,17 @@
     function expandBrentPanel() {
       brentPanel.classList.add('expanded');
       brentPanel.setAttribute('aria-expanded', 'true');
-      setTimeout(() => {
-        setBrentHeightVar(brentPanelTotalHeight());
-        map.invalidateSize();
-      }, 310);
+      setTimeout(() => { setBrentHeightVar(brentPanelTotalHeight()); map.invalidateSize(); }, 310);
     }
     function collapseBrentPanel() {
       brentPanel.classList.remove('expanded');
       brentPanel.setAttribute('aria-expanded', 'false');
-      setTimeout(() => {
-        setBrentHeightVar(brentPanelTotalHeight());
-        map.invalidateSize();
-      }, 310);
+      setTimeout(() => { setBrentHeightVar(brentPanelTotalHeight()); map.invalidateSize(); }, 310);
     }
     function toggleBrentPanel() {
       brentPanel.classList.contains('expanded') ? collapseBrentPanel() : expandBrentPanel();
     }
+
     document.getElementById('brent-panel-header').addEventListener('click', toggleBrentPanel);
     document.getElementById('brent-panel-header').addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleBrentPanel(); }
@@ -1084,14 +1016,14 @@
 
     /* ─────────────────────────────────────────────────────────────────────────
      * EIA BRENT HISTORY — 90-day daily spot price
-     *
      * Documented: https://www.eia.gov/opendata/documentation.php
      *
-     * ASSUMPTION — successful response:
+     * ASSUMPTION — successful response shape:
      * { response: { data: [ { period: "YYYY-MM-DD", value: number }, ... ] } }
+     * Results returned newest-first (sort desc); reversed to oldest-first below.
      *
      * ASSUMPTION — error response (HTTP 200 with error body):
-     * { error: string }  OR  { response: { errors: [...] } }
+     * { error: string }
      * ───────────────────────────────────────────────────────────────────────── */
     async function fetchBrentHistory(apiKey) {
       const url = new URL(EIA_ENDPOINT);
@@ -1111,9 +1043,8 @@
       }
 
       if (!res.ok) {
-        const msg = { 403: 'Ungültiger API-Schlüssel (403)', 429: 'Anfragelimit (429)', 500: 'EIA-Serverfehler (500)' }[res.status]
-          || `HTTP ${res.status}`;
-        throw new Error(msg);
+        const knownErrors = { 403: 'Ungültiger API-Schlüssel (403)', 429: 'Anfragelimit (429)', 500: 'EIA-Serverfehler (500)' };
+        throw new Error(knownErrors[res.status] || `HTTP ${res.status}`);
       }
 
       let json;
@@ -1128,21 +1059,31 @@
 
       const points = [];
       for (const row of json.response.data) {
-        // ASSUMPTION: row.period is YYYY-MM-DD, row.value is a number (USD/barrel)
         if (typeof row.period !== 'string' || typeof row.value !== 'number') continue;
         points.push({ date: row.period, value: row.value });
       }
-      points.reverse(); // API returns newest-first → reverse to oldest-first
+      points.reverse(); // newest-first → oldest-first
       return points;
     }
 
+    /* ── FIX 2: Brent panel UI state helpers ── */
+
+    // Show the key prompt, hide the chart area, hide the ⚙ reset button
     function showBrentKeyPrompt() {
       brentKeyPrompt.style.display = '';
       brentChartArea.style.display = 'none';
+      brentKeyReset.style.display  = 'none';
+      // Re-measure height so the panel fits the prompt content
+      if (brentPanel.classList.contains('expanded')) {
+        setTimeout(() => { setBrentHeightVar(brentPanelTotalHeight()); map.invalidateSize(); }, 60);
+      }
     }
+
+    // Show the chart area, hide the key prompt, show the ⚙ reset button
     function showBrentChartArea() {
       brentKeyPrompt.style.display = 'none';
       brentChartArea.style.display = '';
+      brentKeyReset.style.display  = '';
     }
 
     function setBrentChartMessage(html) {
@@ -1150,7 +1091,7 @@
       const old = brentChartArea.querySelector('canvas');
       if (old) old.remove();
       brentChartMsg.innerHTML = html;
-      brentChartMsg.style.display = '';
+      brentChartMsg.style.display = 'flex';
     }
 
     function renderBrentPanelChart(points) {
@@ -1214,11 +1155,7 @@
 
     async function loadBrentPanel(apiKey) {
       showBrentChartArea();
-      setBrentChartMessage(
-        '<span style="display:inline-flex;align-items:center;gap:8px;">' +
-        '<span class="chart-spinner" style="width:20px;height:20px;border-width:2px;"></span>' +
-        ' Lade EIA-Daten…</span>'
-      );
+      setBrentChartMessage('<span class="chart-spinner" style="width:20px;height:20px;border-width:2px;"></span><span>Lade EIA-Daten…</span>');
 
       let points;
       try {
@@ -1228,7 +1165,7 @@
         const msg = err.message === 'UNEXPECTED_SHAPE'
           ? 'Unerwartetes Datenformat von EIA — siehe Browser-Konsole.'
           : `Fehler: ${err.message}`;
-        setBrentChartMessage(msg);
+        setBrentChartMessage(`<span>${msg}</span>`);
         setTimeout(() => {
           if (brentPanel.classList.contains('expanded')) {
             setBrentHeightVar(brentPanelTotalHeight());
@@ -1240,38 +1177,48 @@
 
       if (points.length === 0) {
         brentHistory = null;
-        setBrentChartMessage('Keine Daten von EIA erhalten.');
+        setBrentChartMessage('<span>Keine Daten von EIA erhalten.</span>');
         return;
       }
 
       brentHistory = points;
       renderBrentPanelChart(points);
 
-      // If a station is already open, refresh its signal badge now that we have
-      // 3-day data (it may have been rendered with the fallback proxy earlier).
+      // If a station is already open, upgrade signal badge from fallback to 3-day data
       if (selectedStation) {
         renderSignalBadge(selectedStation.id);
-        // Also redraw the overlay chart with newly available brent data
         renderOverlayChart(selectedStation, activeFuel);
       }
 
-      // Recolor markers to include updated signal mini-badges
+      // Refresh marker mini-badges now that brentHistory is available
       recolorMarkers();
     }
 
-    /* API key save */
+    /* FIX 2: Save button — stores key, immediately fetches and renders chart */
     brentKeySave.addEventListener('click', () => {
       const key = brentKeyInput.value.trim();
       if (!key) return;
-      try { localStorage.setItem(LS_KEY_EIA, key); } catch (_) { /* unavailable */ }
+      try { localStorage.setItem(LS_KEY_EIA, key); } catch (_) { /* localStorage unavailable in some configs */ }
       loadBrentPanel(key);
     });
     brentKeyInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') brentKeySave.click(); });
 
+    /* FIX 2: ⚙ Reset button — clears saved key and shows the prompt again */
+    brentKeyReset.addEventListener('click', (e) => {
+      // Stop the click from reaching the panel header, which would toggle collapse
+      e.stopPropagation();
+      try { localStorage.removeItem(LS_KEY_EIA); } catch (_) {}
+      brentKeyInput.value = '';
+      brentHistory = null;
+      if (brentPanelChart) { brentPanelChart.destroy(); brentPanelChart = null; }
+      showBrentKeyPrompt();
+      // Expand the panel so the user can see the prompt
+      if (!brentPanel.classList.contains('expanded')) expandBrentPanel();
+    });
+
     /* ─────────────────────────────────────────────────────────────────────────
      * OVERLAY CHART — Brent (USD, left Y) vs. pump price (EUR, right Y)
-     *
-     * Chart.js 4.x dual-axis: yAxisID 'yUSD' left, 'yEUR' right — documented feature.
+     * Chart.js 4.x dual-axis via yAxisID — documented feature.
      * ───────────────────────────────────────────────────────────────────────── */
     async function renderOverlayChart(station, fuelCode) {
       if (!brentHistory || brentHistory.length === 0) {
@@ -1293,11 +1240,11 @@
       if (myToken !== overlayToken) return;
       if (pumpPoints.length < 2) { overlayContainer.classList.remove('visible'); return; }
 
-      const brentByDate = {};
+      const brentByDate  = {};
       for (const b of brentHistory) brentByDate[b.date] = b.value;
 
       const allDates     = pumpPoints.map(p => p.date);
-      const brentAligned = allDates.map(d => brentByDate[d] ?? null);
+      const brentAligned = allDates.map(d => brentByDate[d] ?? null); // null = gap (weekend/holiday)
       const pumpAligned  = pumpPoints.map(p => p.price);
       const labels       = allDates.map(d => { const [,m,day] = d.split('-'); return `${day}.${m}`; });
 
@@ -1321,7 +1268,7 @@
               fill: false,
               tension: 0.3,
               yAxisID: 'yUSD',
-              spanGaps: false, // render gaps where brent has no data (weekends)
+              spanGaps: false,
             },
             {
               label: 'Pumpenpreis EUR',
@@ -1345,13 +1292,7 @@
               display: true,
               position: 'top',
               align: 'end',
-              labels: {
-                color: '#8892a4',
-                font: { size: 10 },
-                boxWidth: 14,
-                boxHeight: 2,
-                padding: 8,
-              },
+              labels: { color: '#8892a4', font: { size: 10 }, boxWidth: 14, boxHeight: 2, padding: 8 },
             },
             tooltip: {
               mode: 'index',
@@ -1394,10 +1335,18 @@
      * loadStationHistory(stationId, fuelCode)
      *
      * Fetches last HISTORY_DAYS daily JSON files in parallel via Promise.allSettled.
-     * 404 or any non-ok response is silently skipped (normal for recent days).
+     * 404 or any non-ok response is silently skipped (normal for dates with no data).
      *
-     * ASSUMPTION — ./data/history/YYYY-MM-DD.json is an array:
-     * [ { id: string, prices: { DIE, SUP, SUP98 } (number|null) }, ... ]
+     * ASSUMPTION — ./data/history/YYYY-MM-DD.json shape:
+     * [
+     *   {
+     *     id: string,
+     *     prices: { DIE: number|null, SUP: number|null }
+     *   }, ...
+     * ]
+     *
+     * FIX 1: prices are accessed as entry.prices.DIE / .SUP (plain object).
+     * There is no array search here — the shape matches stations.json exactly.
      * ───────────────────────────────────────────────────────────────────────── */
     async function loadStationHistory(stationId, fuelCode) {
       const now   = new Date();
@@ -1422,8 +1371,10 @@
         if (r.status !== 'fulfilled') continue;
         const { date, data } = r.value;
         if (!Array.isArray(data)) continue;
+        // Find the station entry by id
         const entry = data.find(s => s.id === stationId);
         if (!entry) continue;
+        // FIX 1: prices is a plain object { DIE, SUP } — direct property access
         const price = entry.prices?.[fuelCode];
         if (typeof price !== 'number' || !isFinite(price)) continue;
         points.push({ date, price });
@@ -1432,7 +1383,7 @@
       return points;
     }
 
-    /* ── Station pump history chart (sidebar) ── */
+    /* ── Station pump history chart (sidebar 30-day line) ── */
     function setHistorySpinner() {
       destroyHistoryChart();
       histEl.className = '';
@@ -1462,9 +1413,7 @@
       if (points.length < 2) {
         destroyHistoryChart();
         histEl.className = '';
-        histEl.innerHTML =
-          '<span style="color:var(--muted);font-size:12px;text-align:center;">' +
-          'Noch zu wenig Verlaufsdaten — in ein paar Tagen verfügbar.</span>';
+        histEl.innerHTML = '<span style="color:var(--muted);font-size:12px;text-align:center;">Noch zu wenig Verlaufsdaten — in ein paar Tagen verfügbar.</span>';
         return;
       }
 
@@ -1520,7 +1469,7 @@
       });
     }
 
-    /* ── Data loading (stations.json + brent.json) ── */
+    /* ── Main data load (stations.json + brent.json) ── */
     async function loadData() {
       try {
         loadingText.textContent = 'Lade Tankstellendaten…';
@@ -1530,12 +1479,23 @@
         ]);
 
         /*
-         * ASSUMPTION — stations.json: array of { id, name, brand, city, address,
-         *   lat, lng, prices: { DIE, SUP, SUP98 } (number|null) }
+         * ASSUMPTION — stations.json: array of objects with shape:
+         * {
+         *   id:      string,
+         *   name:    string,
+         *   brand:   string,
+         *   city:    string,
+         *   address: string,
+         *   lat:     number,
+         *   lng:     number,
+         *   prices: {           ← plain object, not an array
+         *     DIE:   number | null,
+         *     SUP:   number | null
+         *   }
+         * }
          *
-         * ASSUMPTION — brent.json: { price_usd, price_eur, change_pct, timestamp }
-         *   change_pct is a number, e.g. 1.23 = +1.23% (1-day change)
-         *   previous_price_usd is optional; used for display only
+         * ASSUMPTION — brent.json:
+         * { price_usd: number, price_eur: number, change_pct: number, timestamp: string (ISO 8601) }
          */
 
         stations  = stationsRaw;
@@ -1556,22 +1516,37 @@
 
     function hideLoading() { loadingOverlay.classList.add('hidden'); }
 
+    /*
+     * FIX 2: initBrentPanel
+     * If a key is already stored: show chart area and load immediately.
+     * If not: show the key prompt so the user can see it when the panel opens.
+     * Desktop: expand by default. Mobile: collapsed by default (user can tap to open).
+     */
     function initBrentPanel() {
+      // Set --brent-h to header-only height before any expansion
       setBrentHeightVar(brentPanelTotalHeight());
-      const savedKey = (() => { try { return localStorage.getItem(LS_KEY_EIA); } catch (_) { return null; } })();
+
+      const savedKey = (() => {
+        try { return localStorage.getItem(LS_KEY_EIA); }
+        catch (_) { return null; }
+      })();
+
       if (savedKey) {
         showBrentChartArea();
         loadBrentPanel(savedKey);
+        if (!isMobile()) expandBrentPanel();
       } else {
+        // FIX 2: No key — show prompt and expand so it's immediately visible on desktop
         showBrentKeyPrompt();
+        if (!isMobile()) expandBrentPanel();
+        // On mobile, leave collapsed; user can tap the header to open it
       }
-      if (!isMobile()) expandBrentPanel();
     }
 
-    /* ── Brent badge (top bar) ── */
+    /* ── Brent top-bar badge ── */
     function renderBrent(data) {
       if (!data) return;
-      // ASSUMPTION: price_usd, price_eur are numbers; change_pct is number (e.g. 1.23 = +1.23%)
+      // ASSUMPTION: price_usd, price_eur are numbers; change_pct is number (1.23 = +1.23%)
       document.getElementById('brent-usd').textContent =
         typeof data.price_usd === 'number' ? `$${data.price_usd.toFixed(2)}` : '–';
       document.getElementById('brent-eur').textContent =
@@ -1598,28 +1573,26 @@
 
     /* ── Tier calculation ── */
     function computeTiers(fuelCode) {
+      /*
+       * FIX 1: stations.json prices is a plain object { DIE, SUP }.
+       * s.prices?.[fuelCode] reads the property directly — no array .find() needed.
+       */
       const valid = stations
         .map(s => ({ id: s.id, price: s.prices?.[fuelCode] }))
         .filter(s => typeof s.price === 'number' && isFinite(s.price))
         .sort((a, b) => a.price - b.price);
+
       if (valid.length === 0) return {};
       const n = valid.length;
       const tier = {};
-      valid.forEach((s, i) => { const pct = i/n; tier[s.id] = pct < 1/3 ? 'green' : pct < 2/3 ? 'yellow' : 'red'; });
+      valid.forEach((s, i) => {
+        const pct  = i / n;
+        tier[s.id] = pct < 1/3 ? 'green' : pct < 2/3 ? 'yellow' : 'red';
+      });
       return tier;
     }
 
-    /* ─────────────────────────────────────────────────────────────────────────
-     * makeIcon(tierColor, signalDirection)
-     *
-     * Returns a Leaflet divIcon with:
-     *   - A 14px price-tier coloured circle (centred in a 20×20 container)
-     *   - An 8px signal mini-badge (↑/↓/→) in the bottom-right corner
-     *
-     * The marker-wrap container is 20×20; iconAnchor is [10,10] so clicks hit
-     * the centre of the dot.  The mini-badge is purely informational; clicks on
-     * it still open the sidebar via event bubbling.
-     * ───────────────────────────────────────────────────────────────────────── */
+    /* ── Markers ── */
     function makeIcon(tierColor, signalDirection) {
       const vis = signalVisuals(signalDirection || SIG_STABLE);
       return L.divIcon({
@@ -1642,10 +1615,10 @@
       stations.forEach(station => {
         // ASSUMPTION: lat and lng are finite numbers
         if (typeof station.lat !== 'number' || typeof station.lng !== 'number') return;
-        const tier   = tiers[station.id] ?? 'yellow';
-        const color  = TIER_COLORS[tier];
-        const sig    = computeSignal(station.id);
-        const layer  = L.marker([station.lat, station.lng], {
+        const tier  = tiers[station.id] ?? 'yellow';
+        const color = TIER_COLORS[tier];
+        const sig   = computeSignal(station.id);
+        const layer = L.marker([station.lat, station.lng], {
           icon:  makeIcon(color, sig.direction),
           title: station.name || '',
         });
@@ -1660,7 +1633,7 @@
       markers.forEach(m => {
         const tier  = tiers[m.station.id] ?? 'yellow';
         const color = TIER_COLORS[tier];
-        const sig   = computeSignal(m.station.id); // recompute in case brentHistory updated
+        const sig   = computeSignal(m.station.id);
         m.layer.setIcon(makeIcon(color, sig.direction));
         m.tier   = tier;
         m.signal = sig.direction;
@@ -1681,6 +1654,11 @@
       document.getElementById('sidebar-addr').textContent =
         [station.address, station.city].filter(Boolean).join(', ') || '–';
 
+      /*
+       * FIX 1: Read prices from the plain object station.prices.
+       * station.prices is { DIE: number|null, SUP: number|null }.
+       * prices?.[code] safely handles a missing prices object.
+       */
       FUEL_CODES.forEach(code => {
         const val = station.prices?.[code];
         const el  = document.getElementById(`pv-${code}`);
@@ -1698,7 +1676,13 @@
       const tierColor = stationTierColor(station.id);
       loadAndRenderHistory(station, activeFuel, tierColor);
       renderOverlayChart(station, activeFuel);
-      renderSignalBadge(station.id); // synchronous — always renders immediately
+
+      /*
+       * FIX 3: renderSignalBadge is called unconditionally and synchronously here.
+       * It uses brentData (already in memory) and new Date().getDay() only.
+       * No backend check, no async, no condition that can suppress it.
+       */
+      renderSignalBadge(station.id);
 
       sidebar.classList.add('open');
     }
@@ -1713,7 +1697,6 @@
       histEl.textContent = 'Lade Preisverlauf…';
       if (overlayChart) { overlayChart.destroy(); overlayChart = null; }
       overlayContainer.classList.remove('visible');
-      // Clear signal badge back to empty state
       signalContainer.innerHTML = '';
     }
 
@@ -1737,7 +1720,7 @@
           const tierColor = stationTierColor(selectedStation.id);
           loadAndRenderHistory(selectedStation, activeFuel, tierColor);
           renderOverlayChart(selectedStation, activeFuel);
-          // Signal does not depend on fuelCode; no need to re-render
+          // Signal does not depend on fuelCode; no re-render needed
         }
       });
     });
@@ -1754,6 +1737,24 @@
     loadData();
 
   })();
+  </script>
+
+  <script>
+    // Service worker registration.
+    // Wrapped in feature-check and try/catch so a failure never breaks the app.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        try {
+          navigator.serviceWorker.register('./sw.js').then((registration) => {
+            console.log('[SW] Registered, scope:', registration.scope);
+          }).catch((err) => {
+            console.warn('[SW] Registration failed:', err);
+          });
+        } catch (err) {
+          console.warn('[SW] Registration threw:', err);
+        }
+      });
+    }
   </script>
 </body>
 </html>
