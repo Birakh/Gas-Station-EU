@@ -782,13 +782,15 @@
     }
 
     function onGeoFallback(errCode) {
-      // Stay at Wiener Neustadt (already initialised there)
-      // Only show the bar if geo was actively denied or unavailable (not on first load)
+      // Explicitly set map to fallback coords at neighbourhood zoom.
+      // userLat/userLng are already FALLBACK_LAT/LNG so fetchAllData() below
+      // will use the correct coordinates automatically.
+      map.setView([FALLBACK_LAT, FALLBACK_LNG], FALLBACK_ZOOM);
+      // Show yellow notice bar so the user knows we are using Wiener Neustadt
       showGeoBar();
-      // If data hasn't been loaded yet, kick off the fetch now from the fallback location
-      if (stations.length === 0 && !loadingOverlay.classList.contains('hidden')) {
-        fetchAllData();
-      }
+      // Always fetch — identical behaviour to onGeoSuccess, just different coords.
+      // No condition: this must run unconditionally so stations always load.
+      fetchAllData();
     }
 
     /* Blue dot for user position */
@@ -1175,8 +1177,13 @@
       }
       const points = [];
       for (const row of json.response.data) {
-        if (typeof row.period !== 'string' || typeof row.value !== 'number') continue;
-        points.push({ date: row.period, value: row.value });
+        // ASSUMPTION: row.period is a "YYYY-MM-DD" string, row.value is a STRING
+        // representing a float (e.g. "116.73") — EIA returns numbers as strings.
+        // We must use parseFloat(), not assume typeof value === 'number'.
+        if (typeof row.period !== 'string') continue;
+        const price = parseFloat(row.value);
+        if (!isFinite(price)) continue; // skip rows with missing or non-numeric value
+        points.push({ date: row.period, value: price });
       }
       points.reverse();
       return { points, httpStatus };
