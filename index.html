@@ -32,128 +32,47 @@
       --text:      #e2e8f0;
       --muted:     #8892a4;
       --top-h:     52px;
-      --geo-bar-h: 0px;   /* FIX 2: geo-denied bar height, set by JS */
-      --banner-h:  0px;   /* "Jetzt tanken?" panel */
-      --brent-h:   0px;   /* Brent history panel */
+      --geo-bar-h: 0px;
+      --banner-h:  0px;
+      --brent-h:   0px;
       --foot-h:    38px;
       --sidebar-w: 340px;
       --font:      -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     html, body {
-      height: 100%;
-      overflow: hidden;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font);
-      font-size: 14px;
+      height: 100%; overflow: hidden;
+      background: var(--bg); color: var(--text);
+      font-family: var(--font); font-size: 14px;
     }
 
     /* ── Top bar ── */
     #topbar {
-      position: fixed;
-      top: 0; left: 0; right: 0;
+      position: fixed; top: 0; left: 0; right: 0;
       height: var(--top-h);
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 14px;
-      z-index: 1000;
-      gap: 8px;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 14px; z-index: 1000; gap: 8px;
     }
-    #app-title {
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      color: var(--text);
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
+    #app-title { font-size: 15px; font-weight: 700; letter-spacing: 0.03em; color: var(--text); white-space: nowrap; flex-shrink: 0; }
     #app-title span { color: var(--accent); }
 
-    /* fuel toggle */
-    #fuel-toggle {
-      display: flex;
-      gap: 4px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 3px;
-      flex-shrink: 0;
-    }
-    .fuel-btn {
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      font-family: var(--font);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 5px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-      white-space: nowrap;
-    }
+    #fuel-toggle { display: flex; gap: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 3px; flex-shrink: 0; }
+    .fuel-btn { background: transparent; border: none; color: var(--muted); font-family: var(--font); font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer; transition: background 0.15s, color 0.15s; white-space: nowrap; }
     .fuel-btn:hover { color: var(--text); }
     .fuel-btn.active { background: var(--accent); color: #fff; }
 
-    /* radius control */
-    #radius-control {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
+    #radius-control { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
     #radius-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
-    #radius-select {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-family: var(--font);
-      font-size: 11px;
-      font-weight: 600;
-      padding: 4px 6px;
-      cursor: pointer;
-      outline: none;
-    }
+    #radius-select { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font); font-size: 11px; font-weight: 600; padding: 4px 6px; cursor: pointer; outline: none; }
     #radius-select:focus { border-color: var(--accent); }
 
-    /* FIX 2: 📍 geo-locate button in top bar */
-    #geo-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--muted);
-      font-size: 14px;
-      width: 30px; height: 30px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: border-color 0.15s, color 0.15s, background 0.15s;
-      line-height: 1;
-    }
+    #geo-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-size: 14px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: border-color 0.15s, color 0.15s; line-height: 1; }
     #geo-btn:hover { border-color: var(--accent); color: var(--accent); }
-    #geo-btn.locating {
-      border-color: var(--accent);
-      color: var(--accent);
-      animation: pulse-border 1s ease-in-out infinite;
-    }
-    @keyframes pulse-border {
-      0%, 100% { border-color: var(--accent); }
-      50%       { border-color: var(--accent-h); }
-    }
+    #geo-btn.locating { border-color: var(--accent); color: var(--accent); animation: pulse-border 1s ease-in-out infinite; }
+    @keyframes pulse-border { 0%, 100% { border-color: var(--accent); } 50% { border-color: var(--accent-h); } }
 
-    /* brent badge */
-    #brent-badge {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 1px;
-      flex-shrink: 0;
-    }
+    #brent-badge { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; }
     #brent-label { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
     #brent-prices { font-size: 13px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; }
     #brent-change { font-size: 11px; font-weight: 700; padding: 1px 5px; border-radius: 4px; }
@@ -161,81 +80,18 @@
     #brent-change.neg { background: rgba(239,68,68,0.18);   color: var(--red); }
     #brent-change.neu { background: rgba(139,147,174,0.18); color: var(--muted); }
 
-    /* ── FIX 2: Geo-denied notice bar (below topbar, above everything else) ── */
-    /*
-     * This is a persistent yellow bar, not a toast.
-     * It contains an actionable "Standort erlauben" button.
-     * It is visible until the user grants location or dismisses it.
-     * Its height is measured and stored in --geo-bar-h so the layout
-     * below it shifts down correctly.
-     */
-    #geo-bar {
-      position: fixed;
-      top: var(--top-h);
-      left: 0; right: 0;
-      z-index: 999;
-      background: rgba(234,179,8,0.15);
-      border-bottom: 1px solid rgba(234,179,8,0.4);
-      display: none; /* shown by JS on geo failure */
-    }
+    /* ── Geo-denied notice bar ── */
+    #geo-bar { position: fixed; top: var(--top-h); left: 0; right: 0; z-index: 999; background: rgba(234,179,8,0.15); border-bottom: 1px solid rgba(234,179,8,0.4); display: none; }
     #geo-bar.visible { display: block; }
-    #geo-bar-inner {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 7px 14px;
-      flex-wrap: wrap;
-    }
-    #geo-bar-text {
-      flex: 1;
-      font-size: 11px;
-      color: var(--yellow);
-      line-height: 1.4;
-      min-width: 0;
-    }
-    #geo-bar-allow {
-      background: var(--yellow);
-      border: none;
-      border-radius: 6px;
-      color: #000;
-      font-family: var(--font);
-      font-size: 11px;
-      font-weight: 700;
-      padding: 5px 12px;
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
-      transition: opacity 0.15s;
-    }
+    #geo-bar-inner { display: flex; align-items: center; gap: 10px; padding: 7px 14px; flex-wrap: wrap; }
+    #geo-bar-text { flex: 1; font-size: 11px; color: var(--yellow); line-height: 1.4; min-width: 0; }
+    #geo-bar-allow { background: var(--yellow); border: none; border-radius: 6px; color: #000; font-family: var(--font); font-size: 11px; font-weight: 700; padding: 5px 12px; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: opacity 0.15s; }
     #geo-bar-allow:hover { opacity: 0.85; }
-    #geo-bar-dismiss {
-      background: transparent;
-      border: none;
-      color: var(--yellow);
-      font-size: 16px;
-      cursor: pointer;
-      padding: 0 2px;
-      flex-shrink: 0;
-      line-height: 1;
-    }
+    #geo-bar-dismiss { background: transparent; border: none; color: var(--yellow); font-size: 16px; cursor: pointer; padding: 0 2px; flex-shrink: 0; line-height: 1; }
 
     /* ── "Jetzt tanken?" banner ── */
-    #jetzt-banner {
-      position: fixed;
-      top: calc(var(--top-h) + var(--geo-bar-h));
-      left: 0; right: 0;
-      z-index: 997;
-      background: var(--card2);
-      border-bottom: 1px solid var(--border);
-      transition: top 0.25s cubic-bezier(0.4,0,0.2,1);
-    }
-    #jetzt-inner {
-      padding: 8px 14px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
+    #jetzt-banner { position: fixed; top: calc(var(--top-h) + var(--geo-bar-h)); left: 0; right: 0; z-index: 997; background: var(--card2); border-bottom: 1px solid var(--border); transition: top 0.25s cubic-bezier(0.4,0,0.2,1); }
+    #jetzt-inner { padding: 8px 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     #jetzt-title { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); flex-shrink: 0; }
     #jetzt-arrow { font-size: 20px; line-height: 1; flex-shrink: 0; }
     #jetzt-station { flex: 1; min-width: 0; }
@@ -249,88 +105,39 @@
     #brent-panel {
       position: fixed;
       top: calc(var(--top-h) + var(--geo-bar-h) + var(--banner-h));
-      left: 0; right: 0;
-      z-index: 996;
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
+      left: 0; right: 0; z-index: 996;
+      background: var(--card); border-bottom: 1px solid var(--border);
       overflow: hidden;
       transition: top 0.25s cubic-bezier(0.4,0,0.2,1);
     }
-    #brent-panel-header {
-      display: flex; align-items: center;
-      padding: 0 14px; height: 36px;
-      cursor: pointer; user-select: none; gap: 8px;
-    }
+    #brent-panel-header { display: flex; align-items: center; padding: 0 14px; height: 36px; cursor: pointer; user-select: none; gap: 8px; }
     #brent-panel-header:hover { background: rgba(255,255,255,0.03); }
     #brent-panel-title { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); flex: 1; }
-    #brent-key-reset {
-      background: transparent; border: none; color: var(--muted);
-      font-size: 13px; cursor: pointer; padding: 2px 4px; border-radius: 4px;
-      line-height: 1; transition: color 0.15s;
-    }
-    #brent-key-reset:hover { color: var(--text); }
     #brent-panel-toggle-icon { font-size: 11px; color: var(--muted); transition: transform 0.25s; flex-shrink: 0; }
     #brent-panel.expanded #brent-panel-toggle-icon { transform: rotate(180deg); }
     #brent-panel-body { max-height: 0; overflow: hidden; transition: max-height 0.3s cubic-bezier(0.4,0,0.2,1); }
-    #brent-panel.expanded #brent-panel-body { max-height: 320px; }
+    #brent-panel.expanded #brent-panel-body { max-height: 200px; }
     #brent-panel-inner { padding: 0 14px 12px; display: flex; flex-direction: column; gap: 8px; }
 
-    /*
-     * FIX 1: key prompt — label updated, always visible in panel body.
-     * The prompt and chart area are mutually exclusive (toggled by JS).
-     */
-    #brent-key-prompt { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 4px; }
-    #brent-key-prompt label { font-size: 11px; color: var(--muted); line-height: 1.5; }
-    #brent-key-row { display: flex; gap: 6px; }
-    #brent-api-key-input {
-      flex: 1; background: var(--bg); border: 1px solid var(--border);
-      border-radius: 6px; color: var(--text); font-family: var(--font);
-      font-size: 12px; padding: 6px 9px; outline: none;
-      transition: border-color 0.15s; min-height: 30px;
-    }
-    #brent-api-key-input:focus { border-color: var(--accent); }
-    #brent-key-save {
-      background: var(--accent); border: none; border-radius: 6px; color: #fff;
-      font-family: var(--font); font-size: 12px; font-weight: 600;
-      padding: 6px 14px; cursor: pointer; white-space: nowrap;
-      transition: background 0.15s; min-height: 30px;
-    }
-    #brent-key-save:hover { background: var(--accent-h); }
+    /* Chart area — always shown, no key prompt */
     #brent-chart-area { position: relative; }
     #brent-chart-area canvas { display: block; width: 100% !important; }
-    #brent-chart-message {
-      font-size: 12px; color: var(--muted); text-align: center;
-      line-height: 1.5; padding: 12px 0;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
+    #brent-chart-message { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.5; padding: 12px 0; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
     /* ── Map ── */
     #map {
       position: fixed;
       top: calc(var(--top-h) + var(--geo-bar-h) + var(--banner-h) + var(--brent-h));
-      left: 0; right: 0;
-      bottom: var(--foot-h);
+      left: 0; right: 0; bottom: var(--foot-h);
       z-index: 1;
       transition: top 0.25s cubic-bezier(0.4,0,0.2,1);
     }
     .leaflet-tile { filter: brightness(0.88) saturate(0.7); }
 
-    /* user location dot */
-    .user-dot {
-      width: 14px; height: 14px;
-      background: #3b82f6;
-      border: 3px solid #fff;
-      border-radius: 50%;
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.35);
-    }
+    .user-dot { width: 14px; height: 14px; background: #3b82f6; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 0 0 3px rgba(59,130,246,0.35); }
 
     /* ── Footer ── */
-    #footer {
-      position: fixed; bottom: 0; left: 0; right: 0; height: var(--foot-h);
-      background: rgba(15,17,23,0.92); border-top: 1px solid var(--border);
-      display: flex; flex-direction: column; justify-content: center;
-      align-items: center; padding: 0 14px; z-index: 1000; opacity: 0.72; gap: 1px;
-    }
+    #footer { position: fixed; bottom: 0; left: 0; right: 0; height: var(--foot-h); background: rgba(15,17,23,0.92); border-top: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 14px; z-index: 1000; opacity: 0.72; gap: 1px; }
     #footer p { font-size: 10px; color: var(--muted); text-align: center; line-height: 1.4; }
 
     /* ── Sidebar ── */
@@ -340,24 +147,15 @@
       right: 0; width: var(--sidebar-w); bottom: var(--foot-h);
       background: var(--card); border-left: 1px solid var(--border);
       z-index: 999; transform: translateX(100%);
-      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1),
-                  top 0.25s cubic-bezier(0.4,0,0.2,1);
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1), top 0.25s cubic-bezier(0.4,0,0.2,1);
       display: flex; flex-direction: column; overflow: hidden;
     }
     #sidebar.open { transform: translateX(0); }
-    #sidebar-header {
-      display: flex; align-items: flex-start; justify-content: space-between;
-      padding: 16px 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0;
-    }
+    #sidebar-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     #sidebar-station-name { font-size: 15px; font-weight: 700; line-height: 1.3; color: var(--text); }
     #sidebar-brand { font-size: 11px; font-weight: 600; color: var(--accent); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
     #sidebar-addr { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
-    #sidebar-close {
-      background: var(--card2); border: 1px solid var(--border); color: var(--muted);
-      font-size: 16px; width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; margin-left: 8px; transition: background 0.15s, color 0.15s;
-    }
+    #sidebar-close { background: var(--card2); border: 1px solid var(--border); color: var(--muted); font-size: 16px; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: 8px; transition: background 0.15s, color 0.15s; }
     #sidebar-close:hover { background: var(--border); color: var(--text); }
     #sidebar-body { overflow-y: auto; flex: 1; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; }
     #sidebar-body::-webkit-scrollbar { width: 4px; }
@@ -372,21 +170,12 @@
     .price-card-value.na { color: var(--muted); font-size: 13px; font-weight: 400; }
     .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
 
-    #history-chart-container {
-      background: var(--card2); border: 1px solid var(--border); border-radius: 8px;
-      padding: 12px; min-height: 140px; display: flex; align-items: center;
-      justify-content: center; font-size: 12px; color: var(--muted); position: relative;
-    }
+    #history-chart-container { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 140px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--muted); position: relative; }
     #history-chart-container.has-chart { display: block; padding: 10px; }
     #history-chart-container canvas { display: block; width: 100% !important; }
 
-    .chart-spinner {
-      width: 28px; height: 28px; border: 2px solid var(--border);
-      border-top-color: var(--accent); border-radius: 50%;
-      animation: spin 0.75s linear infinite; flex-shrink: 0;
-    }
+    .chart-spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; flex-shrink: 0; }
 
-    /* Preis-Signal badge */
     #signal-badge-container { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
     .signal-main { display: flex; align-items: center; gap: 10px; padding: 10px 12px 8px; }
     .signal-arrow { font-size: 26px; line-height: 1; flex-shrink: 0; }
@@ -409,23 +198,16 @@
     #brent-overlay-chart-wrap canvas { display: block; width: 100% !important; }
     #brent-overlay-note { margin-top: 7px; font-size: 10px; color: var(--muted); line-height: 1.5; font-style: italic; }
 
-    /* Loading overlay */
-    #loading-overlay {
-      position: fixed; inset: 0; background: var(--bg); z-index: 9999;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 18px; transition: opacity 0.4s;
-    }
+    #loading-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: opacity 0.4s; }
     #loading-overlay.hidden { opacity: 0; pointer-events: none; }
     .spinner { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     #loading-text { font-size: 13px; color: var(--muted); }
 
-    /* Marker dots */
     .marker-wrap { position: relative; width: 20px; height: 20px; }
     .station-dot { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.45); cursor: pointer; }
     .signal-mini { position: absolute; bottom: 0; right: 0; width: 9px; height: 9px; border-radius: 50%; background: var(--card); display: flex; align-items: center; justify-content: center; font-size: 7px; line-height: 1; border: 1px solid rgba(0,0,0,0.4); cursor: pointer; font-weight: 900; }
 
-    /* Mobile */
     @media (max-width: 767px) {
       :root { --sidebar-w: 100%; }
       #sidebar { top: auto; bottom: var(--foot-h); left: 0; right: 0; width: 100%; height: 70vh; border-left: none; border-top: 1px solid var(--border); border-radius: 14px 14px 0 0; transform: translateY(100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); }
@@ -445,21 +227,17 @@
 </head>
 <body>
 
-  <!-- Loading overlay -->
   <div id="loading-overlay">
     <div class="spinner"></div>
     <div id="loading-text">Standort wird ermittelt…</div>
   </div>
 
-  <!-- Top bar -->
   <div id="topbar">
     <div id="app-title">AT <span>Spritpreise</span></div>
-
     <div id="fuel-toggle">
       <button class="fuel-btn active" data-code="DIE">Diesel</button>
       <button class="fuel-btn"        data-code="SUP">Eurosuper 95</button>
     </div>
-
     <div id="radius-control">
       <span id="radius-label">Umkreis:</span>
       <select id="radius-select">
@@ -468,13 +246,7 @@
         <option value="25">25 km</option>
       </select>
     </div>
-
-    <!--
-      FIX 2: 📍 button to (re-)request geolocation.
-      Visible always; animates while waiting; lets user grant permission after denial.
-    -->
     <button id="geo-btn" title="Standort verwenden">📍</button>
-
     <div id="brent-badge">
       <div id="brent-label">Brent Rohöl</div>
       <div id="brent-prices">
@@ -485,12 +257,6 @@
     </div>
   </div>
 
-  <!--
-    FIX 2: Geo-denied notice bar.
-    Shown below the topbar when geolocation is denied or unavailable.
-    Contains a "Standort erlauben" button that re-triggers getCurrentPosition().
-    Has its own height tracked as --geo-bar-h so all panels below shift correctly.
-  -->
   <div id="geo-bar">
     <div id="geo-bar-inner">
       <span id="geo-bar-text">📍 Standort nicht verfügbar — zeige Wiener Neustadt</span>
@@ -499,7 +265,6 @@
     </div>
   </div>
 
-  <!-- "Jetzt tanken?" recommendation banner -->
   <div id="jetzt-banner" class="hidden">
     <div id="jetzt-inner">
       <div id="jetzt-title">Jetzt tanken?</div>
@@ -513,40 +278,26 @@
     </div>
   </div>
 
-  <!-- Brent history panel -->
+  <!--
+    Brent history panel — no key prompt, no EIA API call.
+    Chart loads automatically from ./data/brent-history.json on page load.
+  -->
   <div id="brent-panel">
     <div id="brent-panel-header" role="button" aria-expanded="false" aria-controls="brent-panel-body" tabindex="0">
       <span id="brent-panel-title">Rohöl Brent — 90 Tage</span>
-      <!-- FIX 1: ⚙ reset button — always rendered, visibility toggled by JS -->
-      <button id="brent-key-reset" title="API-Schlüssel zurücksetzen" style="display:none;">⚙</button>
       <span id="brent-panel-toggle-icon">▼</span>
     </div>
     <div id="brent-panel-body" role="region">
       <div id="brent-panel-inner">
-        <!--
-          FIX 1: Key prompt shown when no key is stored OR after reset.
-          Label includes registration URL as specified.
-          Input + Speichern button wired in JS.
-        -->
-        <div id="brent-key-prompt">
-          <label for="brent-api-key-input">EIA API-Schlüssel eingeben (kostenlos: eia.gov/opendata/register.php)</label>
-          <div id="brent-key-row">
-            <input id="brent-api-key-input" type="text" placeholder="Schlüssel hier eingeben..." autocomplete="off" spellcheck="false" />
-            <button id="brent-key-save">Speichern</button>
-          </div>
-        </div>
-        <!-- Chart area shown after successful key save + fetch -->
-        <div id="brent-chart-area" style="display:none;">
+        <div id="brent-chart-area">
           <div id="brent-chart-message"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Map -->
   <div id="map"></div>
 
-  <!-- Station sidebar -->
   <div id="sidebar">
     <div id="sidebar-header">
       <div>
@@ -590,7 +341,6 @@
     </div>
   </div>
 
-  <!-- Footer -->
   <div id="footer">
     <p>Spritdaten: E-Control Austria · Rohöl: U.S. EIA / Stooq · Letztes Update: <span id="footer-ts">–</span></p>
     <p>Datenquelle gesetzlich vorgeschrieben gemäß Preistransparenzgesetz</p>
@@ -601,24 +351,16 @@
     'use strict';
 
     /* ── Constants ── */
-    const FUEL_CODES  = ['DIE', 'SUP'];
-    const TIER_COLORS = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
+    const FUEL_CODES     = ['DIE', 'SUP'];
+    const TIER_COLORS    = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
     const AUSTRIA_BOUNDS = [[46.37, 9.53], [49.02, 17.16]];
+    const FALLBACK_LAT   = 47.8150;  // Wiener Neustadt
+    const FALLBACK_LNG   = 16.2370;
+    const FALLBACK_ZOOM  = 13;
+    const HISTORY_DAYS   = 30;
 
     /*
-     * FIX 2: Fallback location changed from Austria center to Wiener Neustadt.
-     * lat: 47.8150, lng: 16.2370
-     */
-    const FALLBACK_LAT = 47.8150;
-    const FALLBACK_LNG = 16.2370;
-    const FALLBACK_ZOOM = 13; // neighborhood level, same as successful geo
-
-    const HISTORY_DAYS = 30;
-    const BRENT_DAYS   = 90;
-    const LS_KEY_EIA   = 'eia_api_key';
-
-    /*
-     * E-Control Spritpreisrechner API — publicly documented REST API, no key required.
+     * E-Control Spritpreisrechner API — no key required.
      * Swagger: https://api.e-control.at/sprit/1.0/doc/
      * Endpoint: GET /sprit/1.0/search/gas-stations/by-address
      *
@@ -630,33 +372,43 @@
      */
     const ECONTROL_BASE = 'https://api.e-control.at/sprit/1.0/search/gas-stations/by-address';
 
-    /* EIA API v2 — documented at https://www.eia.gov/opendata/documentation.php */
-    const EIA_ENDPOINT = 'https://api.eia.gov/v2/petroleum/pri/spt/data/';
-
-    /* Signal constants */
-    const SIG_UP     = 'UP';
-    const SIG_DOWN   = 'DOWN';
-    const SIG_STABLE = 'STABLE';
+    const SIG_UP      = 'UP';
+    const SIG_DOWN    = 'DOWN';
+    const SIG_STABLE  = 'STABLE';
     const DOW_THURSDAY = 4;
     const DOW_MONDAY   = 1;
-    const DOW_NAMES = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+    const DOW_NAMES    = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 
     /* ── State ── */
-    let activeFuel     = 'DIE';
-    let currentRadius  = 10;
-    let userLat        = FALLBACK_LAT;  // FIX 2: start at Wiener Neustadt
-    let userLng        = FALLBACK_LNG;
-    let userLocated    = false;
+    let activeFuel      = 'DIE';
+    let currentRadius   = 10;
+    let userLat         = FALLBACK_LAT;
+    let userLng         = FALLBACK_LNG;
+    let userLocated     = false;
 
-    let stations       = [];
-    let brentData      = null;
-    let markers        = [];
-    let userMarker     = null;
+    let stations        = [];
+    let brentData       = null;
+    let markers         = [];
+    let userMarker      = null;
     let selectedStation = null;
 
     let historyChart    = null;
     let brentPanelChart = null;
     let overlayChart    = null;
+
+    /*
+     * brentHistory: 90-day data loaded from ./data/brent-history.json
+     * Sorted oldest→newest.
+     * ASSUMPTION — brent-history.json shape:
+     * {
+     *   "updated": "YYYY-MM-DD",
+     *   "data": [
+     *     { "date": "YYYY-MM-DD", "price_usd": number },
+     *     ...sorted oldest to newest...
+     *   ]
+     * }
+     * price_usd is a JSON number (already parsed — no parseFloat needed here).
+     */
     let brentHistory    = null;
 
     let historyLoadToken  = 0;
@@ -675,10 +427,6 @@
     const footerTs         = document.getElementById('footer-ts');
     const histEl           = document.getElementById('history-chart-container');
     const brentPanel       = document.getElementById('brent-panel');
-    const brentKeyPrompt   = document.getElementById('brent-key-prompt');
-    const brentKeyInput    = document.getElementById('brent-api-key-input');
-    const brentKeySave     = document.getElementById('brent-key-save');
-    const brentKeyReset    = document.getElementById('brent-key-reset');
     const brentChartArea   = document.getElementById('brent-chart-area');
     const brentChartMsg    = document.getElementById('brent-chart-message');
     const overlayContainer = document.getElementById('brent-overlay-container');
@@ -687,7 +435,7 @@
     const jetztBanner      = document.getElementById('jetzt-banner');
     const radiusSelect     = document.getElementById('radius-select');
 
-    /* ── Map init — starts at fallback location ── */
+    /* ── Map init ── */
     const map = L.map('map', {
       center: [FALLBACK_LAT, FALLBACK_LNG],
       zoom: FALLBACK_ZOOM,
@@ -700,19 +448,13 @@
       maxZoom: 18,
     }).addTo(map);
 
-    /* ── CSS layout vars ── */
+    /* ── CSS layout helpers ── */
     function setCSSVar(name, px) {
       document.documentElement.style.setProperty(name, `${px}px`);
     }
-    function geoBarHeight() {
-      return geoBar.classList.contains('visible') ? geoBar.getBoundingClientRect().height : 0;
-    }
-    function bannerHeight() {
-      return jetztBanner.classList.contains('hidden') ? 0 : jetztBanner.getBoundingClientRect().height;
-    }
-    function brentPanelHeight() {
-      return brentPanel.getBoundingClientRect().height;
-    }
+    function geoBarHeight()   { return geoBar.classList.contains('visible') ? geoBar.getBoundingClientRect().height : 0; }
+    function bannerHeight()   { return jetztBanner.classList.contains('hidden') ? 0 : jetztBanner.getBoundingClientRect().height; }
+    function brentPanelHeight() { return brentPanel.getBoundingClientRect().height; }
     function updateLayoutVars() {
       setCSSVar('--geo-bar-h', geoBarHeight());
       setCSSVar('--banner-h',  bannerHeight());
@@ -721,46 +463,24 @@
     }
     function isMobile() { return window.innerWidth < 768; }
 
-    /* ═══════════════════════════════════════════════════════════════════════════
-     * FIX 2 — GEOLOCATION
-     *
-     * Fallback: Wiener Neustadt (47.8150, 16.2370) at zoom 13.
-     * On failure: show the yellow #geo-bar with "Standort erlauben" button.
-     * Both the 📍 topbar button and the bar's button call requestGeolocation().
-     * ═══════════════════════════════════════════════════════════════════════════ */
+    /* ── Geolocation ── */
     function setGeoButtonLocating(on) {
-      if (on) {
-        geoBtn.classList.add('locating');
-        geoBtn.title = 'Standort wird ermittelt…';
-      } else {
-        geoBtn.classList.remove('locating');
-        geoBtn.title = 'Standort verwenden';
-      }
+      if (on) { geoBtn.classList.add('locating'); geoBtn.title = 'Standort wird ermittelt…'; }
+      else    { geoBtn.classList.remove('locating'); geoBtn.title = 'Standort verwenden'; }
     }
-
-    function showGeoBar() {
-      geoBar.classList.add('visible');
-      requestAnimationFrame(() => updateLayoutVars());
-    }
-    function hideGeoBar() {
-      geoBar.classList.remove('visible');
-      updateLayoutVars();
-    }
+    function showGeoBar() { geoBar.classList.add('visible'); requestAnimationFrame(() => updateLayoutVars()); }
+    function hideGeoBar() { geoBar.classList.remove('visible'); updateLayoutVars(); }
 
     function requestGeolocation() {
-      if (!('geolocation' in navigator)) {
-        onGeoFallback('Geolocation nicht unterstützt');
-        return;
-      }
+      if (!('geolocation' in navigator)) { onGeoFallback('not-supported'); return; }
       setGeoButtonLocating(true);
       loadingText.textContent = 'Standort wird ermittelt…';
-
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setGeoButtonLocating(false);
           hideGeoBar();
-          userLat     = pos.coords.latitude;
-          userLng     = pos.coords.longitude;
+          userLat = pos.coords.latitude;
+          userLng = pos.coords.longitude;
           userLocated = true;
           onGeoSuccess();
         },
@@ -777,55 +497,28 @@
     function onGeoSuccess() {
       map.setView([userLat, userLng], 13);
       placeUserMarker(userLat, userLng);
-      // If stations were already loaded at the fallback location, re-fetch at real location
       fetchAllData();
     }
 
     function onGeoFallback(errCode) {
-      // Explicitly set map to fallback coords at neighbourhood zoom.
-      // userLat/userLng are already FALLBACK_LAT/LNG so fetchAllData() below
-      // will use the correct coordinates automatically.
       map.setView([FALLBACK_LAT, FALLBACK_LNG], FALLBACK_ZOOM);
-      // Show yellow notice bar so the user knows we are using Wiener Neustadt
       showGeoBar();
-      // Always fetch — identical behaviour to onGeoSuccess, just different coords.
-      // No condition: this must run unconditionally so stations always load.
-      fetchAllData();
+      fetchAllData(); // always fetch — identical to onGeoSuccess, different coords
     }
 
-    /* Blue dot for user position */
     function placeUserMarker(lat, lng) {
       if (userMarker) map.removeLayer(userMarker);
       userMarker = L.marker([lat, lng], {
-        icon: L.divIcon({
-          className: '',
-          html: '<div class="user-dot"></div>',
-          iconSize: [14, 14],
-          iconAnchor: [7, 7],
-        }),
-        zIndexOffset: 1000,
-        interactive: false,
+        icon: L.divIcon({ className: '', html: '<div class="user-dot"></div>', iconSize: [14,14], iconAnchor: [7,7] }),
+        zIndexOffset: 1000, interactive: false,
       }).addTo(map);
     }
 
-    /* 📍 topbar button */
-    geoBtn.addEventListener('click', () => {
-      requestGeolocation();
-    });
+    geoBtn.addEventListener('click', () => requestGeolocation());
+    geoBarAllow.addEventListener('click', () => requestGeolocation());
+    geoBarDismiss.addEventListener('click', () => hideGeoBar());
 
-    /* "Standort erlauben" button in geo bar */
-    geoBarAllow.addEventListener('click', () => {
-      requestGeolocation();
-    });
-
-    /* Dismiss button in geo bar — closes bar but doesn't request location again */
-    geoBarDismiss.addEventListener('click', () => {
-      hideGeoBar();
-    });
-
-    /* ─────────────────────────────────────────────────────────────────────────
-     * E-Control API fetch
-     * ───────────────────────────────────────────────────────────────────────── */
+    /* ── E-Control station fetch ── */
     async function fetchEControlStations(lat, lng, radiusKm) {
       async function fetchOneFuelType(fuelType) {
         const url = new URL(ECONTROL_BASE);
@@ -839,7 +532,8 @@
         catch (netErr) { throw new Error(`Netzwerkfehler (${fuelType}): ${netErr.message}`); }
         if (!res.ok) throw new Error(`E-Control API Fehler ${res.status} für ${fuelType}`);
         let json;
-        try { json = await res.json(); } catch (_) { throw new Error(`Ungültige JSON-Antwort für ${fuelType}`); }
+        try { json = await res.json(); }
+        catch (_) { throw new Error(`Ungültige JSON-Antwort für ${fuelType}`); }
         if (!Array.isArray(json)) {
           console.error(`Unerwartetes E-Control Format für ${fuelType}:`, json);
           throw new Error(`Unerwartetes Datenformat von E-Control (${fuelType})`);
@@ -860,16 +554,10 @@
         if (typeof lat !== 'number' || typeof lng !== 'number') continue;
         const dieEntry = Array.isArray(raw.prices) ? raw.prices.find(p => p.fuelType === 'DIE') : null;
         stationMap.set(id, {
-          id,
-          name:    raw.name    || 'Unbekannte Tankstelle',
-          brand:   raw.brand   || '',
-          address: raw.address?.street || '',
-          city:    raw.address?.city   || '',
+          id, name: raw.name || 'Unbekannte Tankstelle', brand: raw.brand || '',
+          address: raw.address?.street || '', city: raw.address?.city || '',
           lat, lng,
-          prices: {
-            DIE: (dieEntry && typeof dieEntry.amount === 'number') ? dieEntry.amount : null,
-            SUP: null,
-          },
+          prices: { DIE: (dieEntry && typeof dieEntry.amount === 'number') ? dieEntry.amount : null, SUP: null },
         });
       }
       for (const raw of supRaw) {
@@ -883,20 +571,16 @@
           const lng = raw.position?.longitude;
           if (typeof lat !== 'number' || typeof lng !== 'number') continue;
           stationMap.set(id, {
-            id,
-            name:    raw.name    || 'Unbekannte Tankstelle',
-            brand:   raw.brand   || '',
-            address: raw.address?.street || '',
-            city:    raw.address?.city   || '',
-            lat, lng,
-            prices: { DIE: null, SUP: supPrice },
+            id, name: raw.name || 'Unbekannte Tankstelle', brand: raw.brand || '',
+            address: raw.address?.street || '', city: raw.address?.city || '',
+            lat, lng, prices: { DIE: null, SUP: supPrice },
           });
         }
       }
       return Array.from(stationMap.values());
     }
 
-    /* ── fetchAllData ── */
+    /* ── fetchAllData: brent.json + stations + brent history in parallel ── */
     async function fetchAllData() {
       loadingText.textContent = 'Lade Spritpreise…';
       const myToken = ++stationFetchToken;
@@ -918,7 +602,10 @@
       renderMarkers();
       renderJetztBanner();
       hideLoading();
-      initBrentPanel();
+      // Load brent history from file — no key needed, runs automatically
+      loadBrentHistoryFile();
+      // Expand panel on desktop after data is ready
+      if (!isMobile()) expandBrentPanel();
     }
 
     async function fetchBrentJSON() {
@@ -950,6 +637,148 @@
       });
     });
 
+    /* ─────────────────────────────────────────────────────────────────────────
+     * loadBrentHistoryFile()
+     *
+     * Fetches ./data/brent-history.json written by the cron job (fetch-prices.js).
+     * No API key. No browser-to-EIA call. Runs automatically on page load.
+     *
+     * ASSUMPTION — file shape:
+     * {
+     *   "updated": "YYYY-MM-DD",
+     *   "data": [
+     *     { "date": "YYYY-MM-DD", "price_usd": number },
+     *     ...sorted oldest to newest...
+     *   ]
+     * }
+     * price_usd is already a JSON number — no parseFloat() needed.
+     * ───────────────────────────────────────────────────────────────────────── */
+    async function loadBrentHistoryFile() {
+      setBrentChartMessage('<span class="chart-spinner" style="width:20px;height:20px;border-width:2px;"></span><span>Lade Rohöl-Verlauf…</span>');
+
+      let res;
+      try { res = await fetch('./data/brent-history.json'); }
+      catch (netErr) {
+        setBrentChartMessage(`<span>Netzwerkfehler beim Laden des Rohöl-Verlaufs.</span>`);
+        return;
+      }
+
+      // 404 = Actions not yet run; show the specified German message
+      if (res.status === 404) {
+        setBrentChartMessage(
+          '<span style="text-align:center;line-height:1.6;">' +
+          'Verlaufsdaten werden geladen — bitte warten bis GitHub Actions ' +
+          'einmal ausgeführt wurde.' +
+          '</span>'
+        );
+        return;
+      }
+
+      if (!res.ok) {
+        setBrentChartMessage(`<span>Fehler ${res.status} beim Laden des Rohöl-Verlaufs.</span>`);
+        return;
+      }
+
+      let json;
+      try { json = await res.json(); }
+      catch (_) { setBrentChartMessage('<span>Ungültiges Datenformat in brent-history.json.</span>'); return; }
+
+      // Validate shape
+      if (!json.data || !Array.isArray(json.data) || json.data.length === 0) {
+        console.error('Unerwartetes brent-history.json Format:', json);
+        setBrentChartMessage('<span>Keine Daten in brent-history.json — siehe Browser-Konsole.</span>');
+        return;
+      }
+
+      // Build brentHistory array from file data
+      // ASSUMPTION: each entry has date (string) and price_usd (number)
+      const points = [];
+      for (const entry of json.data) {
+        if (typeof entry.date !== 'string') continue;
+        const price = typeof entry.price_usd === 'number' ? entry.price_usd : parseFloat(entry.price_usd);
+        if (!isFinite(price)) continue;
+        points.push({ date: entry.date, price_usd: price });
+      }
+      // File is already sorted oldest→newest per spec; no reversal needed.
+
+      if (points.length === 0) {
+        setBrentChartMessage('<span>Keine gültigen Einträge in brent-history.json.</span>');
+        return;
+      }
+
+      brentHistory = points;
+      renderBrentPanelChart(points);
+
+      // Refresh signal badge and overlay if a station is already open
+      if (selectedStation) {
+        renderSignalBadge(selectedStation.id);
+        renderOverlayChart(selectedStation, activeFuel);
+      }
+      // Refresh marker mini-badges now that 3-day data is available
+      recolorMarkers();
+      renderJetztBanner();
+    }
+
+    function setBrentChartMessage(html) {
+      if (brentPanelChart) { brentPanelChart.destroy(); brentPanelChart = null; }
+      const old = brentChartArea.querySelector('canvas');
+      if (old) old.remove();
+      brentChartMsg.innerHTML    = html;
+      brentChartMsg.style.display = 'flex';
+    }
+
+    function renderBrentPanelChart(points) {
+      if (brentPanelChart) { brentPanelChart.destroy(); brentPanelChart = null; }
+      brentChartMsg.style.display = 'none';
+      const old = brentChartArea.querySelector('canvas'); if (old) old.remove();
+      const canvas = document.createElement('canvas'); canvas.height = 130;
+      brentChartArea.appendChild(canvas);
+
+      // Format dates as DD.MM (Austrian format) for the x-axis
+      const labels = points.map(p => {
+        const [, m, d] = p.date.split('-');
+        return `${d}.${m}`;
+      });
+      // Values are price_usd numbers from the file
+      const values = points.map(p => p.price_usd);
+
+      brentPanelChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{ label: 'Brent', data: values, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, fill: true, tension: 0.3 }],
+        },
+        options: {
+          responsive: false, animation: { duration: 300 },
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `$${ctx.parsed.y.toFixed(2)}/Barrel` } } },
+          scales: {
+            x: { ticks: { color: '#8892a4', font: { size: 10 }, maxTicksLimit: 9, maxRotation: 0 }, grid: { color: 'rgba(45,52,82,0.6)' }, border: { color: 'rgba(45,52,82,0.6)' } },
+            y: { ticks: { color: '#8892a4', font: { size: 10 }, callback: v => `$${v.toFixed(0)}`, maxTicksLimit: 5 }, grid: { color: 'rgba(45,52,82,0.6)' }, border: { color: 'rgba(45,52,82,0.6)' } },
+          },
+        },
+      });
+      setTimeout(() => { if (brentPanel.classList.contains('expanded')) updateLayoutVars(); }, 60);
+    }
+
+    /* ── Brent panel collapse/expand ── */
+    function expandBrentPanel() {
+      brentPanel.classList.add('expanded');
+      brentPanel.setAttribute('aria-expanded', 'true');
+      setTimeout(() => updateLayoutVars(), 310);
+    }
+    function collapseBrentPanel() {
+      brentPanel.classList.remove('expanded');
+      brentPanel.setAttribute('aria-expanded', 'false');
+      setTimeout(() => updateLayoutVars(), 310);
+    }
+    function toggleBrentPanel() {
+      brentPanel.classList.contains('expanded') ? collapseBrentPanel() : expandBrentPanel();
+    }
+    document.getElementById('brent-panel-header').addEventListener('click', toggleBrentPanel);
+    document.getElementById('brent-panel-header').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleBrentPanel(); }
+    });
+
     /* ── "Jetzt tanken?" banner ── */
     function renderJetztBanner() {
       const withPrice = stations.filter(s => {
@@ -966,9 +795,9 @@
       const sig = computeSignal(cheapest.id);
       const vis = signalVisuals(sig.direction);
       let recommendation;
-      if (sig.direction === SIG_DOWN)        recommendation = 'Warten empfohlen — Preise könnten in 1–3 Tagen sinken';
-      else if (sig.direction === SIG_UP)     recommendation = 'Jetzt tanken — Preise könnten steigen';
-      else                                   recommendation = 'Kein klarer Trend — beim günstigsten Anbieter tanken';
+      if (sig.direction === SIG_DOWN)    recommendation = 'Warten empfohlen — Preise könnten in 1–3 Tagen sinken';
+      else if (sig.direction === SIG_UP) recommendation = 'Jetzt tanken — Preise könnten steigen';
+      else                               recommendation = 'Kein klarer Trend — beim günstigsten Anbieter tanken';
       document.getElementById('jetzt-arrow').textContent         = vis.arrow;
       document.getElementById('jetzt-arrow').style.color         = vis.color;
       document.getElementById('jetzt-station-name').textContent  = cheapest.name;
@@ -979,26 +808,39 @@
       requestAnimationFrame(() => updateLayoutVars());
     }
 
-    /* ── Signal engine ── */
+    /* ─────────────────────────────────────────────────────────────────────────
+     * Signal engine — deterministic rule engine.
+     * Reads brentHistory[].price_usd (field name matches brent-history.json).
+     * Falls back to brentData.change_pct if history not loaded.
+     * ───────────────────────────────────────────────────────────────────────── */
     function computeSignal(stationId) {
       let brent3day = null, usedFallback = false;
+
       if (brentHistory && brentHistory.length >= 4) {
-        const last  = brentHistory[brentHistory.length - 1].value;
-        const prior = brentHistory[brentHistory.length - 4].value;
+        // Use actual 3-trading-day change from brent-history.json
+        const last  = brentHistory[brentHistory.length - 1].price_usd;
+        const prior = brentHistory[brentHistory.length - 4].price_usd;
         if (prior > 0) brent3day = ((last - prior) / prior) * 100;
       }
+
       if (brent3day === null) {
         // ASSUMPTION: brentData.change_pct is a number, e.g. 1.23 = +1.23%
-        if (brentData && typeof brentData.change_pct === 'number') { brent3day = brentData.change_pct; usedFallback = true; }
-        else { brent3day = 0; usedFallback = true; }
+        if (brentData && typeof brentData.change_pct === 'number') {
+          brent3day = brentData.change_pct; usedFallback = true;
+        } else {
+          brent3day = 0; usedFallback = true;
+        }
       }
+
       const dow = new Date().getDay();
       const stationSeed = (typeof stationId === 'string' && stationId.length > 0) ? stationId.charCodeAt(0) : 0;
       function pickConfidence(a, b) { return a + (stationSeed % (b - a)); }
+
       const sign = brent3day >= 0 ? '+' : '';
       const brentDisplayed = usedFallback
         ? `Brent ${sign}${brent3day.toFixed(2)}% (Tageswert, kein 3-Tage-Verlauf)`
         : `Brent ${sign}${brent3day.toFixed(2)}% über 3 Tage`;
+
       if (brent3day > 3.0)      return { direction: SIG_UP,    confidence: pickConfidence(72,78), ruleNumber: 1, inputDesc: brentDisplayed, usedFallback };
       if (brent3day > 1.0)      return { direction: SIG_UP,    confidence: pickConfidence(58,65), ruleNumber: 2, inputDesc: brentDisplayed, usedFallback };
       if (brent3day < -3.0)     return { direction: SIG_DOWN,  confidence: pickConfidence(72,78), ruleNumber: 3, inputDesc: brentDisplayed, usedFallback };
@@ -1020,7 +862,7 @@
       const sig = computeSignal(stationId);
       const vis = signalVisuals(sig.direction);
       const dowRow = sig.dowName ? `<div class="signal-why-row"><span class="signal-why-key">Wochentag</span><span class="signal-why-val">${sig.dowName}</span></div>` : '';
-      const fallbackNote = sig.usedFallback ? `<div class="signal-why-row"><span class="signal-why-key">Hinweis</span><span class="signal-why-val">3-Tage-EIA-Verlauf nicht verfügbar — Tageswert verwendet</span></div>` : '';
+      const fallbackNote = sig.usedFallback ? `<div class="signal-why-row"><span class="signal-why-key">Hinweis</span><span class="signal-why-val">3-Tage-Verlauf nicht verfügbar — Tageswert verwendet</span></div>` : '';
       const dirLabel = sig.direction === SIG_UP ? 'Tendenz steigend' : sig.direction === SIG_DOWN ? 'Tendenz sinkend' : 'Kein klarer Trend';
       signalContainer.innerHTML = `
         <div class="signal-main">
@@ -1047,7 +889,7 @@
       });
     }
 
-    /* ── Tiers ── */
+    /* ── Tier calculation ── */
     function computeTiers(fuelCode) {
       const valid = stations
         .map(s => ({ id: s.id, price: s.prices?.[fuelCode] }))
@@ -1066,7 +908,7 @@
       return L.divIcon({
         className: '',
         html: `<div class="marker-wrap"><div class="station-dot" style="background:${tierColor};"></div><div class="signal-mini" style="color:${vis.color};">${vis.arrow}</div></div>`,
-        iconSize: [20, 20], iconAnchor: [10, 10],
+        iconSize: [20,20], iconAnchor: [10,10],
       });
     }
     function renderMarkers() {
@@ -1120,217 +962,10 @@
       }
     }
 
-    /* ── Brent panel collapse/expand ── */
-    function expandBrentPanel() {
-      brentPanel.classList.add('expanded');
-      brentPanel.setAttribute('aria-expanded', 'true');
-      setTimeout(() => updateLayoutVars(), 310);
-    }
-    function collapseBrentPanel() {
-      brentPanel.classList.remove('expanded');
-      brentPanel.setAttribute('aria-expanded', 'false');
-      setTimeout(() => updateLayoutVars(), 310);
-    }
-    function toggleBrentPanel() {
-      brentPanel.classList.contains('expanded') ? collapseBrentPanel() : expandBrentPanel();
-    }
-    document.getElementById('brent-panel-header').addEventListener('click', toggleBrentPanel);
-    document.getElementById('brent-panel-header').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleBrentPanel(); }
-    });
-
     /* ─────────────────────────────────────────────────────────────────────────
-     * EIA BRENT HISTORY
-     * Documented: https://www.eia.gov/opendata/documentation.php
-     *
-     * ASSUMPTION — successful response:
-     * { response: { data: [{ period: "YYYY-MM-DD", value: number }] } }
-     * Results newest-first; reversed below to oldest-first.
-     *
-     * ASSUMPTION — error body (HTTP 200 with error):
-     * { error: string }
+     * Overlay chart — Brent (USD left) vs pump price (EUR right)
+     * Reads brentHistory[].price_usd to match the new field name.
      * ───────────────────────────────────────────────────────────────────────── */
-    async function fetchBrentHistory(apiKey) {
-      const url = new URL(EIA_ENDPOINT);
-      url.searchParams.set('api_key',               apiKey);
-      url.searchParams.set('frequency',             'daily');
-      url.searchParams.append('data[]',             'value');
-      url.searchParams.append('facets[series][]',   'RBRTE');
-      url.searchParams.append('sort[0][column]',    'period');
-      url.searchParams.append('sort[0][direction]', 'desc');
-      url.searchParams.set('length',                String(BRENT_DAYS));
-      let res;
-      try { res = await fetch(url.toString()); }
-      catch (netErr) { throw new Error(`Netzwerkfehler: ${netErr.message}`); }
-      // Capture status before reading body, for use in error message
-      const httpStatus = res.status;
-      if (!res.ok) {
-        const known = { 400: 'Ungültige Anfrage (400)', 403: 'Ungültiger API-Schlüssel (403)', 429: 'Anfragelimit überschritten (429)', 500: 'EIA-Serverfehler (500)' };
-        throw new Error(known[httpStatus] || `HTTP ${httpStatus}`);
-      }
-      let json;
-      try { json = await res.json(); } catch (_) { throw new Error('Ungültige JSON-Antwort von EIA'); }
-      if (json.error) throw new Error(`EIA Fehler — ${json.error}`);
-      if (!json.response || !Array.isArray(json.response.data)) {
-        console.error('Unerwartetes EIA-Antwortformat:', json);
-        throw new Error('UNEXPECTED_SHAPE');
-      }
-      const points = [];
-      for (const row of json.response.data) {
-        // ASSUMPTION: row.period is a "YYYY-MM-DD" string, row.value is a STRING
-        // representing a float (e.g. "116.73") — EIA returns numbers as strings.
-        // We must use parseFloat(), not assume typeof value === 'number'.
-        if (typeof row.period !== 'string') continue;
-        const price = parseFloat(row.value);
-        if (!isFinite(price)) continue; // skip rows with missing or non-numeric value
-        points.push({ date: row.period, value: price });
-      }
-      points.reverse();
-      return { points, httpStatus };
-    }
-
-    /* ─────────────────────────────────────────────────────────────────────────
-     * FIX 1 — Brent panel UI
-     *
-     * showBrentKeyPrompt: always shows the key input, hides chart area and ⚙.
-     * showBrentChartArea: shows chart area and ⚙, hides key input.
-     *
-     * loadBrentPanel:
-     *   - On success (>=1 data point): renders chart.
-     *   - On zero data points: shows "EIA Fehler [STATUS] — Schlüssel prüfen ⚙"
-     *     and reverts to the key prompt so user can re-enter.
-     *   - On fetch error: shows the HTTP status + message; reverts to key prompt.
-     * ───────────────────────────────────────────────────────────────────────── */
-    function showBrentKeyPrompt() {
-      brentKeyPrompt.style.display = '';
-      brentChartArea.style.display = 'none';
-      brentKeyReset.style.display  = 'none';
-      if (brentPanel.classList.contains('expanded')) setTimeout(() => updateLayoutVars(), 60);
-    }
-    function showBrentChartArea() {
-      brentKeyPrompt.style.display = 'none';
-      brentChartArea.style.display = '';
-      brentKeyReset.style.display  = '';
-    }
-    function setBrentChartMessage(html) {
-      if (brentPanelChart) { brentPanelChart.destroy(); brentPanelChart = null; }
-      const old = brentChartArea.querySelector('canvas');
-      if (old) old.remove();
-      brentChartMsg.innerHTML    = html;
-      brentChartMsg.style.display = 'flex';
-    }
-
-    function renderBrentPanelChart(points) {
-      if (brentPanelChart) { brentPanelChart.destroy(); brentPanelChart = null; }
-      brentChartMsg.style.display = 'none';
-      const old = brentChartArea.querySelector('canvas'); if (old) old.remove();
-      const canvas = document.createElement('canvas'); canvas.height = 130;
-      brentChartArea.appendChild(canvas);
-      brentPanelChart = new Chart(canvas, {
-        type: 'line',
-        data: {
-          labels: points.map(p => { const [,m,d] = p.date.split('-'); return `${d}.${m}`; }),
-          datasets: [{ label: 'Brent', data: points.map(p => p.value), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, fill: true, tension: 0.3 }],
-        },
-        options: {
-          responsive: false, animation: { duration: 300 },
-          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `$${ctx.parsed.y.toFixed(2)}/Barrel` } } },
-          scales: {
-            x: { ticks: { color: '#8892a4', font: { size: 10 }, maxTicksLimit: 9, maxRotation: 0 }, grid: { color: 'rgba(45,52,82,0.6)' }, border: { color: 'rgba(45,52,82,0.6)' } },
-            y: { ticks: { color: '#8892a4', font: { size: 10 }, callback: v => `$${v.toFixed(0)}`, maxTicksLimit: 5 }, grid: { color: 'rgba(45,52,82,0.6)' }, border: { color: 'rgba(45,52,82,0.6)' } },
-          },
-        },
-      });
-      setTimeout(() => { if (brentPanel.classList.contains('expanded')) updateLayoutVars(); }, 60);
-    }
-
-    async function loadBrentPanel(apiKey) {
-      showBrentChartArea();
-      setBrentChartMessage('<span class="chart-spinner" style="width:20px;height:20px;border-width:2px;"></span><span>Lade EIA-Daten…</span>');
-
-      let result;
-      try {
-        result = await fetchBrentHistory(apiKey);
-      } catch (err) {
-        brentHistory = null;
-        // FIX 1: Show specific error then revert to key prompt so user can correct key
-        const isShape = err.message === 'UNEXPECTED_SHAPE';
-        const msg = isShape ? 'Unerwartetes Datenformat von EIA — siehe Browser-Konsole.' : `EIA Fehler — ${err.message}`;
-        showBrentKeyPrompt();
-        // Temporarily show the error inside the prompt area before the user re-enters
-        const errDiv = document.createElement('div');
-        errDiv.style.cssText = 'font-size:11px;color:var(--red);line-height:1.5;padding:4px 0;';
-        errDiv.textContent = `${msg} — Schlüssel prüfen oder neu eingeben ⚙`;
-        // Insert above the input row
-        const row = document.getElementById('brent-key-row');
-        brentKeyPrompt.insertBefore(errDiv, row);
-        setTimeout(() => { if (brentPanel.classList.contains('expanded')) updateLayoutVars(); }, 60);
-        return;
-      }
-
-      const { points, httpStatus } = result;
-
-      if (points.length === 0) {
-        brentHistory = null;
-        // FIX 1: Zero data — show status code + "Schlüssel prüfen" message, revert to prompt
-        showBrentKeyPrompt();
-        const errDiv = document.createElement('div');
-        errDiv.style.cssText = 'font-size:11px;color:var(--red);line-height:1.5;padding:4px 0;';
-        errDiv.textContent = `EIA Fehler ${httpStatus} — Schlüssel prüfen oder neu eingeben ⚙`;
-        const row = document.getElementById('brent-key-row');
-        brentKeyPrompt.insertBefore(errDiv, row);
-        setTimeout(() => { if (brentPanel.classList.contains('expanded')) updateLayoutVars(); }, 60);
-        return;
-      }
-
-      brentHistory = points;
-      renderBrentPanelChart(points);
-      if (selectedStation) { renderSignalBadge(selectedStation.id); renderOverlayChart(selectedStation, activeFuel); }
-      recolorMarkers();
-      renderJetztBanner();
-    }
-
-    /* FIX 1: Save button stores key and immediately calls loadBrentPanel */
-    brentKeySave.addEventListener('click', () => {
-      const key = brentKeyInput.value.trim();
-      if (!key) return;
-      // Remove any previous error message that may have been inserted
-      brentKeyPrompt.querySelectorAll('div[style]').forEach(el => el.remove());
-      try { localStorage.setItem(LS_KEY_EIA, key); } catch (_) {}
-      loadBrentPanel(key);
-    });
-    brentKeyInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') brentKeySave.click(); });
-
-    /* FIX 1: ⚙ reset — clears key, reverts to prompt */
-    brentKeyReset.addEventListener('click', (e) => {
-      e.stopPropagation(); // don't toggle the panel
-      try { localStorage.removeItem(LS_KEY_EIA); } catch (_) {}
-      brentKeyInput.value = '';
-      brentHistory = null;
-      if (brentPanelChart) { brentPanelChart.destroy(); brentPanelChart = null; }
-      showBrentKeyPrompt();
-      if (!brentPanel.classList.contains('expanded')) expandBrentPanel();
-    });
-
-    /*
-     * FIX 1: initBrentPanel
-     * Check localStorage first.
-     * If key present: show chart area and load immediately.
-     * If not: show key prompt — always, unconditionally.
-     */
-    function initBrentPanel() {
-      updateLayoutVars();
-      const savedKey = (() => { try { return localStorage.getItem(LS_KEY_EIA); } catch (_) { return null; } })();
-      if (savedKey) {
-        showBrentChartArea();
-        loadBrentPanel(savedKey);
-      } else {
-        showBrentKeyPrompt();
-      }
-      if (!isMobile()) expandBrentPanel();
-    }
-
-    /* ── Overlay chart ── */
     async function renderOverlayChart(station, fuelCode) {
       if (!brentHistory || brentHistory.length === 0) { overlayContainer.classList.remove('visible'); return; }
       const myToken = ++overlayToken;
@@ -1339,14 +974,19 @@
       catch (_) { if (myToken !== overlayToken) return; overlayContainer.classList.remove('visible'); return; }
       if (myToken !== overlayToken) return;
       if (pumpPoints.length < 2) { overlayContainer.classList.remove('visible'); return; }
+
+      // Build brent lookup keyed by date, reading price_usd field
       const brentByDate  = {};
-      for (const b of brentHistory) brentByDate[b.date] = b.value;
+      for (const b of brentHistory) brentByDate[b.date] = b.price_usd;
+
       const allDates     = pumpPoints.map(p => p.date);
-      const brentAligned = allDates.map(d => brentByDate[d] ?? null);
+      const brentAligned = allDates.map(d => brentByDate[d] ?? null); // null = gap (weekend)
       const pumpAligned  = pumpPoints.map(p => p.price);
       const labels       = allDates.map(d => { const [,m,day] = d.split('-'); return `${day}.${m}`; });
+
       if (overlayChart) { overlayChart.destroy(); overlayChart = null; }
       const tierColor = stationTierColor(station.id);
+
       overlayChart = new Chart(overlayCanvas, {
         type: 'line',
         data: { labels, datasets: [
@@ -1405,6 +1045,7 @@
     /* ── Sidebar pump history chart ── */
     function setHistorySpinner() { destroyHistoryChart(); histEl.className = ''; histEl.innerHTML = '<div class="chart-spinner"></div>'; }
     function destroyHistoryChart() { if (historyChart) { historyChart.destroy(); historyChart = null; } }
+
     async function loadAndRenderHistory(station, fuelCode, tierColor) {
       const myToken = ++historyLoadToken;
       setHistorySpinner();
@@ -1458,7 +1099,7 @@
       const tierColor = stationTierColor(station.id);
       loadAndRenderHistory(station, activeFuel, tierColor);
       renderOverlayChart(station, activeFuel);
-      renderSignalBadge(station.id); // synchronous, always immediate
+      renderSignalBadge(station.id);
       sidebar.classList.add('open');
     }
     function closeSidebar() {
