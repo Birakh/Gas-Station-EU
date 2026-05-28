@@ -245,6 +245,70 @@ async function fetchECBRate() {
   return rate;
 }
 
+// ─── Step 4: EIA v2 — 90-day Brent history ───────────────────────────────────
+//
+// Same endpoint and API key as Step 1, but length=90 instead of length=2.
+// The response comes newest-first; we reverse it so the output array runs
+// oldest-to-newest, which is the natural order for a time-series chart.
+//
+// This is a separate function (not reused from fetchEIA) because the two
+// calls have different purposes, different lengths, and different return
+// shapes — merging them would add branching complexity for no benefit.
+//
+// ASSUMPTION: response shape is identical to fetchEIA():
+//   { response: { data: [ { period: "YYYY-MM-DD", value: "123.45" }, … ] } }
+// `value` is a string — parseFloat() is used on every row.
+
+async function fetchEIAHistory() {
+  console.log('[Step 4] Fetching 90-day Brent history from EIA…');
+
+  // apiKey was already validated in fetchEIA(); if we reach here it is set.
+  const apiKey = process.env.EIA_API_KEY;
+
+  const url =
+    'https://api.eia.gov/v2/petroleum/pri/spt/data/' +
+    `?api_key=${encodeURIComponent(apiKey)}` +
+    '&frequency=daily' +
+    '&data[]=value' +
+    '&facets[series][]=RBRTE' +
+    '&sort[0][column]=period' +
+    '&sort[0][direction]=desc' +
+    '&length=90';
+
+  const data = await fetchJSON(url);
+
+  const rows = data?.response?.data;
+  if (!Array.isArray(rows) || rows.length === 0) {
+    throw new Error(
+      '[Step 4] EIA history returned no data rows. ' +
+      `Raw response: ${JSON.stringify(data).slice(0, 300)}`
+    );
+  }
+
+  // Parse and validate every row before touching the output array so a
+  // single bad row fails loudly rather than silently producing a NaN entry.
+  const parsed = rows.map((row, i) => {
+    const price_usd = parseFloat(row.value);
+    if (!row.period || isNaN(price_usd)) {
+      throw new Error(
+        `[Step 4] EIA history row ${i} has invalid period or value: ` +
+        JSON.stringify(row)
+      );
+    }
+    return { date: row.period, price_usd: parseFloat(price_usd.toFixed(2)) };
+  });
+
+  // API returns newest-first; reverse so output is oldest-to-newest.
+  parsed.reverse();
+
+  console.log(
+    `[Step 4] EIA history: ${parsed.length} rows, ` +
+    `${parsed[0].date} → ${parsed[parsed.length - 1].date}`
+  );
+
+  return parsed;
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -320,6 +384,44 @@ async function main() {
   } catch (err) {
     console.error('[Step 4] FAILED to write brent.json:', err.message);
     process.exit(1);
+  }
+
+  // ── Step 5: EIA 90-day history ───────────────────────────────────────────────
+  // Only available when EIA was reachable (brentRaw.source === 'EIA').
+  // If we fell back to Stooq we skip this step rather than calling EIA a
+  // second time after it already failed — the existing brent-history.json
+  // from the previous successful run remains on disk unchanged.
+  if (brentRaw.source === 'EIA') {
+    let historyRows;
+    try {
+      historyRows = await fetchEIAHistory();
+    } catch (err) {
+      console.error('[Step 5] FAILED to fetch Brent history:', err.message);
+      process.exit(1);
+    }
+
+    const historyOutput = {
+      updated: new Date().toISOString().slice(0, 10), // "YYYY-MM-DD" UTC
+      data:    historyRows,
+    };
+
+    const historyPath = path.join(DATA_DIR, 'brent-history.json');
+    try {
+      fs.writeFileSync(
+        historyPath,
+        JSON.stringify(historyOutput, null, 2),
+        'utf8'
+      );
+      console.log('[Step 5] Written: data/brent-history.json');
+    } catch (err) {
+      console.error('[Step 5] FAILED to write brent-history.json:', err.message);
+      process.exit(1);
+    }
+  } else {
+    console.log(
+      '[Step 5] Skipping history fetch — Brent source is Stooq, not EIA. ' +
+      'Existing data/brent-history.json (if any) is unchanged.'
+    );
   }
 
   // ── Summary ──────────────────────────────────────────────────────────────────
