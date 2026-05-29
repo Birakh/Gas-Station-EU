@@ -32,7 +32,6 @@
       --text:      #e2e8f0;
       --muted:     #8892a4;
       --top-h:     52px;
-      --geo-bar-h: 0px;
       --banner-h:  0px;
       --brent-h:   0px;
       --foot-h:    38px;
@@ -54,23 +53,51 @@
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 14px; z-index: 1000; gap: 8px;
     }
-    #app-title { font-size: 15px; font-weight: 700; letter-spacing: 0.03em; color: var(--text); white-space: nowrap; flex-shrink: 0; }
+    #app-title {
+      font-size: 15px; font-weight: 700; letter-spacing: 0.03em;
+      color: var(--text); white-space: nowrap; flex-shrink: 0;
+    }
     #app-title span { color: var(--accent); }
 
-    #fuel-toggle { display: flex; gap: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 3px; flex-shrink: 0; }
-    .fuel-btn { background: transparent; border: none; color: var(--muted); font-family: var(--font); font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer; transition: background 0.15s, color 0.15s; white-space: nowrap; }
+    #fuel-toggle {
+      display: flex; gap: 4px; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 8px; padding: 3px; flex-shrink: 0;
+    }
+    .fuel-btn {
+      background: transparent; border: none; color: var(--muted);
+      font-family: var(--font); font-size: 12px; font-weight: 600;
+      padding: 5px 10px; border-radius: 6px; cursor: pointer;
+      transition: background 0.15s, color 0.15s; white-space: nowrap;
+    }
     .fuel-btn:hover { color: var(--text); }
     .fuel-btn.active { background: var(--accent); color: #fff; }
 
     #radius-control { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
     #radius-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
-    #radius-select { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font); font-size: 11px; font-weight: 600; padding: 4px 6px; cursor: pointer; outline: none; }
+    #radius-select {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: var(--font); font-size: 11px; font-weight: 600;
+      padding: 4px 6px; cursor: pointer; outline: none;
+    }
     #radius-select:focus { border-color: var(--accent); }
 
-    #geo-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-size: 14px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: border-color 0.15s, color 0.15s; line-height: 1; }
+    /* FIX 1: Geo button — text label "📍 Mein Standort", optional feature */
+    #geo-btn {
+      background: transparent; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--muted); font-family: var(--font); font-size: 11px; font-weight: 600;
+      padding: 5px 9px; cursor: pointer; flex-shrink: 0; white-space: nowrap;
+      display: flex; align-items: center; gap: 4px;
+      transition: border-color 0.15s, color 0.15s;
+    }
     #geo-btn:hover { border-color: var(--accent); color: var(--accent); }
-    #geo-btn.locating { border-color: var(--accent); color: var(--accent); animation: pulse-border 1s ease-in-out infinite; }
-    @keyframes pulse-border { 0%, 100% { border-color: var(--accent); } 50% { border-color: var(--accent-h); } }
+    #geo-btn.locating {
+      border-color: var(--accent); color: var(--accent);
+      animation: pulse-border 1s ease-in-out infinite;
+    }
+    @keyframes pulse-border {
+      0%, 100% { border-color: var(--accent); }
+      50%       { border-color: var(--accent-h); }
+    }
 
     #brent-badge { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; }
     #brent-label { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
@@ -80,17 +107,59 @@
     #brent-change.neg { background: rgba(239,68,68,0.18);   color: var(--red); }
     #brent-change.neu { background: rgba(139,147,174,0.18); color: var(--muted); }
 
-    /* ── Geo-denied notice bar ── */
-    #geo-bar { position: fixed; top: var(--top-h); left: 0; right: 0; z-index: 999; background: rgba(234,179,8,0.15); border-bottom: 1px solid rgba(234,179,8,0.4); display: none; }
-    #geo-bar.visible { display: block; }
-    #geo-bar-inner { display: flex; align-items: center; gap: 10px; padding: 7px 14px; flex-wrap: wrap; }
-    #geo-bar-text { flex: 1; font-size: 11px; color: var(--yellow); line-height: 1.4; min-width: 0; }
-    #geo-bar-allow { background: var(--yellow); border: none; border-radius: 6px; color: #000; font-family: var(--font); font-size: 11px; font-weight: 700; padding: 5px 12px; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: opacity 0.15s; }
-    #geo-bar-allow:hover { opacity: 0.85; }
-    #geo-bar-dismiss { background: transparent; border: none; color: var(--yellow); font-size: 16px; cursor: pointer; padding: 0 2px; flex-shrink: 0; line-height: 1; }
+    /*
+     * FIX 1: Geo toast — small bottom-anchored message shown briefly on geo failure.
+     * NOT a persistent bar. Does not affect layout of any other element.
+     */
+    #geo-toast {
+      position: fixed;
+      bottom: calc(var(--foot-h) + 12px);
+      left: 50%; transform: translateX(-50%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 12px; color: var(--muted);
+      z-index: 2000;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    #geo-toast.visible { opacity: 1; }
+
+    /* ── FIX 2: Error banner — sits below topbar, does not cover map ── */
+    #error-banner {
+      position: fixed;
+      top: var(--top-h);
+      left: 0; right: 0;
+      z-index: 998;
+      background: rgba(239,68,68,0.12);
+      border-bottom: 1px solid rgba(239,68,68,0.35);
+      display: none;
+    }
+    #error-banner.visible { display: block; }
+    #error-banner-inner {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 14px;
+    }
+    #error-banner-text {
+      flex: 1; font-size: 11px; color: #fca5a5; line-height: 1.4;
+    }
+    #error-banner-dismiss {
+      background: transparent; border: none;
+      color: #fca5a5; font-size: 16px; cursor: pointer;
+      padding: 0 2px; flex-shrink: 0; line-height: 1;
+    }
 
     /* ── "Jetzt tanken?" banner ── */
-    #jetzt-banner { position: fixed; top: calc(var(--top-h) + var(--geo-bar-h)); left: 0; right: 0; z-index: 997; background: var(--card2); border-bottom: 1px solid var(--border); transition: top 0.25s cubic-bezier(0.4,0,0.2,1); }
+    #jetzt-banner {
+      position: fixed;
+      top: var(--top-h);
+      left: 0; right: 0; z-index: 997;
+      background: var(--card2); border-bottom: 1px solid var(--border);
+      transition: top 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
     #jetzt-inner { padding: 8px 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     #jetzt-title { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); flex-shrink: 0; }
     #jetzt-arrow { font-size: 20px; line-height: 1; flex-shrink: 0; }
@@ -104,13 +173,16 @@
     /* ── Brent history panel ── */
     #brent-panel {
       position: fixed;
-      top: calc(var(--top-h) + var(--geo-bar-h) + var(--banner-h));
+      top: calc(var(--top-h) + var(--banner-h));
       left: 0; right: 0; z-index: 996;
       background: var(--card); border-bottom: 1px solid var(--border);
       overflow: hidden;
       transition: top 0.25s cubic-bezier(0.4,0,0.2,1);
     }
-    #brent-panel-header { display: flex; align-items: center; padding: 0 14px; height: 36px; cursor: pointer; user-select: none; gap: 8px; }
+    #brent-panel-header {
+      display: flex; align-items: center;
+      padding: 0 14px; height: 36px; cursor: pointer; user-select: none; gap: 8px;
+    }
     #brent-panel-header:hover { background: rgba(255,255,255,0.03); }
     #brent-panel-title { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); flex: 1; }
     #brent-panel-toggle-icon { font-size: 11px; color: var(--muted); transition: transform 0.25s; flex-shrink: 0; }
@@ -119,45 +191,70 @@
     #brent-panel.expanded #brent-panel-body { max-height: 200px; }
     #brent-panel-inner { padding: 0 14px 12px; display: flex; flex-direction: column; gap: 8px; }
 
-    /* Chart area — always shown, no key prompt */
+    /* Chart area — always visible, no key prompt */
     #brent-chart-area { position: relative; }
     #brent-chart-area canvas { display: block; width: 100% !important; }
-    #brent-chart-message { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.5; padding: 12px 0; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    #brent-chart-message {
+      font-size: 12px; color: var(--muted); text-align: center;
+      line-height: 1.5; padding: 12px 0;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
 
     /* ── Map ── */
     #map {
       position: fixed;
-      top: calc(var(--top-h) + var(--geo-bar-h) + var(--banner-h) + var(--brent-h));
-      left: 0; right: 0; bottom: var(--foot-h);
-      z-index: 1;
+      top: calc(var(--top-h) + var(--banner-h) + var(--brent-h));
+      left: 0; right: 0; bottom: var(--foot-h); z-index: 1;
       transition: top 0.25s cubic-bezier(0.4,0,0.2,1);
     }
     .leaflet-tile { filter: brightness(0.88) saturate(0.7); }
 
-    .user-dot { width: 14px; height: 14px; background: #3b82f6; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 0 0 3px rgba(59,130,246,0.35); }
+    /* User position blue dot */
+    .user-dot {
+      width: 14px; height: 14px; background: #3b82f6;
+      border: 3px solid #fff; border-radius: 50%;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.35);
+    }
 
     /* ── Footer ── */
-    #footer { position: fixed; bottom: 0; left: 0; right: 0; height: var(--foot-h); background: rgba(15,17,23,0.92); border-top: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 14px; z-index: 1000; opacity: 0.72; gap: 1px; }
+    #footer {
+      position: fixed; bottom: 0; left: 0; right: 0; height: var(--foot-h);
+      background: rgba(15,17,23,0.92); border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; justify-content: center;
+      align-items: center; padding: 0 14px; z-index: 1000; opacity: 0.72; gap: 1px;
+    }
     #footer p { font-size: 10px; color: var(--muted); text-align: center; line-height: 1.4; }
 
     /* ── Sidebar ── */
     #sidebar {
       position: fixed;
-      top: calc(var(--top-h) + var(--geo-bar-h) + var(--banner-h) + var(--brent-h));
+      top: calc(var(--top-h) + var(--banner-h) + var(--brent-h));
       right: 0; width: var(--sidebar-w); bottom: var(--foot-h);
       background: var(--card); border-left: 1px solid var(--border);
       z-index: 999; transform: translateX(100%);
-      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1), top 0.25s cubic-bezier(0.4,0,0.2,1);
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1),
+                  top 0.25s cubic-bezier(0.4,0,0.2,1);
       display: flex; flex-direction: column; overflow: hidden;
     }
     #sidebar.open { transform: translateX(0); }
-    #sidebar-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    #sidebar-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: 16px 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
     #sidebar-station-name { font-size: 15px; font-weight: 700; line-height: 1.3; color: var(--text); }
     #sidebar-brand { font-size: 11px; font-weight: 600; color: var(--accent); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
     #sidebar-addr { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
-    #sidebar-close { background: var(--card2); border: 1px solid var(--border); color: var(--muted); font-size: 16px; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: 8px; transition: background 0.15s, color 0.15s; }
+    #sidebar-close {
+      background: var(--card2); border: 1px solid var(--border); color: var(--muted);
+      font-size: 16px; width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-left: 8px; transition: background 0.15s, color 0.15s;
+    }
     #sidebar-close:hover { background: var(--border); color: var(--text); }
-    #sidebar-body { overflow-y: auto; flex: 1; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; }
+    #sidebar-body {
+      overflow-y: auto; flex: 1; padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
     #sidebar-body::-webkit-scrollbar { width: 4px; }
     #sidebar-body::-webkit-scrollbar-track { background: transparent; }
     #sidebar-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -170,12 +267,21 @@
     .price-card-value.na { color: var(--muted); font-size: 13px; font-weight: 400; }
     .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
 
-    #history-chart-container { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 140px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--muted); position: relative; }
+    #history-chart-container {
+      background: var(--card2); border: 1px solid var(--border); border-radius: 8px;
+      padding: 12px; min-height: 140px; display: flex; align-items: center;
+      justify-content: center; font-size: 12px; color: var(--muted); position: relative;
+    }
     #history-chart-container.has-chart { display: block; padding: 10px; }
     #history-chart-container canvas { display: block; width: 100% !important; }
 
-    .chart-spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; flex-shrink: 0; }
+    .chart-spinner {
+      width: 28px; height: 28px; border: 2px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.75s linear infinite; flex-shrink: 0;
+    }
 
+    /* Preis-Signal */
     #signal-badge-container { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
     .signal-main { display: flex; align-items: center; gap: 10px; padding: 10px 12px 8px; }
     .signal-arrow { font-size: 26px; line-height: 1; flex-shrink: 0; }
@@ -192,22 +298,30 @@
     .signal-why-val { color: var(--text); }
     .signal-disclaimer { padding: 6px 12px 9px; font-size: 9px; color: var(--muted); border-top: 1px solid var(--border); line-height: 1.5; letter-spacing: 0.01em; }
 
+    /* Brent overlay */
     #brent-overlay-container { display: none; }
     #brent-overlay-container.visible { display: block; }
     #brent-overlay-chart-wrap { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
     #brent-overlay-chart-wrap canvas { display: block; width: 100% !important; }
     #brent-overlay-note { margin-top: 7px; font-size: 10px; color: var(--muted); line-height: 1.5; font-style: italic; }
 
-    #loading-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: opacity 0.4s; }
+    /* Loading overlay */
+    #loading-overlay {
+      position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 18px; transition: opacity 0.4s;
+    }
     #loading-overlay.hidden { opacity: 0; pointer-events: none; }
     .spinner { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     #loading-text { font-size: 13px; color: var(--muted); }
 
+    /* Marker dots */
     .marker-wrap { position: relative; width: 20px; height: 20px; }
     .station-dot { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.45); cursor: pointer; }
     .signal-mini { position: absolute; bottom: 0; right: 0; width: 9px; height: 9px; border-radius: 50%; background: var(--card); display: flex; align-items: center; justify-content: center; font-size: 7px; line-height: 1; border: 1px solid rgba(0,0,0,0.4); cursor: pointer; font-weight: 900; }
 
+    /* Mobile */
     @media (max-width: 767px) {
       :root { --sidebar-w: 100%; }
       #sidebar { top: auto; bottom: var(--foot-h); left: 0; right: 0; width: 100%; height: 70vh; border-left: none; border-top: 1px solid var(--border); border-radius: 14px 14px 0 0; transform: translateY(100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); }
@@ -218,6 +332,7 @@
       .price-card-value { font-size: 15px; }
       #jetzt-inner { gap: 8px; }
       #radius-control { display: none; }
+      #geo-btn span { display: none; } /* icon only on mobile */
     }
     @media (max-width: 400px) {
       .fuel-btn { font-size: 10px; padding: 4px 5px; }
@@ -229,24 +344,48 @@
 
   <div id="loading-overlay">
     <div class="spinner"></div>
-    <div id="loading-text">Standort wird ermittelt…</div>
+    <div id="loading-text">Lade Spritpreise…</div>
+  </div>
+
+  <!--
+    FIX 1: Geo toast — small, non-intrusive, auto-hides after 3 s.
+    No persistent bar, no layout shift.
+  -->
+  <div id="geo-toast">Standort nicht verfügbar</div>
+
+  <!-- FIX 2: Error banner — shown below topbar on fetch failure, does not cover map -->
+  <div id="error-banner">
+    <div id="error-banner-inner">
+      <span id="error-banner-text"></span>
+      <button id="error-banner-dismiss" title="Schließen">✕</button>
+    </div>
   </div>
 
   <div id="topbar">
     <div id="app-title">AT <span>Spritpreise</span></div>
+
     <div id="fuel-toggle">
       <button class="fuel-btn active" data-code="DIE">Diesel</button>
       <button class="fuel-btn"        data-code="SUP">Eurosuper 95</button>
     </div>
+
     <div id="radius-control">
       <span id="radius-label">Umkreis:</span>
       <select id="radius-select">
         <option value="5">5 km</option>
-        <option value="10" selected>10 km</option>
+        <option value="15" selected>15 km</option>
         <option value="25">25 km</option>
       </select>
     </div>
-    <button id="geo-btn" title="Standort verwenden">📍</button>
+
+    <!--
+      FIX 1: Optional geo button with text label.
+      Clicking triggers geolocation. App works fully without ever clicking this.
+    -->
+    <button id="geo-btn" title="Meinen Standort verwenden">
+      📍 <span>Mein Standort</span>
+    </button>
+
     <div id="brent-badge">
       <div id="brent-label">Brent Rohöl</div>
       <div id="brent-prices">
@@ -257,14 +396,7 @@
     </div>
   </div>
 
-  <div id="geo-bar">
-    <div id="geo-bar-inner">
-      <span id="geo-bar-text">📍 Standort nicht verfügbar — zeige Wiener Neustadt</span>
-      <button id="geo-bar-allow">Standort erlauben</button>
-      <button id="geo-bar-dismiss" title="Schließen">✕</button>
-    </div>
-  </div>
-
+  <!-- "Jetzt tanken?" recommendation banner -->
   <div id="jetzt-banner" class="hidden">
     <div id="jetzt-inner">
       <div id="jetzt-title">Jetzt tanken?</div>
@@ -279,8 +411,8 @@
   </div>
 
   <!--
-    Brent history panel — no key prompt, no EIA API call.
-    Chart loads automatically from ./data/brent-history.json on page load.
+    FIX 2: Brent history panel — no key prompt, no EIA API call.
+    Chart loads automatically from ./data/brent-history.json.
   -->
   <div id="brent-panel">
     <div id="brent-panel-header" role="button" aria-expanded="false" aria-controls="brent-panel-body" tabindex="0">
@@ -342,7 +474,7 @@
   </div>
 
   <div id="footer">
-    <p>Spritdaten: E-Control Austria · Rohöl: U.S. EIA / Stooq · Letztes Update: <span id="footer-ts">–</span></p>
+    <p>Spritdaten: E-Control Austria · Rohöl: U.S. EIA · Letztes Update: <span id="footer-ts">–</span></p>
     <p>Datenquelle gesetzlich vorgeschrieben gemäß Preistransparenzgesetz</p>
   </div>
 
@@ -351,18 +483,25 @@
     'use strict';
 
     /* ── Constants ── */
-    const FUEL_CODES     = ['DIE', 'SUP'];
-    const TIER_COLORS    = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
+    const FUEL_CODES  = ['DIE', 'SUP'];
+    const TIER_COLORS = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
     const AUSTRIA_BOUNDS = [[46.37, 9.53], [49.02, 17.16]];
-    const FALLBACK_LAT   = 47.8150;  // Wiener Neustadt
-    const FALLBACK_LNG   = 16.2370;
-    const FALLBACK_ZOOM  = 13;
-    const HISTORY_DAYS   = 30;
+
+    /*
+     * FIX 1: Wiener Neustadt is the hardcoded default.
+     * The app loads stations from these coordinates immediately on boot,
+     * with no geolocation request. Geo is an optional enhancement via button.
+     */
+    const DEFAULT_LAT  = 47.8150;  // Wiener Neustadt
+    const DEFAULT_LNG  = 16.2370;
+    const DEFAULT_ZOOM = 13;
+    const DEFAULT_RADIUS = 15;     // km — default radius per spec
+
+    const HISTORY_DAYS = 30;
 
     /*
      * E-Control Spritpreisrechner API — no key required.
      * Swagger: https://api.e-control.at/sprit/1.0/doc/
-     * Endpoint: GET /sprit/1.0/search/gas-stations/by-address
      *
      * ASSUMPTION — response: array of station objects:
      * [{ id: number, name: string, brand: string,
@@ -377,19 +516,19 @@
     const SIG_STABLE  = 'STABLE';
     const DOW_THURSDAY = 4;
     const DOW_MONDAY   = 1;
-    const DOW_NAMES    = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+    const DOW_NAMES = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 
     /* ── State ── */
-    let activeFuel      = 'DIE';
-    let currentRadius   = 10;
-    let userLat         = FALLBACK_LAT;
-    let userLng         = FALLBACK_LNG;
-    let userLocated     = false;
+    let activeFuel    = 'DIE';
+    let currentRadius = DEFAULT_RADIUS;
+    // FIX 1: Start at default location — no geolocation on boot
+    let currentLat    = DEFAULT_LAT;
+    let currentLng    = DEFAULT_LNG;
 
-    let stations        = [];
-    let brentData       = null;
-    let markers         = [];
-    let userMarker      = null;
+    let stations      = [];
+    let brentData     = null;
+    let markers       = [];
+    let userMarker    = null;
     let selectedStation = null;
 
     let historyChart    = null;
@@ -397,8 +536,9 @@
     let overlayChart    = null;
 
     /*
-     * brentHistory: 90-day data loaded from ./data/brent-history.json
-     * Sorted oldest→newest.
+     * FIX 2: brentHistory loaded from ./data/brent-history.json (cron job output).
+     * No EIA API call. No key needed.
+     *
      * ASSUMPTION — brent-history.json shape:
      * {
      *   "updated": "YYYY-MM-DD",
@@ -407,9 +547,8 @@
      *     ...sorted oldest to newest...
      *   ]
      * }
-     * price_usd is a JSON number (already parsed — no parseFloat needed here).
      */
-    let brentHistory    = null;
+    let brentHistory  = null;
 
     let historyLoadToken  = 0;
     let overlayToken      = 0;
@@ -418,9 +557,7 @@
     /* ── DOM refs ── */
     const loadingOverlay   = document.getElementById('loading-overlay');
     const loadingText      = document.getElementById('loading-text');
-    const geoBar           = document.getElementById('geo-bar');
-    const geoBarAllow      = document.getElementById('geo-bar-allow');
-    const geoBarDismiss    = document.getElementById('geo-bar-dismiss');
+    const geoToast         = document.getElementById('geo-toast');
     const geoBtn           = document.getElementById('geo-btn');
     const sidebar          = document.getElementById('sidebar');
     const sidebarClose     = document.getElementById('sidebar-close');
@@ -434,11 +571,26 @@
     const signalContainer  = document.getElementById('signal-badge-container');
     const jetztBanner      = document.getElementById('jetzt-banner');
     const radiusSelect     = document.getElementById('radius-select');
+    const errorBanner      = document.getElementById('error-banner');
+    const errorBannerText  = document.getElementById('error-banner-text');
+    document.getElementById('error-banner-dismiss').addEventListener('click', hideErrorBanner);
 
-    /* ── Map init ── */
+    /* FIX 2: Error banner helpers — visible below topbar, never covers map */
+    function showErrorBanner(message) {
+      errorBannerText.textContent = message;
+      errorBanner.classList.add('visible');
+    }
+    function hideErrorBanner() {
+      errorBanner.classList.remove('visible');
+    }
+    function hideLoading() {
+      loadingOverlay.classList.add('hidden');
+    }
+
+    /* ── Map init — centered on Wiener Neustadt immediately ── */
     const map = L.map('map', {
-      center: [FALLBACK_LAT, FALLBACK_LNG],
-      zoom: FALLBACK_ZOOM,
+      center: [DEFAULT_LAT, DEFAULT_LNG],
+      zoom:   DEFAULT_ZOOM,
       maxBounds: AUSTRIA_BOUNDS,
       maxBoundsViscosity: 0.6,
       zoomControl: true,
@@ -452,73 +604,86 @@
     function setCSSVar(name, px) {
       document.documentElement.style.setProperty(name, `${px}px`);
     }
-    function geoBarHeight()   { return geoBar.classList.contains('visible') ? geoBar.getBoundingClientRect().height : 0; }
-    function bannerHeight()   { return jetztBanner.classList.contains('hidden') ? 0 : jetztBanner.getBoundingClientRect().height; }
+    function bannerHeight()     { return jetztBanner.classList.contains('hidden') ? 0 : jetztBanner.getBoundingClientRect().height; }
     function brentPanelHeight() { return brentPanel.getBoundingClientRect().height; }
     function updateLayoutVars() {
-      setCSSVar('--geo-bar-h', geoBarHeight());
-      setCSSVar('--banner-h',  bannerHeight());
-      setCSSVar('--brent-h',   brentPanelHeight());
+      setCSSVar('--banner-h', bannerHeight());
+      setCSSVar('--brent-h',  brentPanelHeight());
       map.invalidateSize();
     }
     function isMobile() { return window.innerWidth < 768; }
 
-    /* ── Geolocation ── */
-    function setGeoButtonLocating(on) {
-      if (on) { geoBtn.classList.add('locating'); geoBtn.title = 'Standort wird ermittelt…'; }
-      else    { geoBtn.classList.remove('locating'); geoBtn.title = 'Standort verwenden'; }
+    /* ─────────────────────────────────────────────────────────────────────────
+     * FIX 1 — Geolocation: optional enhancement, not required for app to work.
+     *
+     * Boot calls fetchAllData(DEFAULT_LAT, DEFAULT_LNG) immediately.
+     * The geo button calls requestGeolocation() which, on success, re-fetches
+     * stations at the real user location and re-centers the map.
+     * On failure: show a small toast and keep existing data visible.
+     * ───────────────────────────────────────────────────────────────────────── */
+    let geoToastTimer = null;
+    function showGeoToast(msg) {
+      geoToast.textContent = msg;
+      geoToast.classList.add('visible');
+      clearTimeout(geoToastTimer);
+      geoToastTimer = setTimeout(() => geoToast.classList.remove('visible'), 3000);
     }
-    function showGeoBar() { geoBar.classList.add('visible'); requestAnimationFrame(() => updateLayoutVars()); }
-    function hideGeoBar() { geoBar.classList.remove('visible'); updateLayoutVars(); }
+
+    function setGeoButtonLocating(on) {
+      if (on) { geoBtn.classList.add('locating'); geoBtn.disabled = true; }
+      else    { geoBtn.classList.remove('locating'); geoBtn.disabled = false; }
+    }
 
     function requestGeolocation() {
-      if (!('geolocation' in navigator)) { onGeoFallback('not-supported'); return; }
+      if (!('geolocation' in navigator)) {
+        showGeoToast('Standort nicht verfügbar');
+        return;
+      }
       setGeoButtonLocating(true);
-      loadingText.textContent = 'Standort wird ermittelt…';
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setGeoButtonLocating(false);
-          hideGeoBar();
-          userLat = pos.coords.latitude;
-          userLng = pos.coords.longitude;
-          userLocated = true;
-          onGeoSuccess();
+          currentLat = pos.coords.latitude;
+          currentLng = pos.coords.longitude;
+          // Re-center map and re-fetch stations at real location
+          map.setView([currentLat, currentLng], DEFAULT_ZOOM);
+          placeUserMarker(currentLat, currentLng);
+          refetchStations();
         },
         (err) => {
           // err.code: 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT
           setGeoButtonLocating(false);
-          console.warn('[Geo] Failed, code', err.code, err.message);
-          onGeoFallback(err.code);
+          console.warn('[Geo] Failed, code', err.code);
+          // FIX 1: Small toast only — existing data stays visible, no layout change
+          showGeoToast('Standort nicht verfügbar');
         },
-        { enableHighAccuracy: true, timeout: 10000 }
+        { enableHighAccuracy: true, timeout: 3000 }
       );
     }
 
-    function onGeoSuccess() {
-      map.setView([userLat, userLng], 13);
-      placeUserMarker(userLat, userLng);
-      fetchAllData();
-    }
-
-    function onGeoFallback(errCode) {
-      map.setView([FALLBACK_LAT, FALLBACK_LNG], FALLBACK_ZOOM);
-      showGeoBar();
-      fetchAllData(); // always fetch — identical to onGeoSuccess, different coords
-    }
+    geoBtn.addEventListener('click', () => requestGeolocation());
 
     function placeUserMarker(lat, lng) {
       if (userMarker) map.removeLayer(userMarker);
       userMarker = L.marker([lat, lng], {
-        icon: L.divIcon({ className: '', html: '<div class="user-dot"></div>', iconSize: [14,14], iconAnchor: [7,7] }),
+        icon: L.divIcon({
+          className: '',
+          html: '<div class="user-dot"></div>',
+          iconSize: [14,14], iconAnchor: [7,7],
+        }),
         zIndexOffset: 1000, interactive: false,
       }).addTo(map);
     }
 
-    geoBtn.addEventListener('click', () => requestGeolocation());
-    geoBarAllow.addEventListener('click', () => requestGeolocation());
-    geoBarDismiss.addEventListener('click', () => hideGeoBar());
-
-    /* ── E-Control station fetch ── */
+    /* ─────────────────────────────────────────────────────────────────────────
+     * E-Control station fetch
+     *
+     * ASSUMPTION — response array element:
+     * { id: number, name: string, brand: string,
+     *   address: { street: string, city: string },
+     *   position: { latitude: number, longitude: number },
+     *   prices: [{ fuelType: "DIE"|"SUP", amount: number }] }
+     * ───────────────────────────────────────────────────────────────────────── */
     async function fetchEControlStations(lat, lng, radiusKm) {
       async function fetchOneFuelType(fuelType) {
         const url = new URL(ECONTROL_BASE);
@@ -530,7 +695,7 @@
         let res;
         try { res = await fetch(url.toString()); }
         catch (netErr) { throw new Error(`Netzwerkfehler (${fuelType}): ${netErr.message}`); }
-        if (!res.ok) throw new Error(`E-Control API Fehler ${res.status} für ${fuelType}`);
+        if (!res.ok) throw new Error(`E-Control Fehler ${res.status} für ${fuelType}`);
         let json;
         try { json = await res.json(); }
         catch (_) { throw new Error(`Ungültige JSON-Antwort für ${fuelType}`); }
@@ -541,6 +706,7 @@
         return json;
       }
 
+      // Fetch DIE and SUP in parallel
       const [dieRaw, supRaw] = await Promise.all([
         fetchOneFuelType('DIE'),
         fetchOneFuelType('SUP'),
@@ -554,10 +720,16 @@
         if (typeof lat !== 'number' || typeof lng !== 'number') continue;
         const dieEntry = Array.isArray(raw.prices) ? raw.prices.find(p => p.fuelType === 'DIE') : null;
         stationMap.set(id, {
-          id, name: raw.name || 'Unbekannte Tankstelle', brand: raw.brand || '',
-          address: raw.address?.street || '', city: raw.address?.city || '',
+          id,
+          name:    raw.name    || 'Unbekannte Tankstelle',
+          brand:   raw.brand   || '',
+          address: raw.address?.street || '',
+          city:    raw.address?.city   || '',
           lat, lng,
-          prices: { DIE: (dieEntry && typeof dieEntry.amount === 'number') ? dieEntry.amount : null, SUP: null },
+          prices: {
+            DIE: (dieEntry && typeof dieEntry.amount === 'number') ? dieEntry.amount : null,
+            SUP: null,
+          },
         });
       }
       for (const raw of supRaw) {
@@ -571,104 +743,151 @@
           const lng = raw.position?.longitude;
           if (typeof lat !== 'number' || typeof lng !== 'number') continue;
           stationMap.set(id, {
-            id, name: raw.name || 'Unbekannte Tankstelle', brand: raw.brand || '',
-            address: raw.address?.street || '', city: raw.address?.city || '',
-            lat, lng, prices: { DIE: null, SUP: supPrice },
+            id,
+            name:    raw.name    || 'Unbekannte Tankstelle',
+            brand:   raw.brand   || '',
+            address: raw.address?.street || '',
+            city:    raw.address?.city   || '',
+            lat, lng,
+            prices: { DIE: null, SUP: supPrice },
           });
         }
       }
       return Array.from(stationMap.values());
     }
 
-    /* ── fetchAllData: brent.json + stations + brent history in parallel ── */
-    async function fetchAllData() {
+    /* ─────────────────────────────────────────────────────────────────────────
+     * fetchAllData(lat, lng)
+     * Fetches brent.json + E-Control stations in parallel.
+     * Called once on boot with DEFAULT coords, and again after successful geo.
+     * ───────────────────────────────────────────────────────────────────────── */
+    async function fetchAllData(lat, lng) {
       loadingText.textContent = 'Lade Spritpreise…';
+      loadingOverlay.classList.remove('hidden');
+      hideErrorBanner(); // clear any previous error from a prior attempt
+
       const myToken = ++stationFetchToken;
       let brentRaw, stationsRaw;
       try {
         [brentRaw, stationsRaw] = await Promise.all([
-          fetchBrentJSON(),
-          fetchEControlStations(userLat, userLng, currentRadius),
+          fetchBrentJSON(),                              // FIX 3: returns null on 404, never throws
+          fetchEControlStations(lat, lng, currentRadius),
         ]);
       } catch (err) {
         if (myToken !== stationFetchToken) return;
-        loadingText.textContent = `Fehler: ${err.message}`;
+        console.error('[fetchAllData] Error:', err);    // FIX 4: log before showing to user
+        hideLoading();                                  // FIX 1: always reveal map, never blank screen
+        showErrorBanner(`Fehler: ${err.message}`);      // FIX 2: visible banner below topbar
         return;
       }
+
       if (myToken !== stationFetchToken) return;
-      brentData = brentRaw;
+
+      // FIX 3: brentRaw may be null if brent.json is missing — that is non-fatal
+      brentData = brentRaw; // null is handled gracefully by renderBrent()
       stations  = stationsRaw;
-      renderBrent(brentData);
+
+      renderBrent(brentData); // renderBrent guards against null brentData
       renderMarkers();
       renderJetztBanner();
       hideLoading();
-      // Load brent history from file — no key needed, runs automatically
+
+      // FIX 3: Show "Rohöl-Daten nicht verfügbar" in badge if brent.json was missing
+      if (!brentData) {
+        document.getElementById('brent-usd').textContent = 'N/V';
+        document.getElementById('brent-eur').textContent = '';
+        const chEl = document.getElementById('brent-change');
+        chEl.textContent = 'Rohöl-Daten nicht verfügbar';
+        chEl.className   = 'neu';
+        chEl.style.fontSize = '9px';
+      }
+
       loadBrentHistoryFile();
-      // Expand panel on desktop after data is ready
       if (!isMobile()) expandBrentPanel();
     }
 
+    /* Re-fetch stations only (after geo button success or radius change) */
+    async function refetchStations() {
+      const myToken = ++stationFetchToken;
+      let stationsRaw;
+      try {
+        stationsRaw = await fetchEControlStations(currentLat, currentLng, currentRadius);
+      } catch (err) {
+        if (myToken !== stationFetchToken) return;
+        console.error('[refetchStations] Error:', err);
+        showGeoToast(`Fehler: ${err.message}`);
+        return;
+      }
+      if (myToken !== stationFetchToken) return;
+      closeSidebar();
+      stations = stationsRaw;
+      renderMarkers();
+      renderJetztBanner();
+    }
+
+    /*
+     * FIX 3: fetchBrentJSON is non-fatal.
+     * If brent.json is missing (404 = cron not yet run) return null so
+     * fetchAllData can continue loading stations without crashing.
+     * Only true network errors or unexpected status codes throw.
+     */
     async function fetchBrentJSON() {
       let res;
       try { res = await fetch('./data/brent.json'); }
-      catch (netErr) { throw new Error(`Netzwerkfehler brent.json: ${netErr.message}`); }
-      if (!res.ok) throw new Error(`brent.json HTTP ${res.status}`);
+      catch (netErr) {
+        // Network failure — still non-fatal; stations can load without brent data
+        console.error('[fetchBrentJSON] Network error:', netErr);
+        return null;
+      }
+      // 404 = cron job not yet run; treat as non-fatal
+      if (res.status === 404) return null;
+      if (!res.ok) {
+        console.error('[fetchBrentJSON] HTTP error:', res.status);
+        return null;
+      }
       try { return await res.json(); }
-      catch (_) { throw new Error('Ungültige JSON-Antwort brent.json'); }
+      catch (parseErr) {
+        console.error('[fetchBrentJSON] JSON parse error:', parseErr);
+        return null;
+      }
     }
-
-    function hideLoading() { loadingOverlay.classList.add('hidden'); }
 
     /* ── Radius change ── */
     radiusSelect.addEventListener('change', () => {
       currentRadius = parseInt(radiusSelect.value, 10);
-      closeSidebar();
-      jetztBanner.classList.add('hidden');
-      updateLayoutVars();
-      loadingOverlay.classList.remove('hidden');
-      loadingText.textContent = 'Lade Spritpreise…';
-      fetchEControlStations(userLat, userLng, currentRadius).then((stationsRaw) => {
-        stations = stationsRaw;
-        renderMarkers();
-        renderJetztBanner();
-        loadingOverlay.classList.add('hidden');
-      }).catch((err) => {
-        loadingText.textContent = `Fehler: ${err.message}`;
-      });
+      refetchStations();
     });
 
     /* ─────────────────────────────────────────────────────────────────────────
-     * loadBrentHistoryFile()
+     * FIX 2 — loadBrentHistoryFile()
      *
-     * Fetches ./data/brent-history.json written by the cron job (fetch-prices.js).
-     * No API key. No browser-to-EIA call. Runs automatically on page load.
+     * Fetches ./data/brent-history.json — produced by fetch-prices.js cron job.
+     * No EIA API call. No API key. Runs automatically after fetchAllData().
      *
      * ASSUMPTION — file shape:
-     * {
-     *   "updated": "YYYY-MM-DD",
-     *   "data": [
-     *     { "date": "YYYY-MM-DD", "price_usd": number },
-     *     ...sorted oldest to newest...
-     *   ]
-     * }
-     * price_usd is already a JSON number — no parseFloat() needed.
+     * { "updated": "YYYY-MM-DD",
+     *   "data": [{ "date": "YYYY-MM-DD", "price_usd": number }, ...oldest→newest] }
+     *
+     * If fewer than 7 entries exist, chart is rendered anyway with what's available.
      * ───────────────────────────────────────────────────────────────────────── */
     async function loadBrentHistoryFile() {
-      setBrentChartMessage('<span class="chart-spinner" style="width:20px;height:20px;border-width:2px;"></span><span>Lade Rohöl-Verlauf…</span>');
+      setBrentChartMessage(
+        '<span class="chart-spinner" style="width:20px;height:20px;border-width:2px;"></span>' +
+        '<span>Lade Rohöl-Verlauf…</span>'
+      );
 
       let res;
       try { res = await fetch('./data/brent-history.json'); }
       catch (netErr) {
-        setBrentChartMessage(`<span>Netzwerkfehler beim Laden des Rohöl-Verlaufs.</span>`);
+        setBrentChartMessage('<span>Netzwerkfehler beim Laden des Rohöl-Verlaufs.</span>');
         return;
       }
 
-      // 404 = Actions not yet run; show the specified German message
+      // FIX 2: 404 = cron job not yet run
       if (res.status === 404) {
         setBrentChartMessage(
           '<span style="text-align:center;line-height:1.6;">' +
-          'Verlaufsdaten werden geladen — bitte warten bis GitHub Actions ' +
-          'einmal ausgeführt wurde.' +
+          'Verlaufsdaten folgen bald — GitHub Actions läuft stündlich.' +
           '</span>'
         );
         return;
@@ -681,40 +900,44 @@
 
       let json;
       try { json = await res.json(); }
-      catch (_) { setBrentChartMessage('<span>Ungültiges Datenformat in brent-history.json.</span>'); return; }
-
-      // Validate shape
-      if (!json.data || !Array.isArray(json.data) || json.data.length === 0) {
-        console.error('Unerwartetes brent-history.json Format:', json);
-        setBrentChartMessage('<span>Keine Daten in brent-history.json — siehe Browser-Konsole.</span>');
+      catch (_) {
+        setBrentChartMessage('<span>Ungültiges Datenformat in brent-history.json.</span>');
         return;
       }
 
-      // Build brentHistory array from file data
-      // ASSUMPTION: each entry has date (string) and price_usd (number)
+      if (!json.data || !Array.isArray(json.data)) {
+        console.error('Unerwartetes brent-history.json Format:', json);
+        setBrentChartMessage('<span>Unerwartetes Datenformat — siehe Browser-Konsole.</span>');
+        return;
+      }
+
+      // Build points array — price_usd is a JSON number per spec, but guard with
+      // parseFloat in case it arrives as a string in a future cron job version
       const points = [];
       for (const entry of json.data) {
         if (typeof entry.date !== 'string') continue;
-        const price = typeof entry.price_usd === 'number' ? entry.price_usd : parseFloat(entry.price_usd);
+        const price = typeof entry.price_usd === 'number'
+          ? entry.price_usd
+          : parseFloat(entry.price_usd);
         if (!isFinite(price)) continue;
         points.push({ date: entry.date, price_usd: price });
       }
-      // File is already sorted oldest→newest per spec; no reversal needed.
+      // File is sorted oldest→newest per spec — no reversal needed
 
       if (points.length === 0) {
         setBrentChartMessage('<span>Keine gültigen Einträge in brent-history.json.</span>');
         return;
       }
 
+      // FIX 2: Render chart with whatever data exists — even < 7 entries
       brentHistory = points;
       renderBrentPanelChart(points);
 
-      // Refresh signal badge and overlay if a station is already open
+      // Refresh signal badge and overlay if sidebar is open
       if (selectedStation) {
         renderSignalBadge(selectedStation.id);
         renderOverlayChart(selectedStation, activeFuel);
       }
-      // Refresh marker mini-badges now that 3-day data is available
       recolorMarkers();
       renderJetztBanner();
     }
@@ -731,33 +954,67 @@
       if (brentPanelChart) { brentPanelChart.destroy(); brentPanelChart = null; }
       brentChartMsg.style.display = 'none';
       const old = brentChartArea.querySelector('canvas'); if (old) old.remove();
-      const canvas = document.createElement('canvas'); canvas.height = 130;
+
+      const canvas = document.createElement('canvas');
+      canvas.height = 130;
       brentChartArea.appendChild(canvas);
 
-      // Format dates as DD.MM (Austrian format) for the x-axis
+      // FIX 2: X axis dates formatted as DD.MM (Austrian format)
       const labels = points.map(p => {
         const [, m, d] = p.date.split('-');
         return `${d}.${m}`;
       });
-      // Values are price_usd numbers from the file
       const values = points.map(p => p.price_usd);
 
       brentPanelChart = new Chart(canvas, {
         type: 'line',
         data: {
           labels,
-          datasets: [{ label: 'Brent', data: values, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, fill: true, tension: 0.3 }],
+          datasets: [{
+            label: 'Brent',
+            data: values,
+            borderColor: '#3b82f6',       // FIX 2: line color #3b82f6 as specified
+            backgroundColor: 'rgba(59,130,246,0.12)',
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            fill: true,
+            tension: 0.3,
+          }],
         },
         options: {
           responsive: false, animation: { duration: 300 },
-          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `$${ctx.parsed.y.toFixed(2)}/Barrel` } } },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                // FIX 2: Y axis values with $ suffix
+                label: ctx => `$${ctx.parsed.y.toFixed(2)}/Barrel`,
+              },
+            },
+          },
           scales: {
-            x: { ticks: { color: '#8892a4', font: { size: 10 }, maxTicksLimit: 9, maxRotation: 0 }, grid: { color: 'rgba(45,52,82,0.6)' }, border: { color: 'rgba(45,52,82,0.6)' } },
-            y: { ticks: { color: '#8892a4', font: { size: 10 }, callback: v => `$${v.toFixed(0)}`, maxTicksLimit: 5 }, grid: { color: 'rgba(45,52,82,0.6)' }, border: { color: 'rgba(45,52,82,0.6)' } },
+            x: {
+              ticks: { color: '#8892a4', font: { size: 10 }, maxTicksLimit: 9, maxRotation: 0 },
+              grid:  { color: 'rgba(45,52,82,0.6)' },
+              border: { color: 'rgba(45,52,82,0.6)' },
+            },
+            y: {
+              ticks: {
+                color: '#8892a4', font: { size: 10 },
+                // FIX 2: Y axis with $ suffix
+                callback: v => `$${v.toFixed(0)}`,
+                maxTicksLimit: 5,
+              },
+              grid:  { color: 'rgba(45,52,82,0.6)' },
+              border: { color: 'rgba(45,52,82,0.6)' },
+            },
           },
         },
       });
-      setTimeout(() => { if (brentPanel.classList.contains('expanded')) updateLayoutVars(); }, 60);
+      setTimeout(() => {
+        if (brentPanel.classList.contains('expanded')) updateLayoutVars();
+      }, 60);
     }
 
     /* ── Brent panel collapse/expand ── */
@@ -802,22 +1059,19 @@
       document.getElementById('jetzt-arrow').style.color         = vis.color;
       document.getElementById('jetzt-station-name').textContent  = cheapest.name;
       document.getElementById('jetzt-station-price').textContent = `€\u00A0${cheapPrice.toFixed(3)} · ${cheapest.city || cheapest.address}`;
-      document.getElementById('jetzt-saving').textContent        = saving >= 0.005 ? `Bei ${cheapest.brand || cheapest.name} sparen Sie €${saving.toFixed(2)}/L gegenüber dem teuersten Anbieter` : '';
+      document.getElementById('jetzt-saving').textContent        = saving >= 0.005
+        ? `Bei ${cheapest.brand || cheapest.name} sparen Sie €${saving.toFixed(2)}/L gegenüber dem teuersten Anbieter`
+        : '';
       document.getElementById('jetzt-recommendation').textContent = recommendation;
       jetztBanner.classList.remove('hidden');
       requestAnimationFrame(() => updateLayoutVars());
     }
 
-    /* ─────────────────────────────────────────────────────────────────────────
-     * Signal engine — deterministic rule engine.
-     * Reads brentHistory[].price_usd (field name matches brent-history.json).
-     * Falls back to brentData.change_pct if history not loaded.
-     * ───────────────────────────────────────────────────────────────────────── */
+    /* ── Signal engine (deterministic rule engine — no ML, no Math.random) ── */
     function computeSignal(stationId) {
       let brent3day = null, usedFallback = false;
 
       if (brentHistory && brentHistory.length >= 4) {
-        // Use actual 3-trading-day change from brent-history.json
         const last  = brentHistory[brentHistory.length - 1].price_usd;
         const prior = brentHistory[brentHistory.length - 4].price_usd;
         if (prior > 0) brent3day = ((last - prior) / prior) * 100;
@@ -833,12 +1087,13 @@
       }
 
       const dow = new Date().getDay();
-      const stationSeed = (typeof stationId === 'string' && stationId.length > 0) ? stationId.charCodeAt(0) : 0;
+      const stationSeed = (typeof stationId === 'string' && stationId.length > 0)
+        ? stationId.charCodeAt(0) : 0;
       function pickConfidence(a, b) { return a + (stationSeed % (b - a)); }
 
       const sign = brent3day >= 0 ? '+' : '';
       const brentDisplayed = usedFallback
-        ? `Brent ${sign}${brent3day.toFixed(2)}% (Tageswert, kein 3-Tage-Verlauf)`
+        ? `Brent ${sign}${brent3day.toFixed(2)}% (Tageswert)`
         : `Brent ${sign}${brent3day.toFixed(2)}% über 3 Tage`;
 
       if (brent3day > 3.0)      return { direction: SIG_UP,    confidence: pickConfidence(72,78), ruleNumber: 1, inputDesc: brentDisplayed, usedFallback };
@@ -861,8 +1116,12 @@
     function renderSignalBadge(stationId) {
       const sig = computeSignal(stationId);
       const vis = signalVisuals(sig.direction);
-      const dowRow = sig.dowName ? `<div class="signal-why-row"><span class="signal-why-key">Wochentag</span><span class="signal-why-val">${sig.dowName}</span></div>` : '';
-      const fallbackNote = sig.usedFallback ? `<div class="signal-why-row"><span class="signal-why-key">Hinweis</span><span class="signal-why-val">3-Tage-Verlauf nicht verfügbar — Tageswert verwendet</span></div>` : '';
+      const dowRow = sig.dowName
+        ? `<div class="signal-why-row"><span class="signal-why-key">Wochentag</span><span class="signal-why-val">${sig.dowName}</span></div>`
+        : '';
+      const fallbackNote = sig.usedFallback
+        ? `<div class="signal-why-row"><span class="signal-why-key">Hinweis</span><span class="signal-why-val">3-Tage-Verlauf nicht verfügbar — Tageswert verwendet</span></div>`
+        : '';
       const dirLabel = sig.direction === SIG_UP ? 'Tendenz steigend' : sig.direction === SIG_DOWN ? 'Tendenz sinkend' : 'Kein klarer Trend';
       signalContainer.innerHTML = `
         <div class="signal-main">
@@ -875,11 +1134,16 @@
         </div>
         <div class="signal-why-body" id="signal-why-body">
           <div class="signal-why-inner">
-            <div class="signal-why-row"><span class="signal-why-key">Regel ${sig.ruleNumber}</span><span class="signal-why-val">${sig.inputDesc}</span></div>
+            <div class="signal-why-row">
+              <span class="signal-why-key">Regel ${sig.ruleNumber}</span>
+              <span class="signal-why-val">${sig.inputDesc}</span>
+            </div>
             ${dowRow}${fallbackNote}
           </div>
         </div>
-        <div class="signal-disclaimer">Regelbasiertes Signal · keine Finanzberatung · ~62–68% Richtungsgenauigkeit</div>`;
+        <div class="signal-disclaimer">
+          Regelbasiertes Signal · keine Finanzberatung · ~62–68% Richtungsgenauigkeit
+        </div>`;
       const whyBtn  = signalContainer.querySelector('.signal-why-btn');
       const whyBody = signalContainer.querySelector('#signal-why-body');
       whyBtn.addEventListener('click', () => {
@@ -898,7 +1162,10 @@
       if (valid.length === 0) return {};
       const n = valid.length;
       const tier = {};
-      valid.forEach((s, i) => { const pct = i/n; tier[s.id] = pct < 1/3 ? 'green' : pct < 2/3 ? 'yellow' : 'red'; });
+      valid.forEach((s, i) => {
+        const pct  = i / n;
+        tier[s.id] = pct < 1/3 ? 'green' : pct < 2/3 ? 'yellow' : 'red';
+      });
       return tier;
     }
 
@@ -920,7 +1187,9 @@
         const tier  = tiers[station.id] ?? 'yellow';
         const color = TIER_COLORS[tier];
         const sig   = computeSignal(station.id);
-        const layer = L.marker([station.lat, station.lng], { icon: makeIcon(color, sig.direction), title: station.name || '' });
+        const layer = L.marker([station.lat, station.lng], {
+          icon: makeIcon(color, sig.direction), title: station.name || '',
+        });
         layer.on('click', (e) => { L.DomEvent.stopPropagation(e); openSidebar(station); });
         layer.addTo(map);
         markers.push({ layer, station, tier, signal: sig.direction });
@@ -945,8 +1214,10 @@
     function renderBrent(data) {
       if (!data) return;
       // ASSUMPTION: price_usd, price_eur are numbers; change_pct is number (1.23 = +1.23%)
-      document.getElementById('brent-usd').textContent = typeof data.price_usd === 'number' ? `$${data.price_usd.toFixed(2)}` : '–';
-      document.getElementById('brent-eur').textContent = typeof data.price_eur === 'number' ? `€${data.price_eur.toFixed(2)}` : '–';
+      document.getElementById('brent-usd').textContent =
+        typeof data.price_usd === 'number' ? `$${data.price_usd.toFixed(2)}` : '–';
+      document.getElementById('brent-eur').textContent =
+        typeof data.price_eur === 'number' ? `€${data.price_eur.toFixed(2)}` : '–';
       const chEl = document.getElementById('brent-change');
       if (typeof data.change_pct === 'number') {
         const sign = data.change_pct > 0 ? '+' : '';
@@ -957,15 +1228,15 @@
       if (data.timestamp) {
         try {
           const d = new Date(data.timestamp);
-          footerTs.textContent = d.toLocaleString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+          footerTs.textContent = d.toLocaleString('de-AT', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+          });
         } catch (_) { footerTs.textContent = data.timestamp; }
       }
     }
 
-    /* ─────────────────────────────────────────────────────────────────────────
-     * Overlay chart — Brent (USD left) vs pump price (EUR right)
-     * Reads brentHistory[].price_usd to match the new field name.
-     * ───────────────────────────────────────────────────────────────────────── */
+    /* ── Overlay chart — Brent (USD left) vs pump price (EUR right) ── */
     async function renderOverlayChart(station, fuelCode) {
       if (!brentHistory || brentHistory.length === 0) { overlayContainer.classList.remove('visible'); return; }
       const myToken = ++overlayToken;
@@ -975,12 +1246,10 @@
       if (myToken !== overlayToken) return;
       if (pumpPoints.length < 2) { overlayContainer.classList.remove('visible'); return; }
 
-      // Build brent lookup keyed by date, reading price_usd field
       const brentByDate  = {};
       for (const b of brentHistory) brentByDate[b.date] = b.price_usd;
-
       const allDates     = pumpPoints.map(p => p.date);
-      const brentAligned = allDates.map(d => brentByDate[d] ?? null); // null = gap (weekend)
+      const brentAligned = allDates.map(d => brentByDate[d] ?? null);
       const pumpAligned  = pumpPoints.map(p => p.price);
       const labels       = allDates.map(d => { const [,m,day] = d.split('-'); return `${day}.${m}`; });
 
@@ -1000,16 +1269,16 @@
             tooltip: { mode: 'index', intersect: false, callbacks: { label: ctx => ctx.dataset.yAxisID === 'yUSD' ? (ctx.parsed.y !== null ? `Brent: $${ctx.parsed.y.toFixed(2)}` : 'Brent: –') : `Pumpe: €${ctx.parsed.y.toFixed(3)}` } },
           },
           scales: {
-            x: { ticks: { color: '#8892a4', font: { size: 10 }, maxTicksLimit: 8, maxRotation: 0 }, grid: { color: 'rgba(45,52,82,0.5)' }, border: { color: 'rgba(45,52,82,0.5)' } },
-            yUSD: { type: 'linear', position: 'left', ticks: { color: '#3b82f6', font: { size: 10 }, callback: v => `$${v.toFixed(0)}`, maxTicksLimit: 5 }, grid: { color: 'rgba(45,52,82,0.5)' }, border: { color: 'rgba(45,52,82,0.5)' } },
-            yEUR: { type: 'linear', position: 'right', ticks: { color: tierColor, font: { size: 10 }, callback: v => `€${v.toFixed(3)}`, maxTicksLimit: 5 }, grid: { drawOnChartArea: false }, border: { color: 'rgba(45,52,82,0.5)' } },
+            x:    { ticks: { color: '#8892a4', font: { size: 10 }, maxTicksLimit: 8, maxRotation: 0 }, grid: { color: 'rgba(45,52,82,0.5)' }, border: { color: 'rgba(45,52,82,0.5)' } },
+            yUSD: { type: 'linear', position: 'left',  ticks: { color: '#3b82f6', font: { size: 10 }, callback: v => `$${v.toFixed(0)}`, maxTicksLimit: 5 }, grid: { color: 'rgba(45,52,82,0.5)' }, border: { color: 'rgba(45,52,82,0.5)' } },
+            yEUR: { type: 'linear', position: 'right', ticks: { color: tierColor,  font: { size: 10 }, callback: v => `€${v.toFixed(3)}`, maxTicksLimit: 5 }, grid: { drawOnChartArea: false }, border: { color: 'rgba(45,52,82,0.5)' } },
           },
         },
       });
       overlayContainer.classList.add('visible');
     }
 
-    /* ── Station history (from ./data/history/) ── */
+    /* ── Station history (./data/history/YYYY-MM-DD.json from cron job) ── */
     async function loadStationHistory(stationId, fuelCode) {
       const now = new Date();
       const dates = [];
@@ -1043,7 +1312,10 @@
     }
 
     /* ── Sidebar pump history chart ── */
-    function setHistorySpinner() { destroyHistoryChart(); histEl.className = ''; histEl.innerHTML = '<div class="chart-spinner"></div>'; }
+    function setHistorySpinner() {
+      destroyHistoryChart(); histEl.className = '';
+      histEl.innerHTML = '<div class="chart-spinner"></div>';
+    }
     function destroyHistoryChart() { if (historyChart) { historyChart.destroy(); historyChart = null; } }
 
     async function loadAndRenderHistory(station, fuelCode, tierColor) {
@@ -1067,10 +1339,15 @@
       histEl.className = 'has-chart';
       const canvas = document.createElement('canvas'); canvas.height = 120;
       histEl.innerHTML = ''; histEl.appendChild(canvas);
-      const r = parseInt(tierColor.slice(1,3),16), g = parseInt(tierColor.slice(3,5),16), b = parseInt(tierColor.slice(5,7),16);
+      const r = parseInt(tierColor.slice(1,3),16);
+      const g = parseInt(tierColor.slice(3,5),16);
+      const b = parseInt(tierColor.slice(5,7),16);
       historyChart = new Chart(canvas, {
         type: 'line',
-        data: { labels: points.map(p => { const [,m,d] = p.date.split('-'); return `${d}.${m}`; }), datasets: [{ data: points.map(p => p.price), borderColor: tierColor, backgroundColor: `rgba(${r},${g},${b},0.15)`, borderWidth: 2, pointRadius: points.length <= 10 ? 3 : 0, pointHoverRadius: 4, fill: true, tension: 0.3 }] },
+        data: {
+          labels: points.map(p => { const [,m,d] = p.date.split('-'); return `${d}.${m}`; }),
+          datasets: [{ data: points.map(p => p.price), borderColor: tierColor, backgroundColor: `rgba(${r},${g},${b},0.15)`, borderWidth: 2, pointRadius: points.length <= 10 ? 3 : 0, pointHoverRadius: 4, fill: true, tension: 0.3 }],
+        },
         options: {
           responsive: false, animation: { duration: 300 },
           plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `€ ${ctx.parsed.y.toFixed(3)}` } } },
@@ -1087,19 +1364,21 @@
       selectedStation = station;
       document.getElementById('sidebar-station-name').textContent = station.name  || '–';
       document.getElementById('sidebar-brand').textContent        = station.brand  || '';
-      document.getElementById('sidebar-addr').textContent = [station.address, station.city].filter(Boolean).join(', ') || '–';
+      document.getElementById('sidebar-addr').textContent =
+        [station.address, station.city].filter(Boolean).join(', ') || '–';
       FUEL_CODES.forEach(code => {
         const val = station.prices?.[code];
         const el  = document.getElementById(`pv-${code}`);
         const pc  = document.getElementById(`pc-${code}`);
-        if (typeof val === 'number' && isFinite(val)) { el.textContent = `€\u00A0${val.toFixed(3)}`; el.classList.remove('na'); }
-        else { el.textContent = 'N/A'; el.classList.add('na'); }
+        if (typeof val === 'number' && isFinite(val)) {
+          el.textContent = `€\u00A0${val.toFixed(3)}`; el.classList.remove('na');
+        } else { el.textContent = 'N/A'; el.classList.add('na'); }
         pc.classList.toggle('active-fuel', code === activeFuel);
       });
       const tierColor = stationTierColor(station.id);
       loadAndRenderHistory(station, activeFuel, tierColor);
       renderOverlayChart(station, activeFuel);
-      renderSignalBadge(station.id);
+      renderSignalBadge(station.id); // synchronous — always immediate
       sidebar.classList.add('open');
     }
     function closeSidebar() {
@@ -1121,11 +1400,15 @@
         const code = btn.dataset.code;
         if (code === activeFuel) return;
         activeFuel = code;
-        document.querySelectorAll('.fuel-btn').forEach(b => b.classList.toggle('active', b.dataset.code === activeFuel));
+        document.querySelectorAll('.fuel-btn').forEach(b =>
+          b.classList.toggle('active', b.dataset.code === activeFuel)
+        );
         recolorMarkers();
         renderJetztBanner();
         if (selectedStation) {
-          FUEL_CODES.forEach(c => document.getElementById(`pc-${c}`)?.classList.toggle('active-fuel', c === activeFuel));
+          FUEL_CODES.forEach(c =>
+            document.getElementById(`pc-${c}`)?.classList.toggle('active-fuel', c === activeFuel)
+          );
           const tierColor = stationTierColor(selectedStation.id);
           loadAndRenderHistory(selectedStation, activeFuel, tierColor);
           renderOverlayChart(selectedStation, activeFuel);
@@ -1137,7 +1420,9 @@
     window.addEventListener('resize', () => updateLayoutVars());
 
     /* ── Boot ── */
-    requestGeolocation();
+    // FIX 1: Load stations immediately using hardcoded Wiener Neustadt coords.
+    // No geolocation request on boot. Works without any browser permission.
+    fetchAllData(DEFAULT_LAT, DEFAULT_LNG);
 
   })();
   </script>
