@@ -715,16 +715,16 @@
       const stationMap = new Map();
       for (const raw of dieRaw) {
         const id  = String(raw.id);
-        const lat = raw.position?.latitude;
-        const lng = raw.position?.longitude;
+        const lat = raw.location?.latitude;
+        const lng = raw.location?.longitude;
         if (typeof lat !== 'number' || typeof lng !== 'number') continue;
         const dieEntry = Array.isArray(raw.prices) ? raw.prices.find(p => p.fuelType === 'DIE') : null;
         stationMap.set(id, {
           id,
-          name:    raw.name    || 'Unbekannte Tankstelle',
-          brand:   raw.brand   || '',
-          address: raw.address?.street || '',
-          city:    raw.address?.city   || '',
+          name:    raw.name            || 'Unbekannte Tankstelle',
+          brand:   raw.brand           || '',
+          address: raw.location?.address || '',
+          city:    raw.location?.city    || '',
           lat, lng,
           prices: {
             DIE: (dieEntry && typeof dieEntry.amount === 'number') ? dieEntry.amount : null,
@@ -739,15 +739,15 @@
         if (stationMap.has(id)) {
           stationMap.get(id).prices.SUP = supPrice;
         } else {
-          const lat = raw.position?.latitude;
-          const lng = raw.position?.longitude;
+          const lat = raw.location?.latitude;
+          const lng = raw.location?.longitude;
           if (typeof lat !== 'number' || typeof lng !== 'number') continue;
           stationMap.set(id, {
             id,
-            name:    raw.name    || 'Unbekannte Tankstelle',
-            brand:   raw.brand   || '',
-            address: raw.address?.street || '',
-            city:    raw.address?.city   || '',
+            name:    raw.name            || 'Unbekannte Tankstelle',
+            brand:   raw.brand           || '',
+            address: raw.location?.address || '',
+            city:    raw.location?.city    || '',
             lat, lng,
             prices: { DIE: null, SUP: supPrice },
           });
