@@ -182,6 +182,15 @@
     .marker-wrap { position: relative; width: 20px; height: 20px; }
     .station-dot { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.45); cursor: pointer; }
     .signal-mini { position: absolute; bottom: 0; right: 0; width: 9px; height: 9px; border-radius: 50%; background: var(--card); display: flex; align-items: center; justify-content: center; font-size: 7px; line-height: 1; border: 1px solid rgba(0,0,0,0.4); cursor: pointer; font-weight: 900; }
+    /* FIX 3: Favourite mini-badge on marker (gold star, top-left corner) */
+    .fav-mini { position: absolute; top: 0; left: 0; font-size: 10px; line-height: 1; color: #f59e0b; pointer-events: none; text-shadow: 0 0 2px rgba(0,0,0,0.8); }
+    /* Sidebar star button */
+    #sidebar-fav-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; font-size: 16px; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: 4px; transition: border-color 0.15s; color: var(--muted); }
+    #sidebar-fav-btn:hover { border-color: #f59e0b; }
+    /* Favourites filter button in topbar */
+    #fav-filter-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-size: 14px; padding: 4px 8px; cursor: pointer; flex-shrink: 0; transition: border-color 0.15s, background 0.15s, color 0.15s; }
+    #fav-filter-btn.active { background: rgba(245,158,11,0.15); border-color: #f59e0b; color: #f59e0b; }
+    #fav-filter-btn:hover { border-color: #f59e0b; }
 
     @media (max-width: 767px) {
       :root { --sidebar-w: 100%; }
@@ -223,6 +232,8 @@
       <button class="fuel-btn active" data-code="DIE">Diesel</button>
       <button class="fuel-btn" data-code="SUP">Eurosuper 95</button>
     </div>
+    <!-- FIX 3: Favourites filter toggle -->
+    <button id="fav-filter-btn" title="Nur Favoriten anzeigen">★</button>
     <div id="radius-control">
       <span id="radius-label">Umkreis:</span>
       <select id="radius-select">
@@ -281,6 +292,7 @@
         <div id="sidebar-brand">&#x2013;</div>
         <div id="sidebar-addr">&#x2013;</div>
       </div>
+      <button id="sidebar-fav-btn" title="Als Favorit speichern">&#x2606;</button>
       <button id="sidebar-close" title="Schlie&#xDF;en">&#x2715;</button>
     </div>
     <div id="sidebar-body">
@@ -323,6 +335,34 @@
   </div>
 
   <script>
+  /* FIX 2: Crosshair plugin registered once before any chart is created.
+   * Chart.register() is a documented Chart.js 4.x API for global plugin registration. */
+  (function() {
+    var crosshairPlugin = {
+      id: 'crosshair',
+      afterDraw: function(chart) {
+        if (chart.tooltip && chart.tooltip._active && chart.tooltip._active.length) {
+          var ctx = chart.ctx;
+          var x = chart.tooltip._active[0].element.x;
+          var topY = chart.scales.y ? chart.scales.y.top : (chart.scales.yUSD ? chart.scales.yUSD.top : 0);
+          var bottomY = chart.scales.y ? chart.scales.y.bottom : (chart.scales.yUSD ? chart.scales.yUSD.bottom : chart.height);
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(x, topY);
+          ctx.lineTo(x, bottomY);
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = 'rgba(139,147,174,0.5)';
+          ctx.setLineDash([4, 4]);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+    };
+    Chart.register(crosshairPlugin);
+  })();
+  </script>
+
+  <script>
   (function () {
     'use strict';
 
@@ -333,6 +373,13 @@
     var DEFAULT_LNG    = 16.2400;
     var DEFAULT_ZOOM   = 13;
     var DEFAULT_RADIUS = 5;
+    // Dual fetch points — always fetched together to guarantee coverage of
+    // both Wiener Neustadt and Theresienfeld (Grazerstrasse stations).
+    // FALLBACK_LAT/LNG is used only for map centering, not for fetching.
+    var FETCH_POINT_A_LAT = 47.8150;  // Wiener Neustadt center
+    var FETCH_POINT_A_LNG = 16.2370;
+    var FETCH_POINT_B_LAT = 47.7850;  // Theresienfeld center
+    var FETCH_POINT_B_LNG = 16.2450;
     var HISTORY_DAYS   = 30;
     var ECONTROL_BASE  = 'https://api.e-control.at/sprit/1.0/search/gas-stations/by-address';
     var SIG_UP     = 'UP';
@@ -469,6 +516,71 @@
     var overlayToken      = 0;
     var stationFetchToken = 0;
 
+    /* FIX 3: Favourites — persisted in localStorage as JSON array of id strings */
+    var LS_FAV = 'fav_stations';
+    var favIds = new Set(); // Set<string> of station ids
+    var favFilterActive = false; // when true, only favourite markers shown
+
+    function loadFavourites() {
+      try {
+        var raw = localStorage.getItem(LS_FAV);
+        if (raw !== null) {
+          var arr = JSON.parse(raw);
+          if (Array.isArray(arr)) { favIds = new Set(arr); return; }
+        }
+      } catch(e) {}
+      // First load — initialise to empty; auto-detect runs after stations load
+      favIds = new Set();
+    }
+
+    function saveFavourites() {
+      try { localStorage.setItem(LS_FAV, JSON.stringify(Array.from(favIds))); } catch(e) {}
+    }
+
+    function autoDetectDefaultFav() {
+      // Only run on first load (localStorage key did not exist)
+      try { if (localStorage.getItem(LS_FAV) !== null) return; } catch(e) { return; }
+      var found = stations.find(function(s) {
+        var n = (s.name || '').toLowerCase();
+        var c = (s.city || '').toLowerCase();
+        var a = (s.address || '').toLowerCase();
+        return n.indexOf('diskont') !== -1 || c.indexOf('theresienfeld') !== -1 || a.indexOf('grazer') !== -1;
+      });
+      if (found) favIds.add(found.id);
+      saveFavourites();
+    }
+
+    function toggleFavourite(stationId) {
+      if (favIds.has(stationId)) { favIds.delete(stationId); }
+      else { favIds.add(stationId); }
+      saveFavourites();
+      // Update sidebar star button
+      var btn = document.getElementById('sidebar-fav-btn');
+      if (btn) updateFavBtn(btn, stationId);
+      // Update map marker immediately
+      var m = markers.find(function(m) { return m.station.id === stationId; });
+      if (m) {
+        var price = m.station.prices && m.station.prices[activeFuel];
+        var hasPrice = typeof price === 'number' && isFinite(price);
+        var isFav = favIds.has(stationId);
+        if (hasPrice) {
+          var tiers = computeTiers(activeFuel);
+          var tier = tiers[stationId] || 'yellow';
+          var sig = computeSignal(stationId);
+          m.layer.setIcon(makeIcon(TIER_COLORS[tier], sig.direction, isFav));
+        } else {
+          m.layer.setIcon(makeIconGrey(isFav));
+        }
+      }
+    }
+
+    function updateFavBtn(btn, stationId) {
+      var isFav = favIds.has(stationId);
+      btn.textContent = isFav ? '★' : '☆';
+      btn.style.color = isFav ? '#f59e0b' : '';
+      btn.title = isFav ? 'Aus Favoriten entfernen' : 'Als Favorit speichern';
+    }
+
     function t(key) {
       var tr = TRANSLATIONS[currentLang];
       return (tr && tr[key] !== undefined) ? tr[key] : (TRANSLATIONS['DE'][key] || key);
@@ -602,6 +714,15 @@
     }
 
     /* E-Control */
+    /* fetchEControlStations(lat, lng, radiusKm)
+     * Single-point fetch: fires DIE and SUP in parallel, merges into a Map keyed by id.
+     * Returns Promise<Array<station>>.
+     *
+     * ASSUMPTION — E-Control response element shape:
+     * { id: number, name: string, brand: string,
+     *   location: { address: string, city: string, latitude: number, longitude: number },
+     *   prices: [{ fuelType: "DIE"|"SUP", amount: number }] }
+     */
     function fetchEControlStations(lat, lng, radiusKm) {
       function fetchOne(fuelType) {
         var url = new URL(ECONTROL_BASE);
@@ -623,15 +744,15 @@
         var stationMap = new Map();
         dieRaw.forEach(function(raw) {
           var id = String(raw.id);
-          var lat = raw.location && raw.location.latitude;
-          var lng = raw.location && raw.location.longitude;
-          if (typeof lat !== 'number' || typeof lng !== 'number') return;
+          var slat = raw.location && raw.location.latitude;
+          var slng = raw.location && raw.location.longitude;
+          if (typeof slat !== 'number' || typeof slng !== 'number') return;
           var dieEntry = Array.isArray(raw.prices) ? raw.prices.find(function(p) { return p.fuelType === 'DIE'; }) : null;
           stationMap.set(id, {
             id: id, name: raw.name || 'Unbekannte Tankstelle', brand: raw.brand || '',
             address: (raw.location && raw.location.address) || '',
             city: (raw.location && raw.location.city) || '',
-            lat: lat, lng: lng,
+            lat: slat, lng: slng,
             prices: { DIE: (dieEntry && typeof dieEntry.amount === 'number') ? dieEntry.amount : null, SUP: null },
           });
         });
@@ -642,31 +763,65 @@
           if (stationMap.has(id)) {
             stationMap.get(id).prices.SUP = supPrice;
           } else {
-            var lat = raw.location && raw.location.latitude;
-            var lng = raw.location && raw.location.longitude;
-            if (typeof lat !== 'number' || typeof lng !== 'number') return;
+            var slat = raw.location && raw.location.latitude;
+            var slng = raw.location && raw.location.longitude;
+            if (typeof slat !== 'number' || typeof slng !== 'number') return;
             stationMap.set(id, {
               id: id, name: raw.name || 'Unbekannte Tankstelle', brand: raw.brand || '',
               address: (raw.location && raw.location.address) || '',
               city: (raw.location && raw.location.city) || '',
-              lat: lat, lng: lng,
+              lat: slat, lng: slng,
               prices: { DIE: null, SUP: supPrice },
             });
           }
         });
-        return Array.from(stationMap.values());
+        return stationMap; // return Map for merging
       });
     }
 
-    function fetchAllData(lat, lng) {
+    /* fetchAllPoints(extraLat, extraLng, radiusKm)
+     *
+     * Always fetches from FETCH_POINT_A (Wiener Neustadt) and FETCH_POINT_B
+     * (Theresienfeld) simultaneously. If extraLat/extraLng are provided (user GPS),
+     * adds a third fetch point. All fetches run in parallel via Promise.all().
+     * Results are merged into a single deduplicated array keyed by station id.
+     * A station appearing in multiple results keeps the first occurrence's data
+     * (prices should be identical from the API regardless of fetch center).
+     */
+    function fetchAllPoints(extraLat, extraLng, radiusKm) {
+      var fetches = [
+        fetchEControlStations(FETCH_POINT_A_LAT, FETCH_POINT_A_LNG, radiusKm),
+        fetchEControlStations(FETCH_POINT_B_LAT, FETCH_POINT_B_LNG, radiusKm),
+      ];
+      // Add user GPS point if provided and meaningfully different from the defaults
+      if (typeof extraLat === 'number' && typeof extraLng === 'number') {
+        fetches.push(fetchEControlStations(extraLat, extraLng, radiusKm));
+      }
+      return Promise.all(fetches).then(function(maps) {
+        // Merge all station Maps; first occurrence of each id wins (deduplicate)
+        var merged = new Map();
+        maps.forEach(function(stationMap) {
+          stationMap.forEach(function(station, id) {
+            if (!merged.has(id)) merged.set(id, station);
+          });
+        });
+        return Array.from(merged.values());
+      });
+    }
+
+    function fetchAllData(extraLat, extraLng) {
+      // extraLat/extraLng: user GPS coords to add as a third fetch point (optional).
+      // Points A and B are ALWAYS fetched regardless.
       loadingText.textContent = t('loadingPrices');
       loadingOverlay.classList.remove('hidden');
       hideErrorBanner();
       var myToken = ++stationFetchToken;
-      return Promise.all([fetchBrentJSON(), fetchEControlStations(lat, lng, currentRadius)]).then(function(results) {
+      return Promise.all([fetchBrentJSON(), fetchAllPoints(extraLat, extraLng, currentRadius)]).then(function(results) {
         if (myToken !== stationFetchToken) return;
         brentData = results[0]; stations = results[1];
-        renderBrent(brentData); renderMarkers(); renderJetztBanner(); hideLoading();
+        renderBrent(brentData);
+        autoDetectDefaultFav(); // sets default fav on first-ever load
+        renderMarkers(); renderJetztBanner(); hideLoading();
         if (!brentData) {
           document.getElementById('brent-usd').textContent = 'N/V';
           document.getElementById('brent-eur').textContent = '';
@@ -684,10 +839,14 @@
     }
 
     function refetchStations() {
+      // Always fetch Point A + Point B. If geo succeeded, currentLat/currentLng
+      // differs from DEFAULT and is passed as the third extra point.
+      var extraLat = (currentLat !== DEFAULT_LAT || currentLng !== DEFAULT_LNG) ? currentLat : null;
+      var extraLng = (currentLat !== DEFAULT_LAT || currentLng !== DEFAULT_LNG) ? currentLng : null;
       var myToken = ++stationFetchToken;
-      return fetchEControlStations(currentLat, currentLng, currentRadius).then(function(stationsRaw) {
+      return fetchAllPoints(extraLat, extraLng, currentRadius).then(function(stationsRaw) {
         if (myToken !== stationFetchToken) return;
-        closeSidebar(); stations = stationsRaw; renderMarkers(); renderJetztBanner();
+        closeSidebar(); stations = stationsRaw; renderMarkers(); applyFavFilter(); renderJetztBanner();
       }).catch(function(err) {
         if (myToken !== stationFetchToken) return;
         console.error('[refetchStations] Error:', err);
@@ -746,11 +905,26 @@
       brentChartArea.appendChild(canvas);
       var labels = points.map(function(p) { var parts = p.date.split('-'); return parts[2] + '.' + parts[1]; });
       var values = points.map(function(p) { return p.price_usd; });
+      canvas.style.touchAction = 'none'; // FIX 2: mobile touch support
       brentPanelChart = new Chart(canvas, {
         type: 'line',
-        data: { labels: labels, datasets: [{ label: 'Brent', data: values, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, fill: true, tension: 0.3 }] },
+        data: { labels: labels, datasets: [{ label: 'Brent', data: values, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, pointHoverBackgroundColor: '#3b82f6', pointHoverBorderColor: '#ffffff', pointHoverBorderWidth: 2, fill: true, tension: 0.3 }] },
         options: { responsive: false, animation: { duration: 300 },
-          plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return '$' + ctx.parsed.y.toFixed(2) + '/Barrel'; } } } },
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              enabled: true,
+              backgroundColor: 'rgba(30,33,48,0.95)',
+              borderColor: '#2d3452', borderWidth: 1,
+              titleColor: '#8892a4', bodyColor: '#e2e8f0',
+              padding: 10, displayColors: false,
+              callbacks: {
+                title: function(items) { return items[0] ? items[0].label : ''; },
+                label: function(ctx) { return '$' + ctx.parsed.y.toFixed(2) + '/Barrel'; },
+              },
+            },
+          },
           scales: {
             x: { ticks: { color: '#8892a4', font: { size: 10 }, maxTicksLimit: 9, maxRotation: 0 }, grid: { color: 'rgba(45,52,82,0.6)' }, border: { color: 'rgba(45,52,82,0.6)' } },
             y: { ticks: { color: '#8892a4', font: { size: 10 }, callback: function(v) { return '$' + v.toFixed(0); }, maxTicksLimit: 5 }, grid: { color: 'rgba(45,52,82,0.6)' }, border: { color: 'rgba(45,52,82,0.6)' } },
@@ -869,11 +1043,21 @@
     }
 
     /* Markers */
-    function makeIcon(tierColor, sigDir) {
+    function makeIcon(tierColor, sigDir, isFav) {
       var vis = signalVisuals(sigDir || SIG_STABLE);
+      var favBadge = isFav ? '<div class="fav-mini">★</div>' : '';
       return L.divIcon({
         className: '',
-        html: '<div class="marker-wrap"><div class="station-dot" style="background:' + tierColor + ';"></div><div class="signal-mini" style="color:' + vis.color + ';">' + vis.arrow + '</div></div>',
+        html: '<div class="marker-wrap"><div class="station-dot" style="background:' + tierColor + ';"></div><div class="signal-mini" style="color:' + vis.color + ';">' + vis.arrow + '</div>' + favBadge + '</div>',
+        iconSize: [20,20], iconAnchor: [10,10],
+      });
+    }
+    function makeIconGrey(isFav) {
+      // Grey marker for stations with no price for the active fuel type — no tier badge
+      var favBadge = isFav ? '<div class="fav-mini">★</div>' : '';
+      return L.divIcon({
+        className: '',
+        html: '<div class="marker-wrap"><div class="station-dot" style="background:#6b7280;opacity:0.5;"></div>' + favBadge + '</div>',
         iconSize: [20,20], iconAnchor: [10,10],
       });
     }
@@ -883,21 +1067,43 @@
       var tiers = computeTiers(activeFuel);
       stations.forEach(function(station) {
         if (typeof station.lat !== 'number' || typeof station.lng !== 'number') return;
-        var tier = tiers[station.id] || 'yellow';
-        var color = TIER_COLORS[tier];
-        var sig = computeSignal(station.id);
-        var layer = L.marker([station.lat, station.lng], { icon: makeIcon(color, sig.direction), title: station.name || '' });
+        var price = station.prices && station.prices[activeFuel];
+        var hasPrice = typeof price === 'number' && isFinite(price);
+        var isFav = favIds.has(station.id);
+        var icon, tier, sigDir;
+        if (hasPrice) {
+          tier = tiers[station.id] || 'yellow';
+          var color = TIER_COLORS[tier];
+          var sig = computeSignal(station.id);
+          sigDir = sig.direction;
+          icon = makeIcon(color, sigDir, isFav);
+        } else {
+          tier = 'grey'; sigDir = null;
+          icon = makeIconGrey(isFav);
+        }
+        var layer = L.marker([station.lat, station.lng], { icon: icon, title: station.name || '' });
         layer.on('click', function(e) { L.DomEvent.stopPropagation(e); openSidebar(station); });
         layer.addTo(map);
-        markers.push({ layer: layer, station: station, tier: tier, signal: sig.direction });
+        markers.push({ layer: layer, station: station, tier: tier, signal: sigDir });
       });
     }
     function recolorMarkers() {
       var tiers = computeTiers(activeFuel);
       markers.forEach(function(m) {
-        var tier = tiers[m.station.id] || 'yellow', color = TIER_COLORS[tier];
-        var sig = computeSignal(m.station.id);
-        m.layer.setIcon(makeIcon(color, sig.direction)); m.tier = tier; m.signal = sig.direction;
+        var price = m.station.prices && m.station.prices[activeFuel];
+        var hasPrice = typeof price === 'number' && isFinite(price);
+        if (hasPrice) {
+          // Station has a price for the active fuel — colour by tier
+          var tier = tiers[m.station.id] || 'yellow';
+          var color = TIER_COLORS[tier];
+          var sig = computeSignal(m.station.id);
+          m.layer.setIcon(makeIcon(color, sig.direction, favIds.has(m.station.id)));
+          m.tier = tier; m.signal = sig.direction;
+        } else {
+          // No price for active fuel — grey marker, no tier badge
+          m.layer.setIcon(makeIconGrey(favIds.has(m.station.id)));
+          m.tier = 'grey'; m.signal = null;
+        }
       });
     }
     function stationTierColor(stationId) {
@@ -1006,14 +1212,29 @@
         var canvas = document.createElement('canvas'); canvas.height = 120;
         histEl.innerHTML = ''; histEl.appendChild(canvas);
         var r = parseInt(tierColor.slice(1,3),16), g = parseInt(tierColor.slice(3,5),16), b = parseInt(tierColor.slice(5,7),16);
+        canvas.style.touchAction = 'none'; // FIX 2: mobile touch support
         historyChart = new Chart(canvas, {
           type: 'line',
-          data: { labels: points.map(function(p) { var parts = p.date.split('-'); return parts[2] + '.' + parts[1]; }), datasets: [{ data: points.map(function(p) { return p.price; }), borderColor: tierColor, backgroundColor: 'rgba('+r+','+g+','+b+',0.15)', borderWidth: 2, pointRadius: points.length <= 10 ? 3 : 0, pointHoverRadius: 4, fill: true, tension: 0.3 }] },
+          data: { labels: points.map(function(p) { var parts = p.date.split('-'); return parts[2] + '.' + parts[1]; }), datasets: [{ data: points.map(function(p) { return p.price; }), borderColor: tierColor, backgroundColor: 'rgba('+r+','+g+','+b+',0.15)', borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, pointHoverBackgroundColor: tierColor, pointHoverBorderColor: '#ffffff', pointHoverBorderWidth: 2, fill: true, tension: 0.3 }] },
           options: { responsive: false, animation: { duration: 300 },
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return '\u20ac ' + ctx.parsed.y.toFixed(3); } } } },
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                enabled: true,
+                backgroundColor: 'rgba(30,33,48,0.95)',
+                borderColor: '#2d3452', borderWidth: 1,
+                titleColor: '#8892a4', bodyColor: '#e2e8f0',
+                padding: 10, displayColors: false,
+                callbacks: {
+                  title: function(items) { return items[0] ? items[0].label : ''; },
+                  label: function(ctx) { return '€ ' + ctx.parsed.y.toFixed(3); },
+                },
+              },
+            },
             scales: {
               x: { ticks: { color: '#8892a4', font: { size: 10 }, maxTicksLimit: 8, maxRotation: 0 }, grid: { color: 'rgba(45,52,82,0.6)' }, border: { color: 'rgba(45,52,82,0.6)' } },
-              y: { ticks: { color: '#8892a4', font: { size: 10 }, callback: function(v) { return '\u20ac ' + v.toFixed(3); }, maxTicksLimit: 5 }, grid: { color: 'rgba(45,52,82,0.6)' }, border: { color: 'rgba(45,52,82,0.6)' } },
+              y: { ticks: { color: '#8892a4', font: { size: 10 }, callback: function(v) { return '€ ' + v.toFixed(3); }, maxTicksLimit: 5 }, grid: { color: 'rgba(45,52,82,0.6)' }, border: { color: 'rgba(45,52,82,0.6)' } },
             },
           },
         });
@@ -1026,9 +1247,15 @@
     /* Sidebar */
     function openSidebar(station) {
       selectedStation = station;
-      document.getElementById('sidebar-station-name').textContent = station.name || '\u2013';
+      document.getElementById('sidebar-station-name').textContent = station.name || '–';
       document.getElementById('sidebar-brand').textContent = station.brand || '';
-      document.getElementById('sidebar-addr').textContent = [station.address, station.city].filter(Boolean).join(', ') || '\u2013';
+      document.getElementById('sidebar-addr').textContent = [station.address, station.city].filter(Boolean).join(', ') || '–';
+      // FIX 3: Update fav star button state
+      var favBtn = document.getElementById('sidebar-fav-btn');
+      if (favBtn) {
+        updateFavBtn(favBtn, station.id);
+        favBtn.onclick = function() { toggleFavourite(station.id); };
+      }
       FUEL_CODES.forEach(function(code) {
         var val = station.prices && station.prices[code];
         var el = document.getElementById('pv-' + code), pc = document.getElementById('pc-' + code);
@@ -1071,12 +1298,33 @@
       });
     });
 
+    /* FIX 3: Favourites filter button */
+    var favFilterBtn = document.getElementById('fav-filter-btn');
+    favFilterBtn.addEventListener('click', function() {
+      favFilterActive = !favFilterActive;
+      favFilterBtn.classList.toggle('active', favFilterActive);
+      applyFavFilter();
+    });
+
+    function applyFavFilter() {
+      markers.forEach(function(m) {
+        if (favFilterActive && !favIds.has(m.station.id)) {
+          // Hide non-favourite markers from the map without removing them from the array
+          if (map.hasLayer(m.layer)) map.removeLayer(m.layer);
+        } else {
+          // Show all markers (or just favourites when filter active)
+          if (!map.hasLayer(m.layer)) m.layer.addTo(map);
+        }
+      });
+    }
+
     window.addEventListener('resize', updateLayoutVars);
 
     /* Boot */
+    loadFavourites();  // FIX 3: load fav ids before first render
     initLanguage();
     applyLanguage(currentLang);
-    fetchAllData(DEFAULT_LAT, DEFAULT_LNG);
+    fetchAllData(null, null); // Points A + B always fetched; no GPS point on initial load
 
   })();
   </script>
