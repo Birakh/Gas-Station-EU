@@ -181,6 +181,10 @@
 
     .marker-wrap { position: relative; width: 20px; height: 20px; }
     .station-dot { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.45); cursor: pointer; }
+    .marker-wrap-sm { position: relative; width: 14px; height: 14px; }
+    .station-dot-hollow { position: absolute; top: 3px; left: 3px; width: 8px; height: 8px; border-radius: 50%; border: 2px solid #4b5563; background: transparent; cursor: pointer; opacity: 0.7; }
+    .price-card-value.not-reported { color: var(--muted); font-size: 11px; font-weight: 500; cursor: help; }
+    #footer-station-count { font-size: 10px; color: var(--muted); }
     .signal-mini { position: absolute; bottom: 0; right: 0; width: 9px; height: 9px; border-radius: 50%; background: var(--card); display: flex; align-items: center; justify-content: center; font-size: 7px; line-height: 1; border: 1px solid rgba(0,0,0,0.4); cursor: pointer; font-weight: 900; }
     /* FIX 3: Favourite mini-badge on marker (gold star, top-left corner) */
     .fav-mini { position: absolute; top: 0; left: 0; font-size: 10px; line-height: 1; color: #f59e0b; pointer-events: none; text-shadow: 0 0 2px rgba(0,0,0,0.8); }
@@ -330,7 +334,7 @@
   </div>
 
   <div id="footer">
-    <p><span id="footer-data">Spritdaten: E-Control Austria &#xB7; Roh&#xF6;l: U.S. EIA</span> &#xB7; <span id="footer-last-updated">Letztes Update:</span> <span id="footer-ts">&#x2013;</span></p>
+    <p><span id="footer-data">Spritdaten: E-Control Austria &#xB7; Roh&#xF6;l: U.S. EIA</span> &#xB7; <span id="footer-last-updated">Letztes Update:</span> <span id="footer-ts">&#x2013;</span> &middot; <span id="footer-station-count"></span></p>
     <p id="footer-legal">Datenquelle gesetzlich vorgeschrieben gem&#xE4;&#xDF; Preistransparenzgesetz</p>
   </div>
 
@@ -442,6 +446,10 @@
         brentErrStatus:   'Fehler beim Laden des Roh\u00f6l-Verlaufs.',
         oilUnavailable:   'Roh\u00f6l-Daten nicht verf\u00fcgbar',
         pumpLabel:        'Pumpenpreis EUR',
+        notReported:      'Nicht gemeldet',
+        notReportedTooltip: 'Keine aktuellen Preismeldung bei E-Control',
+        stationCount:     'Tankstellen',
+        withPrices:       'mit Preisen',
       },
       EN: {
         appTitleHtml:     'AT <span>Fuel Prices</span>',
@@ -494,6 +502,10 @@
         brentErrStatus:   'Error loading crude oil history.',
         oilUnavailable:   'Oil data unavailable',
         pumpLabel:        'Pump price EUR',
+        notReported:      'Not reported',
+        notReportedTooltip: 'No current price reported to E-Control',
+        stationCount:     'stations',
+        withPrices:       'with prices',
       }
     };
 
@@ -612,6 +624,16 @@
     function hideErrorBanner()    { errorBanner.classList.remove('visible'); }
     function hideLoading()        { loadingOverlay.classList.add('hidden'); }
 
+    function updateStationCount() {
+      var el = document.getElementById('footer-station-count');
+      if (!el || stations.length === 0) { if (el) el.textContent = ''; return; }
+      var withP = stations.filter(function(s) {
+        var p = s.prices && s.prices[activeFuel];
+        return typeof p === 'number' && isFinite(p);
+      }).length;
+      el.textContent = stations.length + ' ' + t('stationCount') + ' · ' + withP + ' ' + t('withPrices');
+    }
+
     /* Language */
     function applyLanguage(lang) {
       currentLang = lang;
@@ -636,8 +658,18 @@
       document.getElementById('footer-last-updated').textContent = t('lastUpdated');
       document.getElementById('footer-legal').textContent = t('footerLegal');
       if (!loadingOverlay.classList.contains('hidden')) loadingText.textContent = t('loadingPrices');
-      if (stations.length > 0) renderJetztBanner();
-      if (selectedStation) renderSignalBadge(selectedStation.id);
+      if (stations.length > 0) { renderJetztBanner(); updateStationCount(); }
+      if (selectedStation) {
+        renderSignalBadge(selectedStation.id);
+        FUEL_CODES.forEach(function(code) {
+          var val = selectedStation.prices && selectedStation.prices[code];
+          var el = document.getElementById('pv-' + code);
+          if (el && !(typeof val === 'number' && isFinite(val))) {
+            el.textContent = t('notReported');
+            el.setAttribute('title', t('notReportedTooltip'));
+          }
+        });
+      }
       var hText = histEl.textContent.trim();
       if (hText === TRANSLATIONS['DE'].loadingHistory || hText === TRANSLATIONS['EN'].loadingHistory) {
         histEl.textContent = t('loadingHistory');
@@ -820,8 +852,8 @@
         if (myToken !== stationFetchToken) return;
         brentData = results[0]; stations = results[1];
         renderBrent(brentData);
-        autoDetectDefaultFav(); // sets default fav on first-ever load
-        renderMarkers(); renderJetztBanner(); hideLoading();
+        autoDetectDefaultFav();
+        renderMarkers(); renderJetztBanner(); updateStationCount(); hideLoading();
         if (!brentData) {
           document.getElementById('brent-usd').textContent = 'N/V';
           document.getElementById('brent-eur').textContent = '';
@@ -846,7 +878,7 @@
       var myToken = ++stationFetchToken;
       return fetchAllPoints(extraLat, extraLng, currentRadius).then(function(stationsRaw) {
         if (myToken !== stationFetchToken) return;
-        closeSidebar(); stations = stationsRaw; renderMarkers(); applyFavFilter(); renderJetztBanner();
+        closeSidebar(); stations = stationsRaw; renderMarkers(); applyFavFilter(); renderJetztBanner(); updateStationCount();
       }).catch(function(err) {
         if (myToken !== stationFetchToken) return;
         console.error('[refetchStations] Error:', err);
@@ -887,7 +919,7 @@
         brentHistory = points;
         renderBrentPanelChart(points);
         if (selectedStation) { renderSignalBadge(selectedStation.id); renderOverlayChart(selectedStation, activeFuel); }
-        recolorMarkers(); renderJetztBanner();
+        recolorMarkers(); renderJetztBanner(); updateStationCount();
       }).catch(function() { setBrentChartMessage('<span>' + t('brentNetErr') + '</span>'); });
     }
 
@@ -1053,12 +1085,12 @@
       });
     }
     function makeIconGrey(isFav) {
-      // Grey marker for stations with no price for the active fuel type — no tier badge
+      // FIX 1: hollow 8px grey circle for no-price stations
       var favBadge = isFav ? '<div class="fav-mini">★</div>' : '';
       return L.divIcon({
         className: '',
-        html: '<div class="marker-wrap"><div class="station-dot" style="background:#6b7280;opacity:0.5;"></div>' + favBadge + '</div>',
-        iconSize: [20,20], iconAnchor: [10,10],
+        html: '<div class="marker-wrap-sm"><div class="station-dot-hollow"></div>' + favBadge + '</div>',
+        iconSize: [14,14], iconAnchor: [7,7],
       });
     }
     function renderMarkers() {
@@ -1259,8 +1291,14 @@
       FUEL_CODES.forEach(function(code) {
         var val = station.prices && station.prices[code];
         var el = document.getElementById('pv-' + code), pc = document.getElementById('pc-' + code);
-        if (typeof val === 'number' && isFinite(val)) { el.textContent = '\u20ac\u00a0' + val.toFixed(3); el.classList.remove('na'); }
-        else { el.textContent = t('noData'); el.classList.add('na'); }
+        if (typeof val === 'number' && isFinite(val)) {
+          el.textContent = '\u20ac\u00a0' + val.toFixed(3);
+          el.classList.remove('na'); el.classList.remove('not-reported'); el.removeAttribute('title');
+        } else {
+          el.textContent = t('notReported');
+          el.classList.remove('na'); el.classList.add('not-reported');
+          el.setAttribute('title', t('notReportedTooltip'));
+        }
         pc.classList.toggle('active-fuel', code === activeFuel);
       });
       var tierColor = stationTierColor(station.id);
