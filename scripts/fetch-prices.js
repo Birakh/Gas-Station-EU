@@ -5,9 +5,9 @@
 // Native fetch is available — no npm install required.
 // Execute with:  node scripts/fetch-prices.js
 //
-// This script fetches only Brent crude oil price and EUR/USD rate,
-// then writes data/brent.json.  Station prices are fetched directly
-// by the browser using the user's geolocation — not handled here.
+// This script fetches Brent crude oil price and EUR/USD rate,
+// then writes data/brent.json and data/brent-history.json.
+// Station prices are fetched directly by the browser — not handled here.
 
 const fs   = require('fs');
 const path = require('path');
@@ -60,14 +60,17 @@ async function fetchText(url, options = {}) {
 //
 // EIA v2 API docs: https://www.eia.gov/opendata/documentation.php
 //
-// NOTE: Series ID "RBRTE" is the Brent crude spot price as listed in
-//       https://www.eia.gov/opendata/browser/petroleum/pri/spt
-//       If EIA has changed this series ID the call will return an empty array
-//       and the Stooq fallback will activate.
+// Series IDs tried in order until one returns data.  RBRTE is the
+// documented Brent spot price series; EPCBRENT and BRT are included as
+// fallbacks in case EIA renames the series.
+//   RBRTE   — Europe Brent Spot Price FOB (primary)
+//   EPCBRENT — alternate ID observed in EIA v2 browser
+//   BRT      — short alias; not confirmed in docs, included as last resort
 //
-// The query string uses bracket notation (data[]=value, facets[series][]=RBRTE).
-// We build it manually to avoid URLSearchParams percent-encoding the brackets,
-// because EIA v2 may not accept %5B%5D in place of literal [].
+// The query string uses literal [ ] brackets.  URLSearchParams would
+// percent-encode them to %5B%5D which EIA v2 may not accept.
+
+const EIA_SERIES_IDS = ['RBRTE', 'EPCBRENT', 'BRT'];
 
 async function fetchEIA() {
   const apiKey = process.env.EIA_API_KEY;
@@ -78,65 +81,89 @@ async function fetchEIA() {
     );
   }
 
-  // Manually assembled to keep literal [ ] brackets (not %5B%5D).
-  const url =
-    'https://api.eia.gov/v2/petroleum/pri/spt/data/' +
-    `?api_key=${encodeURIComponent(apiKey)}` +
-    '&frequency=daily' +
-    '&data[]=value' +
-    '&facets[series][]=RBRTE' +
-    '&sort[0][column]=period' +
-    '&sort[0][direction]=desc' +
-    '&length=2';
+  let lastError = null;
 
-  // Let any throw propagate to the caller so the Stooq fallback can activate.
-  const data = await fetchJSON(url);
+  for (const seriesId of EIA_SERIES_IDS) {
+    const url =
+      'https://api.eia.gov/v2/petroleum/pri/spt/data/' +
+      `?api_key=${encodeURIComponent(apiKey)}` +
+      '&frequency=daily' +
+      '&data[]=value' +
+      `&facets[series][]=${seriesId}` +
+      '&sort[0][column]=period' +
+      '&sort[0][direction]=desc' +
+      '&length=2';
 
-  // ASSUMPTION: EIA v2 response shape:
-  //   {
-  //     response: {
-  //       data: [
-  //         { period: "2024-01-15", series: "RBRTE", seriesDescription: "...",
-  //           value: 76.51, unit: "Dollars per Barrel" },
-  //         { period: "2024-01-14", ... value: 75.90 }
-  //       ]
-  //     }
-  //   }
-  const rows = data?.response?.data;
+    let eiaJson;
+    try {
+      eiaJson = await fetchJSON(url);
+    } catch (networkErr) {
+      console.warn(`[Step 1] EIA network error for series ${seriesId}: ${networkErr.message}`);
+      lastError = networkErr;
+      continue; // try next series ID
+    }
 
-  if (!Array.isArray(rows) || rows.length === 0) {
-    throw new Error(
-      '[Step 1] EIA returned no data rows. ' +
-      'Series RBRTE may have changed. ' +
-      `Raw response: ${JSON.stringify(data).slice(0, 300)}`
+    // FIX 3: Log the raw response immediately after every fetch attempt
+    // so CI logs show exactly what EIA is returning, regardless of outcome.
+    console.log(`[EIA Raw] series=${seriesId}`, JSON.stringify(eiaJson).slice(0, 500));
+
+    // ASSUMPTION: EIA v2 response shape:
+    //   {
+    //     response: {
+    //       data: [
+    //         { period: "2024-01-15", series: "RBRTE", value: "76.51" },
+    //         { period: "2024-01-14", value: "75.90" }
+    //       ]
+    //     }
+    //   }
+    // `value` may be a string or number — parseFloat handles both.
+    const rows = eiaJson?.response?.data;
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      console.warn(
+        `[Step 1] EIA series ${seriesId} returned no data rows — trying next series.`
+      );
+      lastError = new Error(`EIA series ${seriesId} returned no data rows`);
+      continue;
+    }
+
+    const latest   = rows[0];
+    const previous = rows[1] ?? null;
+
+    const price_usd = parseFloat(latest.value);
+    if (isNaN(price_usd)) {
+      console.warn(
+        `[Step 1] EIA series ${seriesId} value is not a number: ` +
+        `${JSON.stringify(latest.value)} — trying next series.`
+      );
+      lastError = new Error(`EIA series ${seriesId} value not a number`);
+      continue;
+    }
+
+    const previous_price_usd =
+      previous != null && !isNaN(parseFloat(previous.value))
+        ? parseFloat(previous.value)
+        : null;
+
+    console.log(
+      `[Step 1] EIA success: series=${seriesId}, ` +
+      `period=${latest.period}, price_usd=${price_usd}`
     );
+
+    return {
+      date:               latest.period, // "YYYY-MM-DD"
+      price_usd,
+      previous_price_usd,
+      source:             'EIA',
+      seriesId,           // passed to fetchEIAHistory() so both calls use the same series
+    };
   }
 
-  // rows[0] is the most recent (sorted desc by period).
-  const latest   = rows[0];
-  const previous = rows[1] ?? null;
-
-  // ASSUMPTION: price is in `value` (number or numeric string), date in `period`.
-  const price_usd = parseFloat(latest.value);
-  if (isNaN(price_usd)) {
-    throw new Error(
-      `[Step 1] EIA value field is not a number: ${JSON.stringify(latest.value)}`
-    );
-  }
-
-  const previous_price_usd =
-    previous != null && !isNaN(parseFloat(previous.value))
-      ? parseFloat(previous.value)
-      : null;
-
-  console.log(`[Step 1] EIA: period=${latest.period}, price_usd=${price_usd}`);
-
-  return {
-    date:               latest.period, // "YYYY-MM-DD"
-    price_usd,
-    previous_price_usd,
-    source:             'EIA',
-  };
+  // All series exhausted.
+  throw new Error(
+    `[Step 1] All EIA series failed (${EIA_SERIES_IDS.join(', ')}). ` +
+    `Last error: ${lastError?.message ?? 'unknown'}`
+  );
 }
 
 // ─── Step 2: Stooq fallback ───────────────────────────────────────────────────
@@ -144,7 +171,6 @@ async function fetchEIA() {
 // Stooq provides a free CSV endpoint for commodities.
 // Symbol @brn.uk is ICE Brent Crude (London) on Stooq.
 // NOTE: Stooq symbols are not formally documented; this is the observed symbol.
-//       If Stooq changes it the script will throw and exit with code 1.
 
 async function fetchStooq() {
   console.log('[Step 2] Fetching Brent crude from Stooq (fallback)…');
@@ -183,7 +209,6 @@ async function fetchStooq() {
     );
   }
 
-  // Most recent row.
   const lastFields = lines[lines.length - 1].split(',');
   const date       = lastFields[dateIdx]?.trim();
   const price_usd  = parseFloat(lastFields[closeIdx]?.trim());
@@ -194,7 +219,6 @@ async function fetchStooq() {
     );
   }
 
-  // Previous row (second-to-last) for change calculation.
   let previous_price_usd = null;
   if (lines.length >= 3) {
     const prevFields = lines[lines.length - 2].split(',');
@@ -204,7 +228,8 @@ async function fetchStooq() {
 
   console.log(`[Step 2] Stooq: date=${date}, close=${price_usd}`);
 
-  return { date, price_usd, previous_price_usd, source: 'Stooq' };
+  // seriesId is null for Stooq — fetchEIAHistory() is skipped when source !== 'EIA'.
+  return { date, price_usd, previous_price_usd, source: 'Stooq', seriesId: null };
 }
 
 // ─── Step 3: ECB EUR/USD rate ─────────────────────────────────────────────────
@@ -245,42 +270,39 @@ async function fetchECBRate() {
   return rate;
 }
 
-// ─── Step 4: EIA v2 — 90-day Brent history ───────────────────────────────────
+// ─── Step 5: EIA v2 — 90-day Brent history ───────────────────────────────────
 //
-// Same endpoint and API key as Step 1, but length=90 instead of length=2.
-// The response comes newest-first; we reverse it so the output array runs
-// oldest-to-newest, which is the natural order for a time-series chart.
-//
-// This is a separate function (not reused from fetchEIA) because the two
-// calls have different purposes, different lengths, and different return
-// shapes — merging them would add branching complexity for no benefit.
+// Uses whichever seriesId succeeded in fetchEIA() so both calls hit the
+// same series.  Only called when source === 'EIA'; skipped on Stooq fallback.
 //
 // ASSUMPTION: response shape is identical to fetchEIA():
 //   { response: { data: [ { period: "YYYY-MM-DD", value: "123.45" }, … ] } }
 // `value` is a string — parseFloat() is used on every row.
 
-async function fetchEIAHistory() {
-  console.log('[Step 4] Fetching 90-day Brent history from EIA…');
+async function fetchEIAHistory(seriesId) {
+  console.log(`[Step 5] Fetching 90-day Brent history from EIA (series=${seriesId})…`);
 
-  // apiKey was already validated in fetchEIA(); if we reach here it is set.
-  const apiKey = process.env.EIA_API_KEY;
+  const apiKey = process.env.EIA_API_KEY; // already validated in fetchEIA()
 
   const url =
     'https://api.eia.gov/v2/petroleum/pri/spt/data/' +
     `?api_key=${encodeURIComponent(apiKey)}` +
     '&frequency=daily' +
     '&data[]=value' +
-    '&facets[series][]=RBRTE' +
+    `&facets[series][]=${seriesId}` +
     '&sort[0][column]=period' +
     '&sort[0][direction]=desc' +
     '&length=90';
 
   const data = await fetchJSON(url);
 
+  // Log raw response for the same visibility as the spot-price fetch.
+  console.log('[EIA Raw] history', JSON.stringify(data).slice(0, 500));
+
   const rows = data?.response?.data;
   if (!Array.isArray(rows) || rows.length === 0) {
     throw new Error(
-      '[Step 4] EIA history returned no data rows. ' +
+      `[Step 5] EIA history returned no data rows for series ${seriesId}. ` +
       `Raw response: ${JSON.stringify(data).slice(0, 300)}`
     );
   }
@@ -291,7 +313,7 @@ async function fetchEIAHistory() {
     const price_usd = parseFloat(row.value);
     if (!row.period || isNaN(price_usd)) {
       throw new Error(
-        `[Step 4] EIA history row ${i} has invalid period or value: ` +
+        `[Step 5] EIA history row ${i} has invalid period or value: ` +
         JSON.stringify(row)
       );
     }
@@ -302,7 +324,7 @@ async function fetchEIAHistory() {
   parsed.reverse();
 
   console.log(
-    `[Step 4] EIA history: ${parsed.length} rows, ` +
+    `[Step 5] EIA history: ${parsed.length} rows, ` +
     `${parsed[0].date} → ${parsed[parsed.length - 1].date}`
   );
 
@@ -313,21 +335,62 @@ async function fetchEIAHistory() {
 
 async function main() {
 
-  // ── Steps 1 + 2: Brent crude (EIA primary, Stooq fallback) ──────────────────
-  let brentRaw;
+  // Ensure data/ exists before any file reads or writes below.
   try {
-    brentRaw = await fetchEIA();
-  } catch (eiaErr) {
-    console.warn(
-      `[Step 1] EIA failed: ${eiaErr.message}\n` +
-      '[Step 1] Activating Stooq fallback…'
-    );
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  } catch (err) {
+    console.error('[Setup] FAILED to create data/ directory:', err.message);
+    process.exit(1);
+  }
+
+  // ── Steps 1 + 2: Brent crude ─────────────────────────────────────────────────
+  // FIX 4: The entire Brent block is wrapped in a single try/catch.
+  // If both EIA (all series) and Stooq fail, we do NOT exit with code 1.
+  // Instead we mark the existing brent.json as stale and continue — the
+  // browser will see the stale flag and show a warning rather than no data.
+
+  let brentRaw  = null;  // stays null only when every source failed
+  let brentFailed = false;
+
+  try {
     try {
-      brentRaw = await fetchStooq();
-    } catch (stooqErr) {
-      console.error('[Step 2] Stooq fallback FAILED:', stooqErr.message);
-      process.exit(1);
+      brentRaw = await fetchEIA();
+    } catch (eiaErr) {
+      console.warn(
+        `[Step 1] All EIA series failed: ${eiaErr.message}\n` +
+        '[Step 1] Activating Stooq fallback…'
+      );
+      brentRaw = await fetchStooq(); // throws if Stooq also fails
     }
+  } catch (allSourcesFailed) {
+    brentFailed = true;
+    console.error(
+      '[Brent] BOTH EIA and Stooq failed. Error:',
+      allSourcesFailed.message
+    );
+
+    // FIX 4: Write stale flag into existing brent.json if it exists.
+    const brentPath = path.join(DATA_DIR, 'brent.json');
+    if (fs.existsSync(brentPath)) {
+      try {
+        const existing = JSON.parse(fs.readFileSync(brentPath, 'utf8'));
+        existing.stale = true;
+        fs.writeFileSync(brentPath, JSON.stringify(existing, null, 2), 'utf8');
+        console.log('[Brent] Wrote stale=true to existing data/brent.json — continuing.');
+      } catch (readWriteErr) {
+        console.error('[Brent] Could not update stale brent.json:', readWriteErr.message);
+      }
+    } else {
+      console.warn('[Brent] No existing brent.json to mark stale — file will be absent.');
+    }
+  }
+
+  // If Brent failed entirely, there is nothing more to compute or write.
+  // ECB rate and history both depend on a live Brent value, so we skip them.
+  if (brentFailed) {
+    console.log('[Brent] Skipping ECB and history steps due to Brent fetch failure.');
+    console.log('Script finished with degraded data.');
+    return;
   }
 
   // ── Step 3: ECB EUR/USD ──────────────────────────────────────────────────────
@@ -340,8 +403,7 @@ async function main() {
   }
 
   // Derived calculations.
-  // price_eur: the USD price converted to EUR.
-  // EUR/USD rate from ECB means: 1 EUR = eurUsdRate USD, so 1 USD = 1/eurUsdRate EUR.
+  // EUR/USD rate from ECB: 1 EUR = eurUsdRate USD → 1 USD = 1/eurUsdRate EUR.
   const price_eur = brentRaw.price_usd / eurUsdRate;
 
   let change_pct = null;
@@ -367,16 +429,10 @@ async function main() {
       change_pct !== null ? parseFloat(change_pct.toFixed(4)) : null,
     eur_usd_rate: parseFloat(eurUsdRate.toFixed(4)),
     source:       brentRaw.source,
+    // stale is intentionally absent on a successful fetch
   };
 
   // ── Step 4: Write data/brent.json ────────────────────────────────────────────
-  try {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  } catch (err) {
-    console.error('[Step 4] FAILED to create data/ directory:', err.message);
-    process.exit(1);
-  }
-
   const brentPath = path.join(DATA_DIR, 'brent.json');
   try {
     fs.writeFileSync(brentPath, JSON.stringify(brentOutput, null, 2), 'utf8');
@@ -387,14 +443,13 @@ async function main() {
   }
 
   // ── Step 5: EIA 90-day history ───────────────────────────────────────────────
-  // Only available when EIA was reachable (brentRaw.source === 'EIA').
-  // If we fell back to Stooq we skip this step rather than calling EIA a
-  // second time after it already failed — the existing brent-history.json
-  // from the previous successful run remains on disk unchanged.
+  // Only attempted when EIA was the successful source.  If Stooq was used,
+  // the existing brent-history.json from the last successful EIA run stays
+  // on disk unchanged rather than making a second EIA call that will also fail.
   if (brentRaw.source === 'EIA') {
     let historyRows;
     try {
-      historyRows = await fetchEIAHistory();
+      historyRows = await fetchEIAHistory(brentRaw.seriesId);
     } catch (err) {
       console.error('[Step 5] FAILED to fetch Brent history:', err.message);
       process.exit(1);
