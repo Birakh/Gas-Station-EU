@@ -6,8 +6,8 @@
 // Execute with:  node scripts/fetch-prices.js
 //
 // Fetch order for brent.json (current price badge):
-//   PRIMARY:  Stooq CSV  — updates daily, no API key needed
-//   FALLBACK: EIA API    — 3-8 day lag but reliable
+//   PRIMARY:  Yahoo Finance unofficial API — real-time, no API key needed
+//   FALLBACK: EIA API                     — 3-8 day lag but reliable
 //
 // Fetch order for brent-history.json (90-day chart):
 //   Always EIA — historical lag is irrelevant for a multi-month chart
@@ -61,84 +61,91 @@ async function fetchText(url, options = {}) {
   return response.text();
 }
 
-// ─── Step 1 (primary): Stooq CSV — current Brent price ───────────────────────
+// ─── Step 1 (primary): Yahoo Finance — current Brent price ───────────────────
 //
-// Stooq returns a CSV for @brn.uk (ICE Brent Crude, London) sorted
-// newest-first.  Stooq symbols are not formally documented; @brn.uk is
-// the observed symbol for Brent.
+// NOTE: This uses Yahoo Finance's unofficial /v8/finance/chart endpoint.
+// It is not part of any published API contract and may change without notice.
+// BZ=F is the CME Brent Crude futures ticker on Yahoo Finance.
 //
-// Expected CSV shape (newest row first after the header):
-//   Date,Open,High,Low,Close,Volume
-//   2026-06-02,96.45,97.21,95.76,96.89,123456
-//   2026-06-01,94.12,96.50,93.80,96.42,98765
-//   ...
+// The endpoint works from Node.js server-side (GitHub Actions) without
+// an API key.  It does not work from browsers due to CORS restrictions.
 //
-// Column indices used (0-based):
-//   0 → Date   (YYYY-MM-DD)
-//   4 → Close  (most recent settlement price)
+// ASSUMPTION: Response shape (only the fields we use are listed):
+//   {
+//     "chart": {
+//       "result": [{
+//         "timestamp": [1748908800, 1749168000, ...],   // Unix seconds, 5 values for range=5d
+//         "indicators": { "quote": [{ "close": [...] }] },
+//         "meta": {
+//           "regularMarketPrice": 96.89,   // current session price (number)
+//           "previousClose":      96.42    // prior session close (number)
+//         }
+//       }]
+//     }
+//   }
 //
-// We validate the header row to detect format changes before relying on
-// fixed indices, but do not throw on a header mismatch — we fall back to EIA.
+// We read price from meta.regularMarketPrice (not indicators.quote[].close)
+// because meta reflects the live session price rather than the last close bar.
 
-async function fetchStooq() {
-  console.log('[Step 1] Fetching Brent crude from Stooq (primary)…');
+async function fetchYahoo() {
+  console.log('[Step 1] Fetching Brent crude from Yahoo Finance (primary)…');
 
-  const url = 'https://stooq.com/q/d/l/?s=@brn.uk&i=d';
-  let csv;
+  const url =
+    'https://query1.finance.yahoo.com/v8/finance/chart/BZ=F' +
+    '?interval=1d&range=5d';
+
+  let json;
   try {
-    csv = await fetchText(url);
+    // Yahoo requires a browser-like User-Agent; without it the endpoint
+    // returns HTTP 429 or a redirect in some network environments.
+    json = await fetchJSON(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    });
   } catch (err) {
-    throw new Error(`[Step 1] Stooq network error: ${err.message}`);
+    throw new Error(`[Step 1] Yahoo Finance network error: ${err.message}`);
   }
 
-  // Split and drop blank lines.
-  const lines = csv
-    .split('\n')
-    .map(l => l.trim())
-    .filter(l => l.length > 0);
+  // Log the raw response so CI can detect shape changes early.
+  console.log('[Yahoo Raw]', JSON.stringify(json).slice(0, 500));
 
-  // Need at least a header row and one data row.
-  if (lines.length < 2) {
+  const result = json?.chart?.result?.[0];
+  if (!result) {
     throw new Error(
-      `[Step 1] Stooq CSV has fewer than 2 lines — cannot parse. ` +
-      `Raw: ${csv.slice(0, 200)}`
+      '[Step 1] Yahoo Finance: chart.result[0] is missing. ' +
+      `Raw: ${JSON.stringify(json).slice(0, 300)}`
     );
   }
 
-  // Warn if the header doesn't match the expected shape so CI logs flag it,
-  // but still attempt parsing — the column layout rarely changes.
-  const expectedHeader = 'date,open,high,low,close,volume';
-  const actualHeader   = lines[0].toLowerCase().trim();
-  if (actualHeader !== expectedHeader) {
-    console.warn(
-      `[Step 1] Stooq header mismatch. Expected: "${expectedHeader}". ` +
-      `Got: "${actualHeader}". Attempting parse anyway.`
-    );
-  }
-
-  // First data row is the most recent date (CSV is newest-first).
-  const latestRow   = lines[1].split(',');
-  const previousRow = lines.length >= 3 ? lines[2].split(',') : null;
-
-  // ASSUMPTION: column 0 = Date, column 4 = Close (per documented CSV shape above).
-  const date      = latestRow[0]?.trim();
-  const price_usd = parseFloat(latestRow[4]?.trim());
-
-  if (!date || isNaN(price_usd)) {
+  // Price from meta — null/undefined/NaN all trigger the EIA fallback.
+  const price_usd = parseFloat(result.meta?.regularMarketPrice);
+  if (isNaN(price_usd)) {
     throw new Error(
-      `[Step 1] Stooq: could not parse date or close price from row: "${lines[1]}"`
+      '[Step 1] Yahoo Finance: regularMarketPrice is null, undefined, or NaN. ' +
+      `meta: ${JSON.stringify(result.meta)}`
     );
   }
 
-  let previous_price_usd = null;
-  if (previousRow !== null) {
-    const prevClose = parseFloat(previousRow[4]?.trim());
-    previous_price_usd = isNaN(prevClose) ? null : prevClose;
+  const previous_price_usd = (() => {
+    const v = parseFloat(result.meta?.previousClose);
+    return isNaN(v) ? null : v;
+  })();
+
+  // Date from the last element of the timestamps array (most recent session).
+  // ASSUMPTION: result.timestamp is an array of Unix seconds.
+  const timestamps = result.timestamp;
+  let date;
+  if (Array.isArray(timestamps) && timestamps.length > 0) {
+    const lastTs = timestamps[timestamps.length - 1];
+    date = new Date(lastTs * 1000).toISOString().slice(0, 10); // "YYYY-MM-DD"
+  } else {
+    // Timestamp array absent — fall back to today's UTC date with a warning.
+    date = new Date().toISOString().slice(0, 10);
+    console.warn('[Step 1] Yahoo Finance: timestamp array missing — using today as date.');
   }
 
-  console.log(`[Stooq] period=${date}, price_usd=${price_usd}`);
+  console.log(`[Yahoo] period=${date}, price_usd=${price_usd}`);
 
-  return { date, price_usd, previous_price_usd, source: 'Stooq' };
+  return { date, price_usd, previous_price_usd, source: 'Yahoo' };
 }
 
 // ─── Step 1 (fallback): EIA v2 — current Brent price ─────────────────────────
@@ -291,7 +298,7 @@ async function fetchECBRate() {
 // Historical lag (3-8 days) does not matter for a chart showing 90 days of data.
 //
 // This function tries all EIA_SERIES_IDS internally so it is not coupled to
-// whichever source (Stooq or EIA) succeeded for the current price.
+// whichever source (Yahoo Finance or EIA) succeeded for the current price.
 //
 // ASSUMPTION: response shape:
 //   { response: { data: [ { period: "YYYY-MM-DD", value: "123.45" }, … ] } }
@@ -388,7 +395,8 @@ async function main() {
   }
 
   // ── Steps 1 + 2: Brent crude current price ───────────────────────────────────
-  // Primary: Stooq (current, no API key).  Fallback: EIA (lagged, needs API key).
+  // Primary: Yahoo Finance (real-time, no API key).
+  // Fallback: EIA (lagged, needs API key).
   // If both fail: mark existing brent.json stale and continue — do not exit(1).
 
   let brentRaw    = null;
@@ -396,10 +404,10 @@ async function main() {
 
   try {
     try {
-      brentRaw = await fetchStooq();
-    } catch (stooqErr) {
+      brentRaw = await fetchYahoo();
+    } catch (yahooErr) {
       console.warn(
-        `[Step 1] Stooq failed: ${stooqErr.message}\n` +
+        `[Step 1] Yahoo Finance failed: ${yahooErr.message}\n` +
         '[Step 1] Activating EIA fallback…'
       );
       brentRaw = await fetchEIA(); // throws if all EIA series also fail
@@ -407,7 +415,7 @@ async function main() {
   } catch (allSourcesFailed) {
     brentFailed = true;
     console.error(
-      '[Brent] BOTH Stooq and EIA failed. Error:',
+      '[Brent] BOTH Yahoo Finance and EIA failed. Error:',
       allSourcesFailed.message
     );
 
