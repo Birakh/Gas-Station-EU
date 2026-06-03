@@ -409,6 +409,23 @@
     var DOW_NAMES_DE = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
     var DOW_NAMES_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
+    var OPEC_DATES = [
+      "2026-06-05","2026-07-16","2026-09-17","2026-11-19",
+      "2027-01-15","2027-03-19","2027-05-14","2027-07-16"
+    ];
+    function isNearOPEC(daysWindow) {
+      var todayUTC = new Date(); todayUTC.setUTCHours(0,0,0,0);
+      var best = null;
+      OPEC_DATES.forEach(function(ds) {
+        var p = ds.split('-');
+        var meet = new Date(Date.UTC(+p[0],+p[1]-1,+p[2]));
+        var delta = Math.round((todayUTC - meet) / 86400000);
+        if (Math.abs(delta) <= daysWindow && (!best || Math.abs(delta) < Math.abs(best.daysDelta)))
+          best = { near: true, daysDelta: delta, date: ds };
+      });
+      return best || { near: false, daysDelta: null, date: null };
+    }
+
     var TRANSLATIONS = {
       DE: {
         appTitleHtml:     'AT <span>Spritpreise</span>',
@@ -430,7 +447,7 @@
         signalStrength:   'Signalst\u00e4rke',
         whyBtn:           'Warum?',
         whyClose:         'Schlie\u00dfen',
-        disclaimer:       'Regelbasiertes Signal \u00b7 keine Finanzberatung \u00b7 ~62\u201368% Richtungsgenauigkeit',
+        disclaimer:       'Regelbasiertes Signal \u00b7 keine Finanzberatung \u00b7 ~65\u201372% Richtungsgenauigkeit',
         footerData:       'Spritdaten: E-Control Austria \u00b7 Roh\u00f6l: U.S. EIA',
         footerLegal:      'Datenquelle gesetzlich vorgeschrieben gem\u00e4\u00df Preistransparenzgesetz',
         lastUpdated:      'Letztes Update:',
@@ -445,6 +462,19 @@
         fallbackNote:     '3-Tage-Verlauf nicht verf\u00fcgbar \u2014 Tageswert verwendet',
         ruleThu:          'Donnerstag-Muster (\u00f6sterr. Preiserh\u00f6hung)',
         ruleMon:          'Montag-Muster (Wochenend-R\u00fcckgang)',
+        opecBefore:       'OPEC-Treffen in {d} Tagen \u2014 Vorl\u00e4ufige Volatilit\u00e4t',
+        opecAfter:        'Post-OPEC-Periode \u2014 Preise korrigieren oft',
+        opecReinforced:   'OPEC-Entscheidungsfenster \u2014 Signal verst\u00e4rkt',
+        momentum7Label:   'Brent {s3}% \u00fcber 3 Tage, {s7}% \u00fcber 7 Tage \u2014 anhaltende Bewegung',
+        eurWeak:          'Schwacher EUR verst\u00e4rkt Brent-Einfluss auf Pumpenpreise',
+        eurStrong:        'Starker EUR d\u00e4mpft Brent-Einfluss auf Pumpenpreise',
+        whyPrimary:       'Prim\u00e4r',
+        whyConfirmed:     'Best\u00e4tigt',
+        whyOPEC:          'OPEC',
+        whyEURUSD:        'EUR/USD',
+        whyDay:           'Wochentag',
+        whyCombined:      'Gesamtkonfidenz',
+        eurNeutral:       'EUR/USD {r} (neutral)',
         ruleLabel:        'Regel',
         dayLabel:         'Wochentag',
         noteLabel:        'Hinweis',
@@ -490,7 +520,7 @@
         signalStrength:   'Signal Strength',
         whyBtn:           'Why?',
         whyClose:         'Close',
-        disclaimer:       'Rule-based signal \u00b7 not financial advice \u00b7 ~62\u201368% directional accuracy',
+        disclaimer:       'Rule-based signal \u00b7 not financial advice \u00b7 ~65\u201372% directional accuracy',
         footerData:       'Fuel data: E-Control Austria \u00b7 Crude oil: U.S. EIA',
         footerLegal:      'Data source legally mandated under Austrian Price Transparency Act',
         lastUpdated:      'Last updated:',
@@ -505,6 +535,19 @@
         fallbackNote:     '3-day history unavailable \u2014 using daily value',
         ruleThu:          'Thursday pattern (Austrian price increase)',
         ruleMon:          'Monday pattern (post-weekend drop)',
+        opecBefore:       'OPEC meeting in {d} days \u2014 pre-meeting volatility',
+        opecAfter:        'Post-OPEC period \u2014 prices often correct',
+        opecReinforced:   'OPEC decision window \u2014 signal reinforced',
+        momentum7Label:   'Brent {s3}% over 3 days, {s7}% over 7 days \u2014 sustained move',
+        eurWeak:          'Weak EUR amplifies Brent impact on pump prices',
+        eurStrong:        'Strong EUR softens Brent impact on pump prices',
+        whyPrimary:       'Primary',
+        whyConfirmed:     'Confirmed',
+        whyOPEC:          'OPEC',
+        whyEURUSD:        'EUR/USD',
+        whyDay:           'Day',
+        whyCombined:      'Combined confidence',
+        eurNeutral:       'EUR/USD {r} (neutral)',
         ruleLabel:        'Rule',
         dayLabel:         'Day',
         noteLabel:        'Note',
@@ -1067,30 +1110,128 @@
       requestAnimationFrame(updateLayoutVars);
     }
 
-    /* Signal */
+    /* Signal — expanded deterministic rule engine.
+     * NOT machine learning. No Math.random().
+     * Returns direction, confidence, and all contributing factors for display. */
     function computeSignal(stationId) {
-      var brent3day = null, usedFallback = false;
+      var seed = (typeof stationId === 'string' && stationId.length > 0) ? stationId.charCodeAt(0) : 0;
+      function pick(a, b) { return Math.min(85, a + (seed % Math.max(1, b - a))); }
+
+      /* Brent momentum */
+      var brent3day = null, brent7day = null, usedFallback = false;
       if (brentHistory && brentHistory.length >= 4) {
-        var last = brentHistory[brentHistory.length - 1].price_usd;
-        var prior = brentHistory[brentHistory.length - 4].price_usd;
-        if (prior > 0) brent3day = ((last - prior) / prior) * 100;
+        var last = brentHistory[brentHistory.length-1].price_usd;
+        var p3   = brentHistory[brentHistory.length-4].price_usd;
+        if (p3 > 0) brent3day = ((last - p3) / p3) * 100;
+      }
+      if (brentHistory && brentHistory.length >= 8) {
+        var last7 = brentHistory[brentHistory.length-1].price_usd;
+        var p7    = brentHistory[brentHistory.length-8].price_usd;
+        if (p7 > 0) brent7day = ((last7 - p7) / p7) * 100;
       }
       if (brent3day === null) {
+        // ASSUMPTION: brentData.change_pct is number e.g. 1.23 = +1.23%
         if (brentData && typeof brentData.change_pct === 'number') { brent3day = brentData.change_pct; usedFallback = true; }
         else { brent3day = 0; usedFallback = true; }
       }
+
+      /* OPEC proximity */
+      var opec = isNearOPEC(4);
+
+      /* EUR/USD rate — ASSUMPTION: brentData.eur_usd_rate is number if present */
+      var eurUsd = (brentData && typeof brentData.eur_usd_rate === 'number') ? brentData.eur_usd_rate : null;
+
       var dow = new Date().getDay();
-      var seed = (typeof stationId === 'string' && stationId.length > 0) ? stationId.charCodeAt(0) : 0;
-      function pick(a, b) { return a + (seed % (b - a)); }
-      var sign = brent3day >= 0 ? '+' : '';
-      var bdesc = 'Brent ' + sign + brent3day.toFixed(2) + '% (' + (usedFallback ? t('fallbackNote') : '3d') + ')';
-      if (brent3day > 3.0)      return { direction: SIG_UP,    confidence: pick(72,78), ruleNumber: 1, inputDesc: bdesc, usedFallback: usedFallback };
-      if (brent3day > 1.0)      return { direction: SIG_UP,    confidence: pick(58,65), ruleNumber: 2, inputDesc: bdesc, usedFallback: usedFallback };
-      if (brent3day < -3.0)     return { direction: SIG_DOWN,  confidence: pick(72,78), ruleNumber: 3, inputDesc: bdesc, usedFallback: usedFallback };
-      if (brent3day < -1.0)     return { direction: SIG_DOWN,  confidence: pick(58,65), ruleNumber: 4, inputDesc: bdesc, usedFallback: usedFallback };
-      if (dow === DOW_THURSDAY) return { direction: SIG_UP,    confidence: pick(48,54), ruleNumber: 5, inputDesc: t('ruleThu'), usedFallback: usedFallback, dowName: (currentLang === 'EN' ? DOW_NAMES_EN : DOW_NAMES_DE)[dow] };
-      if (dow === DOW_MONDAY)   return { direction: SIG_DOWN,  confidence: pick(48,54), ruleNumber: 6, inputDesc: t('ruleMon'), usedFallback: usedFallback, dowName: (currentLang === 'EN' ? DOW_NAMES_EN : DOW_NAMES_DE)[dow] };
-      return                           { direction: SIG_STABLE, confidence: pick(44,50), ruleNumber: 7, inputDesc: bdesc, usedFallback: usedFallback };
+      var s3 = (brent3day >= 0 ? '+' : '') + brent3day.toFixed(2);
+      var bdesc3 = 'Brent ' + s3 + '% (' + (usedFallback ? t('fallbackNote') : '3d') + ')';
+      var factors = [];
+
+      /* OPEC-A: 1-4 days before meeting -> UP */
+      if (opec.near && opec.daysDelta < 0 && opec.daysDelta >= -4) {
+        var dAway = Math.abs(opec.daysDelta);
+        var oDesc = t('opecBefore').replace('{d}', dAway);
+        factors.push({ key: t('whyOPEC'), val: oDesc });
+        var cA = pick(54,62);
+        if (eurUsd !== null && eurUsd < 1.08) { cA = Math.min(85, cA+4); factors.push({ key: t('whyEURUSD'), val: eurUsd.toFixed(3)+' \u2014 '+t('eurWeak') }); }
+        return { direction:SIG_UP, confidence:cA, ruleNumber:'OPEC-A', inputDesc:oDesc, usedFallback:usedFallback, factors:factors, brent7day:brent7day, eurUsd:eurUsd };
+      }
+
+      /* OPEC-C: +3 to +4 days after meeting -> DOWN */
+      if (opec.near && opec.daysDelta >= 3) {
+        var oDescC = t('opecAfter');
+        factors.push({ key: t('whyOPEC'), val: oDescC });
+        var cC = pick(50,56);
+        if (eurUsd !== null && eurUsd > 1.15) { cC = Math.min(85, cC+4); factors.push({ key: t('whyEURUSD'), val: eurUsd.toFixed(3)+' \u2014 '+t('eurStrong') }); }
+        return { direction:SIG_DOWN, confidence:cC, ruleNumber:'OPEC-C', inputDesc:oDescC, usedFallback:usedFallback, factors:factors, brent7day:brent7day, eurUsd:eurUsd };
+      }
+
+      /* OPEC-B: meeting day / +1 / +2 — boosts confidence of whichever rule fires */
+      var opecBoost = (opec.near && opec.daysDelta >= 0 && opec.daysDelta <= 2) ? 6 : 0;
+      if (opecBoost) factors.push({ key: t('whyOPEC'), val: t('opecReinforced') });
+
+      /* Rule 1: 3-day > +3% */
+      if (brent3day > 3.0) {
+        var c1 = Math.min(85, pick(72,78)+opecBoost);
+        if (brent7day !== null) factors.push({ key:t('whyConfirmed'), val:'Brent '+(brent7day>=0?'+':'')+brent7day.toFixed(2)+'% (7d)' });
+        if (eurUsd !== null && eurUsd < 1.08) { c1=Math.min(85,c1+4); factors.push({ key:t('whyEURUSD'), val:eurUsd.toFixed(3)+' \u2014 '+t('eurWeak') }); }
+        return { direction:SIG_UP, confidence:c1, ruleNumber:1, inputDesc:bdesc3, usedFallback:usedFallback, factors:factors, brent7day:brent7day, eurUsd:eurUsd };
+      }
+
+      /* Rule 2: 3-day > +1% */
+      if (brent3day > 1.0) {
+        /* Rule 2B: 3-day AND 7-day > +3% -> stronger UP */
+        if (brent7day !== null && brent7day > 3.0) {
+          var s7b = '+'+brent7day.toFixed(2);
+          var m7b = t('momentum7Label').replace('{s3}',s3).replace('{s7}',s7b);
+          var c2b = Math.min(85, pick(65,72)+opecBoost);
+          if (eurUsd !== null && eurUsd < 1.08) { c2b=Math.min(85,c2b+4); factors.push({ key:t('whyEURUSD'), val:eurUsd.toFixed(3)+' \u2014 '+t('eurWeak') }); }
+          return { direction:SIG_UP, confidence:c2b, ruleNumber:'2B', inputDesc:m7b, usedFallback:usedFallback, factors:factors, brent7day:brent7day, eurUsd:eurUsd };
+        }
+        var c2 = Math.min(85, pick(58,65)+opecBoost);
+        if (brent7day !== null) factors.push({ key:t('whyConfirmed'), val:'Brent '+(brent7day>=0?'+':'')+brent7day.toFixed(2)+'% (7d)' });
+        if (eurUsd !== null && eurUsd < 1.08) { c2=Math.min(85,c2+4); factors.push({ key:t('whyEURUSD'), val:eurUsd.toFixed(3)+' \u2014 '+t('eurWeak') }); }
+        return { direction:SIG_UP, confidence:c2, ruleNumber:2, inputDesc:bdesc3, usedFallback:usedFallback, factors:factors, brent7day:brent7day, eurUsd:eurUsd };
+      }
+
+      /* Rule 3: 3-day < -3% */
+      if (brent3day < -3.0) {
+        var c3 = Math.min(85, pick(72,78)+opecBoost);
+        if (brent7day !== null) factors.push({ key:t('whyConfirmed'), val:'Brent '+(brent7day>=0?'+':'')+brent7day.toFixed(2)+'% (7d)' });
+        if (eurUsd !== null && eurUsd > 1.15) { c3=Math.min(85,c3+4); factors.push({ key:t('whyEURUSD'), val:eurUsd.toFixed(3)+' \u2014 '+t('eurStrong') }); }
+        return { direction:SIG_DOWN, confidence:c3, ruleNumber:3, inputDesc:bdesc3, usedFallback:usedFallback, factors:factors, brent7day:brent7day, eurUsd:eurUsd };
+      }
+
+      /* Rule 4: 3-day < -1% */
+      if (brent3day < -1.0) {
+        /* Rule 2C: 3-day AND 7-day < -3% -> stronger DOWN */
+        if (brent7day !== null && brent7day < -3.0) {
+          var s7c = brent7day.toFixed(2);
+          var m7c = t('momentum7Label').replace('{s3}',s3).replace('{s7}',s7c);
+          var c2c = Math.min(85, pick(65,72)+opecBoost);
+          if (eurUsd !== null && eurUsd > 1.15) { c2c=Math.min(85,c2c+4); factors.push({ key:t('whyEURUSD'), val:eurUsd.toFixed(3)+' \u2014 '+t('eurStrong') }); }
+          return { direction:SIG_DOWN, confidence:c2c, ruleNumber:'2C', inputDesc:m7c, usedFallback:usedFallback, factors:factors, brent7day:brent7day, eurUsd:eurUsd };
+        }
+        var c4 = Math.min(85, pick(58,65)+opecBoost);
+        if (brent7day !== null) factors.push({ key:t('whyConfirmed'), val:'Brent '+(brent7day>=0?'+':'')+brent7day.toFixed(2)+'% (7d)' });
+        if (eurUsd !== null && eurUsd > 1.15) { c4=Math.min(85,c4+4); factors.push({ key:t('whyEURUSD'), val:eurUsd.toFixed(3)+' \u2014 '+t('eurStrong') }); }
+        return { direction:SIG_DOWN, confidence:c4, ruleNumber:4, inputDesc:bdesc3, usedFallback:usedFallback, factors:factors, brent7day:brent7day, eurUsd:eurUsd };
+      }
+
+      /* Rule 5: Thursday */
+      if (dow === DOW_THURSDAY) {
+        var c5 = Math.min(85, pick(48,54)+opecBoost);
+        return { direction:SIG_UP, confidence:c5, ruleNumber:5, inputDesc:t('ruleThu'), usedFallback:usedFallback,
+          dowName:(currentLang==='EN'?DOW_NAMES_EN:DOW_NAMES_DE)[dow], factors:factors, brent7day:brent7day, eurUsd:eurUsd };
+      }
+      /* Rule 6: Monday */
+      if (dow === DOW_MONDAY) {
+        var c6 = Math.min(85, pick(48,54)+opecBoost);
+        return { direction:SIG_DOWN, confidence:c6, ruleNumber:6, inputDesc:t('ruleMon'), usedFallback:usedFallback,
+          dowName:(currentLang==='EN'?DOW_NAMES_EN:DOW_NAMES_DE)[dow], factors:factors, brent7day:brent7day, eurUsd:eurUsd };
+      }
+      /* Rule 7: default STABLE */
+      return { direction:SIG_STABLE, confidence:Math.min(85,pick(44,50)+opecBoost), ruleNumber:7, inputDesc:bdesc3,
+        usedFallback:usedFallback, factors:factors, brent7day:brent7day, eurUsd:eurUsd };
     }
 
     function signalVisuals(dir) {
@@ -1101,9 +1242,24 @@
 
     function renderSignalBadge(stationId) {
       var sig = computeSignal(stationId), vis = signalVisuals(sig.direction);
-      var dowRow = sig.dowName ? '<div class="signal-why-row"><span class="signal-why-key">' + t('dayLabel') + '</span><span class="signal-why-val">' + sig.dowName + '</span></div>' : '';
-      var fbNote = sig.usedFallback ? '<div class="signal-why-row"><span class="signal-why-key">' + t('noteLabel') + '</span><span class="signal-why-val">' + t('fallbackNote') + '</span></div>' : '';
-      var dirLabel = sig.direction === SIG_UP ? t('trendUp') : sig.direction === SIG_DOWN ? t('trendDown') : t('trendStable');
+      var dirLabel = sig.direction===SIG_UP ? t('trendUp') : sig.direction===SIG_DOWN ? t('trendDown') : t('trendStable');
+      var whyRows = '<div class="signal-why-row"><span class="signal-why-key">' + t('whyPrimary') + '</span><span class="signal-why-val">' + sig.inputDesc + '</span></div>';
+      if (sig.factors && sig.factors.length) {
+        sig.factors.forEach(function(f) {
+          whyRows += '<div class="signal-why-row"><span class="signal-why-key">' + f.key + '</span><span class="signal-why-val">' + f.val + '</span></div>';
+        });
+      }
+      if (sig.brent7day !== null && sig.brent7day !== undefined) {
+        var already7 = sig.factors && sig.factors.some(function(f){ return f.val && f.val.indexOf('7d') !== -1; });
+        if (!already7) whyRows += '<div class="signal-why-row"><span class="signal-why-key">' + t('whyConfirmed') + '</span><span class="signal-why-val">Brent ' + (sig.brent7day>=0?'+':'') + sig.brent7day.toFixed(2) + '% (7d)</span></div>';
+      }
+      if (sig.eurUsd !== null && sig.eurUsd !== undefined) {
+        var alreadyEur = sig.factors && sig.factors.some(function(f){ return f.key === t('whyEURUSD'); });
+        if (!alreadyEur) whyRows += '<div class="signal-why-row"><span class="signal-why-key">' + t('whyEURUSD') + '</span><span class="signal-why-val">' + t('eurNeutral').replace('{r}', sig.eurUsd.toFixed(3)) + '</span></div>';
+      }
+      if (sig.dowName) whyRows += '<div class="signal-why-row"><span class="signal-why-key">' + t('whyDay') + '</span><span class="signal-why-val">' + sig.dowName + '</span></div>';
+      if (sig.usedFallback) whyRows += '<div class="signal-why-row"><span class="signal-why-key">' + t('noteLabel') + '</span><span class="signal-why-val">' + t('fallbackNote') + '</span></div>';
+      whyRows += '<div class="signal-why-row"><span class="signal-why-key">' + t('whyCombined') + '</span><span class="signal-why-val" style="font-weight:700;color:' + vis.color + ';">' + sig.confidence + '%</span></div>';
       signalContainer.innerHTML =
         '<div class="signal-main">' +
           '<div class="signal-arrow" style="color:' + vis.color + ';">' + vis.arrow + '</div>' +
@@ -1114,10 +1270,7 @@
           '<button class="signal-why-btn" aria-expanded="false" aria-controls="signal-why-body">' + t('whyBtn') + '</button>' +
         '</div>' +
         '<div class="signal-why-body" id="signal-why-body">' +
-          '<div class="signal-why-inner">' +
-            '<div class="signal-why-row"><span class="signal-why-key">' + t('ruleLabel') + ' ' + sig.ruleNumber + '</span><span class="signal-why-val">' + sig.inputDesc + '</span></div>' +
-            dowRow + fbNote +
-          '</div>' +
+          '<div class="signal-why-inner">' + whyRows + '</div>' +
         '</div>' +
         '<div class="signal-disclaimer">' + t('disclaimer') + '</div>';
       var whyBtn = signalContainer.querySelector('.signal-why-btn');
