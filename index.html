@@ -195,6 +195,14 @@
     #fav-filter-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-size: 14px; padding: 4px 8px; cursor: pointer; flex-shrink: 0; transition: border-color 0.15s, background 0.15s, color 0.15s; }
     #fav-filter-btn.active { background: rgba(245,158,11,0.15); border-color: #f59e0b; color: #f59e0b; }
     #fav-filter-btn:hover { border-color: #f59e0b; }
+    /* Timestamp: price fetch badge in topbar */
+    #price-fetch-badge { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; }
+    #price-fetch-label { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
+    #price-fetch-time { font-size: 11px; font-weight: 700; color: var(--muted); }
+    #price-fetch-time.outdated { color: var(--yellow); }
+    /* Sidebar fetch timestamp line */
+    #sidebar-fetch-time { font-size: 10px; color: var(--muted); margin-top: -6px; }
+    #sidebar-fetch-time.outdated { color: var(--yellow); }
 
     @media (max-width: 767px) {
       :root { --sidebar-w: 100%; }
@@ -250,12 +258,18 @@
       &#x1F4CD; <span id="geo-btn-label">Mein Standort</span>
     </button>
     <button id="lang-btn" title="Switch language">EN</button>
+    <!-- Station price fetch timestamp badge -->
+    <div id="price-fetch-badge" style="display:none;">
+      <div id="price-fetch-label">Preise</div>
+      <div id="price-fetch-time" title="">&#x2013;</div>
+    </div>
     <div id="brent-badge">
       <div id="brent-label">Brent Roh&#xF6;l</div>
       <div id="brent-prices">
         <span id="brent-usd">&#x2014;</span>
         <span id="brent-eur">&#x2014;</span>
         <span id="brent-change" class="neu">&#x2014;</span>
+        <span id="brent-date" style="font-size:10px;color:var(--muted);font-weight:400;"></span>
       </div>
     </div>
   </div>
@@ -312,6 +326,7 @@
             <div class="price-card-value" id="pv-SUP">&#x2013;</div>
           </div>
         </div>
+        <div id="sidebar-fetch-time"></div>
       </div>
       <div>
         <div class="section-label" id="label-history-title">Preisverlauf (30 Tage)</div>
@@ -450,6 +465,10 @@
         notReportedTooltip: 'Keine aktuellen Preismeldung bei E-Control',
         stationCount:     'Tankstellen',
         withPrices:       'mit Preisen',
+        lastFetched:      'Zuletzt abgerufen:',
+        prices:           'Preise',
+        dataOutdated:     'Daten könnten veraltet sein — Seite neu laden',
+        brentDate:        'Brent:',
       },
       EN: {
         appTitleHtml:     'AT <span>Fuel Prices</span>',
@@ -506,6 +525,10 @@
         notReportedTooltip: 'No current price reported to E-Control',
         stationCount:     'stations',
         withPrices:       'with prices',
+        lastFetched:      'Last fetched:',
+        prices:           'Prices',
+        dataOutdated:     'Data may be outdated — refresh the page',
+        brentDate:        'Brent:',
       }
     };
 
@@ -527,6 +550,7 @@
     var historyLoadToken  = 0;
     var overlayToken      = 0;
     var stationFetchToken = 0;
+    var lastStationFetch = null; // Date object of last successful E-Control fetch
 
     /* FIX 3: Favourites — persisted in localStorage as JSON array of id strings */
     var LS_FAV = 'fav_stations';
@@ -634,6 +658,45 @@
       el.textContent = stations.length + ' ' + t('stationCount') + ' · ' + withP + ' ' + t('withPrices');
     }
 
+    /* Update all timestamp displays after a successful station fetch.
+     * Compares lastStationFetch against now; if >2h shows yellow outdated warning. */
+    function updateFetchTimestamp() {
+      if (!lastStationFetch) return;
+      var now = new Date();
+      var ageMs = now - lastStationFetch;
+      var isOld = ageMs > 2 * 60 * 60 * 1000; // 2 hours
+      // Format HH:MM
+      var hh = String(lastStationFetch.getHours()).padStart(2, '0');
+      var mm = String(lastStationFetch.getMinutes()).padStart(2, '0');
+      var timeStr = hh + ':' + mm;
+      // Format DD.MM.YYYY for sidebar
+      var dd = String(lastStationFetch.getDate()).padStart(2, '0');
+      var mo = String(lastStationFetch.getMonth() + 1).padStart(2, '0');
+      var yr = lastStationFetch.getFullYear();
+      var dateStr = dd + '.' + mo + '.' + yr;
+      var outdatedTip = isOld ? t('dataOutdated') : '';
+      // Topbar badge
+      var badge = document.getElementById('price-fetch-badge');
+      var badgeLabel = document.getElementById('price-fetch-label');
+      var badgeTime = document.getElementById('price-fetch-time');
+      if (badge) {
+        badge.style.display = '';
+        if (badgeLabel) badgeLabel.textContent = t('prices');
+        if (badgeTime) {
+          badgeTime.textContent = timeStr;
+          badgeTime.className = isOld ? 'outdated' : '';
+          badgeTime.title = outdatedTip;
+        }
+      }
+      // Sidebar fetch line
+      var sft = document.getElementById('sidebar-fetch-time');
+      if (sft) {
+        sft.textContent = lastStationFetch ? t('lastFetched') + ' ' + timeStr + ' — ' + dateStr : '';
+        sft.className = isOld ? 'outdated' : '';
+        sft.title = outdatedTip;
+      }
+    }
+
     /* Language */
     function applyLanguage(lang) {
       currentLang = lang;
@@ -659,6 +722,7 @@
       document.getElementById('footer-legal').textContent = t('footerLegal');
       if (!loadingOverlay.classList.contains('hidden')) loadingText.textContent = t('loadingPrices');
       if (stations.length > 0) { renderJetztBanner(); updateStationCount(); }
+      updateFetchTimestamp(); // refresh lastFetched label in new language
       if (selectedStation) {
         renderSignalBadge(selectedStation.id);
         FUEL_CODES.forEach(function(code) {
@@ -851,9 +915,10 @@
       return Promise.all([fetchBrentJSON(), fetchAllPoints(extraLat, extraLng, currentRadius)]).then(function(results) {
         if (myToken !== stationFetchToken) return;
         brentData = results[0]; stations = results[1];
+        lastStationFetch = new Date();
         renderBrent(brentData);
         autoDetectDefaultFav();
-        renderMarkers(); renderJetztBanner(); updateStationCount(); hideLoading();
+        renderMarkers(); renderJetztBanner(); updateStationCount(); updateFetchTimestamp(); hideLoading();
         if (!brentData) {
           document.getElementById('brent-usd').textContent = 'N/V';
           document.getElementById('brent-eur').textContent = '';
@@ -878,7 +943,8 @@
       var myToken = ++stationFetchToken;
       return fetchAllPoints(extraLat, extraLng, currentRadius).then(function(stationsRaw) {
         if (myToken !== stationFetchToken) return;
-        closeSidebar(); stations = stationsRaw; renderMarkers(); applyFavFilter(); renderJetztBanner(); updateStationCount();
+        lastStationFetch = new Date();
+        closeSidebar(); stations = stationsRaw; renderMarkers(); applyFavFilter(); renderJetztBanner(); updateStationCount(); updateFetchTimestamp();
       }).catch(function(err) {
         if (myToken !== stationFetchToken) return;
         console.error('[refetchStations] Error:', err);
@@ -1157,6 +1223,13 @@
         try {
           var d = new Date(data.timestamp);
           footerTs.textContent = d.toLocaleString(currentLang === 'EN' ? 'en-GB' : 'de-AT', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+          // Add DD.MM date next to brent change in topbar
+          var brentDateEl = document.getElementById('brent-date');
+          if (brentDateEl) {
+            var bdd = String(d.getDate()).padStart(2,'0');
+            var bmo = String(d.getMonth()+1).padStart(2,'0');
+            brentDateEl.textContent = bdd + '.' + bmo;
+          }
         } catch(e) { footerTs.textContent = data.timestamp; }
       }
     }
