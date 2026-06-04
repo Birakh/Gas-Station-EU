@@ -928,22 +928,30 @@
      * (prices should be identical from the API regardless of fetch center).
      */
     function fetchAllPoints(extraLat, extraLng, radiusKm) {
+      /* Always fire Point A (Wiener Neustadt) and Point B (Theresienfeld) in parallel.
+       * Each point fetches DIE and SUP simultaneously inside fetchEControlStations,
+       * so this function always makes at least 4 E-Control API calls total. */
       var fetches = [
         fetchEControlStations(FETCH_POINT_A_LAT, FETCH_POINT_A_LNG, radiusKm),
         fetchEControlStations(FETCH_POINT_B_LAT, FETCH_POINT_B_LNG, radiusKm),
       ];
-      // Add user GPS point if provided and meaningfully different from the defaults
-      if (typeof extraLat === 'number' && typeof extraLng === 'number') {
+      var hasGPS = typeof extraLat === 'number' && typeof extraLng === 'number';
+      if (hasGPS) {
         fetches.push(fetchEControlStations(extraLat, extraLng, radiusKm));
       }
       return Promise.all(fetches).then(function(maps) {
-        // Merge all station Maps; first occurrence of each id wins (deduplicate)
+        // Log per-point counts for debugging
+        console.log('[Fetch] Point A (WN):', maps[0].size, 'stations');
+        console.log('[Fetch] Point B (Theresienfeld):', maps[1].size, 'stations');
+        if (hasGPS && maps[2]) console.log('[Fetch] Point C (GPS):', maps[2].size, 'stations');
+        // Merge all Maps; first occurrence of each id wins (deduplicates by station id)
         var merged = new Map();
         maps.forEach(function(stationMap) {
           stationMap.forEach(function(station, id) {
             if (!merged.has(id)) merged.set(id, station);
           });
         });
+        console.log('[Fetch] Merged total after dedup:', merged.size, 'stations');
         return Array.from(merged.values());
       });
     }
@@ -1317,6 +1325,8 @@
       markers = [];
       var tiers = computeTiers(activeFuel);
       stations.forEach(function(station) {
+        // Skip only if coordinates are missing — stations with empty prices[] are
+        // still rendered as hollow grey markers so they remain clickable on the map.
         if (typeof station.lat !== 'number' || typeof station.lng !== 'number') return;
         var price = station.prices && station.prices[activeFuel];
         var hasPrice = typeof price === 'number' && isFinite(price);
