@@ -497,7 +497,7 @@
         withPrices:       'mit Preisen',
         lastFetched:      'Zuletzt abgerufen:',
         prices:           'Preise',
-        dataOutdated:     'Daten könnten veraltet sein — Seite neu laden',
+        dataOutdated:     'Daten könnten veraltet sein — ↺ zum Aktualisieren',
         brentDate:        'Brent:',
       },
       EN: {
@@ -570,7 +570,7 @@
         withPrices:       'with prices',
         lastFetched:      'Last fetched:',
         prices:           'Prices',
-        dataOutdated:     'Data may be outdated — refresh the page',
+        dataOutdated:     'Data may be outdated — click ↺ to refresh',
         brentDate:        'Brent:',
       }
     };
@@ -594,6 +594,7 @@
     var overlayToken      = 0;
     var stationFetchToken = 0;
     var lastStationFetch = null; // Date object of last successful E-Control fetch
+    var brentFetchedAt   = null; // Date object of last successful brent.json parse
 
     /* FIX 3: Favourites — persisted in localStorage as JSON array of id strings */
     var LS_FAV = 'fav_stations';
@@ -701,27 +702,24 @@
       el.textContent = stations.length + ' ' + t('stationCount') + ' · ' + withP + ' ' + t('withPrices');
     }
 
-    /* Update all timestamp displays after a successful station fetch.
-     * Compares lastStationFetch against now; if >2h shows yellow outdated warning. */
+    /* updateFetchTimestamp()
+     * Uses lastStationFetch (set only in fetchAllData/refetchStations) for display.
+     * new Date() is used only to compute age, never for display strings. */
     function updateFetchTimestamp() {
-      if (!lastStationFetch) return;
-      var now = new Date();
-      var ageMs = now - lastStationFetch;
-      var isOld = ageMs > 2 * 60 * 60 * 1000; // 2 hours
-      // Format HH:MM
-      var hh = String(lastStationFetch.getHours()).padStart(2, '0');
-      var mm = String(lastStationFetch.getMinutes()).padStart(2, '0');
-      var timeStr = hh + ':' + mm;
-      // Format DD.MM.YYYY for sidebar
-      var dd = String(lastStationFetch.getDate()).padStart(2, '0');
-      var mo = String(lastStationFetch.getMonth() + 1).padStart(2, '0');
-      var yr = lastStationFetch.getFullYear();
-      var dateStr = dd + '.' + mo + '.' + yr;
-      var outdatedTip = isOld ? t('dataOutdated') : '';
-      // Topbar badge
-      var badge = document.getElementById('price-fetch-badge');
+      var badge      = document.getElementById('price-fetch-badge');
       var badgeLabel = document.getElementById('price-fetch-label');
-      var badgeTime = document.getElementById('price-fetch-time');
+      var badgeTime  = document.getElementById('price-fetch-time');
+      var sft        = document.getElementById('sidebar-fetch-time');
+      if (!lastStationFetch) {
+        if (badge) badge.style.display = 'none';
+        if (sft)   sft.textContent = '';
+        return;
+      }
+      var isOld = (new Date() - lastStationFetch) > 2 * 60 * 60 * 1000;
+      var outdatedTip = isOld ? t('dataOutdated') : '';
+      var locale = currentLang === 'EN' ? 'en-GB' : 'de-AT';
+      // Topbar HH:MM via toLocaleTimeString
+      var timeStr = lastStationFetch.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
       if (badge) {
         badge.style.display = '';
         if (badgeLabel) badgeLabel.textContent = t('prices');
@@ -731,10 +729,13 @@
           badgeTime.title = outdatedTip;
         }
       }
-      // Sidebar fetch line
-      var sft = document.getElementById('sidebar-fetch-time');
+      // Sidebar full date+time via toLocaleString
+      var fullStr = lastStationFetch.toLocaleString(locale, {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
       if (sft) {
-        sft.textContent = lastStationFetch ? t('lastFetched') + ' ' + timeStr + ' — ' + dateStr : '';
+        sft.textContent = t('lastFetched') + ' ' + fullStr;
         sft.className = isOld ? 'outdated' : '';
         sft.title = outdatedTip;
       }
@@ -1007,7 +1008,10 @@
       return fetch('./data/brent.json').then(function(res) {
         if (res.status === 404) return null;
         if (!res.ok) { console.error('[fetchBrentJSON] HTTP', res.status); return null; }
-        return res.json();
+        return res.json().then(function(data) {
+          brentFetchedAt = new Date(); // set ONLY here, after successful parse
+          return data;
+        });
       }).catch(function(err) { console.error('[fetchBrentJSON] error:', err); return null; });
     }
 
@@ -1386,12 +1390,15 @@
         try {
           var d = new Date(data.timestamp);
           footerTs.textContent = d.toLocaleString(currentLang === 'EN' ? 'en-GB' : 'de-AT', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
-          // Add DD.MM date next to brent change in topbar
+          // DD.MM from brent.json data.date field (YYYY-MM-DD)
+          // ASSUMPTION: data.date is a 'YYYY-MM-DD' string; falls back to timestamp
           var brentDateEl = document.getElementById('brent-date');
           if (brentDateEl) {
-            var bdd = String(d.getDate()).padStart(2,'0');
-            var bmo = String(d.getMonth()+1).padStart(2,'0');
-            brentDateEl.textContent = bdd + '.' + bmo;
+            var dateSource = typeof data.date === 'string' ? data.date : data.timestamp;
+            var dateParts  = typeof dateSource === 'string' ? dateSource.substring(0,10).split('-') : null;
+            if (dateParts && dateParts.length === 3) {
+              brentDateEl.textContent = dateParts[2] + '.' + dateParts[1];
+            }
           }
         } catch(e) { footerTs.textContent = data.timestamp; }
       }
