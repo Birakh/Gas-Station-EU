@@ -401,6 +401,8 @@
     var FETCH_POINT_B_LNG = 16.2450;
     var HISTORY_DAYS   = 30;
     var ECONTROL_BASE  = 'https://api.e-control.at/sprit/1.0/search/gas-stations/by-address';
+    /* Cache-busting: appends current timestamp so service worker / CDN never serves stale data files */
+    function bust() { return '?cb=' + Date.now(); }
     var SIG_UP     = 'UP';
     var SIG_DOWN   = 'DOWN';
     var SIG_STABLE = 'STABLE';
@@ -953,7 +955,21 @@
           });
         });
         console.log('[Fetch] Merged total after dedup:', merged.size, 'stations');
-        return Array.from(merged.values());
+        var mergedArr = Array.from(merged.values());
+        // FIX 1A: expose to window for console inspection
+        window._stations = mergedArr;
+        // FIX 1B: log every station so Theresienfeld/Grazerstrasse is visible
+        mergedArr.forEach(function(s) {
+          console.log('[Station]', s.id,
+            s.city || 'no city',
+            s.name,
+            'lat:', s.lat,
+            'lng:', s.lng,
+            'DIE:', (s.prices && s.prices.DIE != null) ? s.prices.DIE : 'none',
+            'SUP:', (s.prices && s.prices.SUP != null) ? s.prices.SUP : 'none'
+          );
+        });
+        return mergedArr;
       });
     }
 
@@ -1005,7 +1021,7 @@
     }
 
     function fetchBrentJSON() {
-      return fetch('./data/brent.json').then(function(res) {
+      return fetch('./data/brent.json' + bust()).then(function(res) {
         if (res.status === 404) return null;
         if (!res.ok) { console.error('[fetchBrentJSON] HTTP', res.status); return null; }
         return res.json().then(function(data) {
@@ -1023,7 +1039,7 @@
     /* Brent history */
     function loadBrentHistoryFile() {
       setBrentChartMessage('<span class="chart-spinner" style="width:20px;height:20px;border-width:2px;"></span><span>' + t('brentLoading') + '</span>');
-      fetch('./data/brent-history.json').then(function(res) {
+      fetch('./data/brent-history.json' + bust()).then(function(res) {
         if (res.status === 404) { setBrentChartMessage('<span style="text-align:center;line-height:1.6;">' + t('brentWaiting') + '</span>'); return null; }
         if (!res.ok) { setBrentChartMessage('<span>' + t('brentErrStatus') + ' (' + res.status + ')</span>'); return null; }
         return res.json();
@@ -1329,9 +1345,13 @@
       markers = [];
       var tiers = computeTiers(activeFuel);
       stations.forEach(function(station) {
-        // Skip only if coordinates are missing — stations with empty prices[] are
-        // still rendered as hollow grey markers so they remain clickable on the map.
-        if (typeof station.lat !== 'number' || typeof station.lng !== 'number') return;
+        // FIX 1C: Only skip if coordinates are missing or NaN — everything else gets a marker.
+        var lat = station.lat;
+        var lng = station.lng;
+        if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+          console.warn('[Station] Skipped - no coordinates:', station.id, station.name);
+          return;
+        }
         var price = station.prices && station.prices[activeFuel];
         var hasPrice = typeof price === 'number' && isFinite(price);
         var isFav = favIds.has(station.id);
@@ -1452,7 +1472,7 @@
         dates.push(yyyy + '-' + mm + '-' + dd);
       }
       return Promise.allSettled(dates.map(function(date) {
-        return fetch('./data/history/' + date + '.json').then(function(res) {
+        return fetch('./data/history/' + date + '.json' + bust()).then(function(res) {
           if (!res.ok) return { date: date, data: null };
           return res.json().then(function(data) { return { date: date, data: data }; }).catch(function() { return { date: date, data: null }; });
         }).catch(function() { return { date: date, data: null }; });
