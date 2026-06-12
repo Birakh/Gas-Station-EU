@@ -497,6 +497,8 @@
         notReportedTooltip: 'Keine aktuellen Preismeldung bei E-Control',
         stationCount:     'Tankstellen',
         withPrices:       'mit Preisen',
+        savingVs:         '— sparen Sie €{x}/L gegenüber teuerstem Anbieter',
+        noSaving:         '— günstigster Anbieter in der Nähe',
         lastFetched:      'Zuletzt abgerufen:',
         prices:           'Preise',
         dataOutdated:     'Daten könnten veraltet sein — ↺ zum Aktualisieren',
@@ -570,6 +572,8 @@
         notReportedTooltip: 'No current price reported to E-Control',
         stationCount:     'stations',
         withPrices:       'with prices',
+        savingVs:         '— save €{x}/L vs most expensive nearby',
+        noSaving:         '— cheapest station nearby',
         lastFetched:      'Last fetched:',
         prices:           'Prices',
         dataOutdated:     'Data may be outdated — click ↺ to refresh',
@@ -1130,9 +1134,9 @@
       document.getElementById('jetzt-title').textContent = t('fillUpNow');
       document.getElementById('jetzt-arrow').textContent = vis.arrow;
       document.getElementById('jetzt-arrow').style.color = vis.color;
-      document.getElementById('jetzt-station-name').textContent = cheapest.name;
+      document.getElementById('jetzt-station-name').textContent = toTitleCase(cheapest.name);
       document.getElementById('jetzt-station-price').textContent = '\u20ac\u00a0' + cheapPrice.toFixed(3) + ' \u00b7 ' + (cheapest.city || cheapest.address);
-      document.getElementById('jetzt-saving').textContent = saving >= 0.005 ? (cheapest.brand || cheapest.name) + ' \u2014 ' + t('saving') + ' \u20ac' + saving.toFixed(2) + t('perLiter') : '';
+      document.getElementById('jetzt-saving').textContent = saving >= 0.05 ? t('savingVs').replace('{x}', saving.toFixed(2)) : t('noSaving');
       document.getElementById('jetzt-recommendation').textContent = rec;
       jetztBanner.classList.remove('hidden');
       requestAnimationFrame(updateLayoutVars);
@@ -1268,6 +1272,11 @@
       return { arrow: '\u2192', color: '#6b7280' };
     }
 
+    function toTitleCase(str) {
+      if (!str) return str;
+      return str.toLowerCase().replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+    }
+
     function renderSignalBadge(stationId) {
       var sig = computeSignal(stationId), vis = signalVisuals(sig.direction);
       var dirLabel = sig.direction===SIG_UP ? t('trendUp') : sig.direction===SIG_DOWN ? t('trendDown') : t('trendStable');
@@ -1366,7 +1375,7 @@
           tier = 'grey'; sigDir = null;
           icon = makeIconGrey(isFav);
         }
-        var layer = L.marker([station.lat, station.lng], { icon: icon, title: station.name || '' });
+        var layer = L.marker([station.lat, station.lng], { icon: icon, title: toTitleCase(station.name) || '' });
         layer.on('click', function(e) { L.DomEvent.stopPropagation(e); openSidebar(station); });
         layer.addTo(map);
         markers.push({ layer: layer, station: station, tier: tier, signal: sigDir });
@@ -1542,7 +1551,7 @@
     /* Sidebar */
     function openSidebar(station) {
       selectedStation = station;
-      document.getElementById('sidebar-station-name').textContent = station.name || '–';
+      document.getElementById('sidebar-station-name').textContent = toTitleCase(station.name) || '–';
       document.getElementById('sidebar-brand').textContent = station.brand || '';
       document.getElementById('sidebar-addr').textContent = [station.address, station.city].filter(Boolean).join(', ') || '–';
       // FIX 3: Update fav star button state
