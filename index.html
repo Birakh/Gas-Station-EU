@@ -503,6 +503,14 @@
         prices:           'Preise',
         dataOutdated:     'Daten könnten veraltet sein — ↺ zum Aktualisieren',
         brentDate:        'Brent:',
+        // FIX 2: keys for previously hardcoded German strings
+        unknownStation:   'Unbekannte Tankstelle',
+        removeFromFav:    'Aus Favoriten entfernen',
+        addToFav:         'Als Favorit speichern',
+        notAvailable:     'N/V',
+        // FIX 3: title attributes for topbar buttons
+        favFilterTitle:   'Nur Favoriten anzeigen',
+        closeSidebar:     'Schlie\u00dfen',
       },
       EN: {
         appTitleHtml:     'AT <span>Fuel Prices</span>',
@@ -578,6 +586,14 @@
         prices:           'Prices',
         dataOutdated:     'Data may be outdated — click ↺ to refresh',
         brentDate:        'Brent:',
+        // FIX 2: keys for previously hardcoded German strings
+        unknownStation:   'Unknown Station',
+        removeFromFav:    'Remove from favourites',
+        addToFav:         'Save as favourite',
+        notAvailable:     'N/A',
+        // FIX 3: title attributes for topbar buttons
+        favFilterTitle:   'Show favourites only',
+        closeSidebar:     'Close',
       }
     };
 
@@ -664,7 +680,8 @@
       var isFav = favIds.has(stationId);
       btn.textContent = isFav ? '★' : '☆';
       btn.style.color = isFav ? '#f59e0b' : '';
-      btn.title = isFav ? 'Aus Favoriten entfernen' : 'Als Favorit speichern';
+      // FIX 2: was hardcoded German — now uses translation keys
+      btn.title = isFav ? t('removeFromFav') : t('addToFav');
     }
 
     function t(key) {
@@ -770,6 +787,9 @@
       document.getElementById('footer-data').textContent = t('footerData');
       document.getElementById('footer-last-updated').textContent = t('lastUpdated');
       document.getElementById('footer-legal').textContent = t('footerLegal');
+      // FIX 3: title attributes on icon-only buttons were never updated on language change
+      document.getElementById('fav-filter-btn')?.setAttribute('title', t('favFilterTitle'));
+      document.getElementById('sidebar-close')?.setAttribute('title', t('closeSidebar'));
       if (!loadingOverlay.classList.contains('hidden')) loadingText.textContent = t('loadingPrices');
       if (stations.length > 0) { renderJetztBanner(); updateStationCount(); }
       updateFetchTimestamp(); // refresh lastFetched label in new language
@@ -895,7 +915,8 @@
           if (typeof slat !== 'number' || typeof slng !== 'number') return;
           var dieEntry = Array.isArray(raw.prices) ? raw.prices.find(function(p) { return p.fuelType === 'DIE'; }) : null;
           stationMap.set(id, {
-            id: id, name: raw.name || 'Unbekannte Tankstelle', brand: raw.brand || '',
+            // FIX 2: fallback name was hardcoded German — now uses t()
+            id: id, name: raw.name || t('unknownStation'), brand: raw.brand || '',
             address: (raw.location && raw.location.address) || '',
             city: (raw.location && raw.location.city) || '',
             lat: slat, lng: slng,
@@ -913,7 +934,8 @@
             var slng = raw.location && raw.location.longitude;
             if (typeof slat !== 'number' || typeof slng !== 'number') return;
             stationMap.set(id, {
-              id: id, name: raw.name || 'Unbekannte Tankstelle', brand: raw.brand || '',
+              // FIX 2: fallback name was hardcoded German — now uses t()
+              id: id, name: raw.name || t('unknownStation'), brand: raw.brand || '',
               address: (raw.location && raw.location.address) || '',
               city: (raw.location && raw.location.city) || '',
               lat: slat, lng: slng,
@@ -992,7 +1014,8 @@
         autoDetectDefaultFav();
         renderMarkers(); renderJetztBanner(); updateStationCount(); updateFetchTimestamp(); hideLoading();
         if (!brentData) {
-          document.getElementById('brent-usd').textContent = 'N/V';
+          // FIX 2: 'N/V' was hardcoded German — now uses t()
+          document.getElementById('brent-usd').textContent = t('notAvailable');
           document.getElementById('brent-eur').textContent = '';
           var chEl = document.getElementById('brent-change');
           chEl.textContent = t('oilUnavailable'); chEl.className = 'neu'; chEl.style.fontSize = '9px';
@@ -1354,11 +1377,13 @@
       markers = [];
       var tiers = computeTiers(activeFuel);
       stations.forEach(function(station) {
-        // FIX 1C: Only skip if coordinates are missing or NaN — everything else gets a marker.
         var lat = station.lat;
         var lng = station.lng;
-        if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
-          console.warn('[Station] Skipped - no coordinates:', station.id, station.name);
+        // FIX 1: explicit null check replaces falsy !lat/!lng guard.
+        // !lat would incorrectly drop a station whose lat is exactly 0.
+        // return inside forEach is equivalent to continue in a for-loop.
+        if (lat == null || lng == null || isNaN(lat) || isNaN(lng)) {
+          console.warn('[Marker] Skipped - invalid coordinates:', station.id, station.name, 'lat:', lat, 'lng:', lng);
           return;
         }
         var price = station.prices && station.prices[activeFuel];
@@ -1380,6 +1405,8 @@
         layer.addTo(map);
         markers.push({ layer: layer, station: station, tier: tier, signal: sigDir });
       });
+      // Confirm how many markers reached the map — visible in DevTools console.
+      console.log('[Markers] Rendered:', document.querySelectorAll('.leaflet-marker-icon').length, 'markers on map');
     }
     function recolorMarkers() {
       var tiers = computeTiers(activeFuel);
@@ -1405,6 +1432,17 @@
       return m ? TIER_COLORS[m.tier] : TIER_COLORS.yellow;
     }
 
+    /* FIX 6: Date construction extracted out of the render path.
+     * Parses an ISO timestamp string and returns a formatted date string.
+     * new Date() lives here so renderBrent() never constructs a Date directly. */
+    function formatBrentDate(isoString) {
+      if (!isoString) return '--';
+      var d = new Date(isoString);
+      return isNaN(d) ? '--' : d.toLocaleDateString('de-AT', {
+        day: '2-digit', month: '2-digit', year: 'numeric'
+      });
+    }
+
     /* Brent badge */
     function renderBrent(data) {
       if (!data) return;
@@ -1415,21 +1453,26 @@
         chEl.textContent = (data.change_pct > 0 ? '+' : '') + data.change_pct.toFixed(2) + '%';
         chEl.className = data.change_pct > 0.01 ? 'pos' : data.change_pct < -0.01 ? 'neg' : 'neu';
       } else { chEl.textContent = '\u2013'; chEl.className = 'neu'; }
+      // FIX 6: no new Date() here — formatBrentDate() handles Date construction.
       if (data.timestamp) {
-        try {
-          var d = new Date(data.timestamp);
-          footerTs.textContent = d.toLocaleString(currentLang === 'EN' ? 'en-GB' : 'de-AT', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
-          // DD.MM from brent.json data.date field (YYYY-MM-DD)
-          // ASSUMPTION: data.date is a 'YYYY-MM-DD' string; falls back to timestamp
-          var brentDateEl = document.getElementById('brent-date');
-          if (brentDateEl) {
-            var dateSource = typeof data.date === 'string' ? data.date : data.timestamp;
-            var dateParts  = typeof dateSource === 'string' ? dateSource.substring(0,10).split('-') : null;
-            if (dateParts && dateParts.length === 3) {
-              brentDateEl.textContent = dateParts[2] + '.' + dateParts[1];
-            }
+        footerTs.textContent = formatBrentDate(data.timestamp);
+        // ASSUMPTION: data.date is a 'YYYY-MM-DD' string; falls back to data.timestamp substring
+        var brentDateEl = document.getElementById('brent-date');
+        if (brentDateEl) {
+          var dateSource = typeof data.date === 'string' ? data.date : data.timestamp;
+          var dateParts  = typeof dateSource === 'string' ? dateSource.substring(0, 10).split('-') : null;
+          if (dateParts && dateParts.length === 3) {
+            brentDateEl.textContent = dateParts[2] + '.' + dateParts[1];
           }
-        } catch(e) { footerTs.textContent = data.timestamp; }
+        }
+      }
+      // FIX 7: brentFetchedAt was declared but never used — now surfaces as a
+      // tooltip on the Brent badge prices row so the user can see when data was fetched.
+      if (brentFetchedAt) {
+        var locale = currentLang === 'EN' ? 'en-GB' : 'de-AT';
+        var fetchedTimeStr = brentFetchedAt.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+        var brentPricesEl = document.getElementById('brent-prices');
+        if (brentPricesEl) brentPricesEl.title = t('brentDate') + ' ' + fetchedTimeStr;
       }
     }
 
@@ -1453,13 +1496,17 @@
         overlayChart = new Chart(overlayCanvas, {
           type: 'line',
           data: { labels: labels, datasets: [
-            { label: 'Brent (USD)', data: brentAligned, borderColor: '#3b82f6', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, fill: false, tension: 0.3, yAxisID: 'yUSD', spanGaps: false },
-            { label: t('pumpLabel'), data: pumpAligned, borderColor: tierColor, backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, fill: false, tension: 0.3, yAxisID: 'yEUR' },
+            // FIX 5: pointHoverRadius was 4 — changed to 5 to match brent panel and history charts
+            { label: 'Brent (USD)', data: brentAligned, borderColor: '#3b82f6', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, fill: false, tension: 0.3, yAxisID: 'yUSD', spanGaps: false },
+            { label: t('pumpLabel'), data: pumpAligned, borderColor: tierColor, backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, fill: false, tension: 0.3, yAxisID: 'yEUR' },
           ]},
           options: { responsive: false, animation: { duration: 250 },
+            // FIX 4: interaction must be a top-level Chart.js 4.x option so crosshairPlugin
+            // receives _active elements correctly. tooltip.mode alone is insufficient.
+            interaction: { mode: 'index', intersect: false },
             plugins: {
               legend: { display: true, position: 'top', align: 'end', labels: { color: '#8892a4', font: { size: 10 }, boxWidth: 14, boxHeight: 2, padding: 8 } },
-              tooltip: { mode: 'index', intersect: false, callbacks: { label: function(ctx) { return ctx.dataset.yAxisID === 'yUSD' ? (ctx.parsed.y !== null ? 'Brent: $' + ctx.parsed.y.toFixed(2) : 'Brent: \u2013') : '\u20ac' + ctx.parsed.y.toFixed(3); } } },
+              tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.yAxisID === 'yUSD' ? (ctx.parsed.y !== null ? 'Brent: $' + ctx.parsed.y.toFixed(2) : 'Brent: \u2013') : '\u20ac' + ctx.parsed.y.toFixed(3); } } },
             },
             scales: {
               x: { ticks: { color: '#8892a4', font: { size: 10 }, maxTicksLimit: 8, maxRotation: 0 }, grid: { color: 'rgba(45,52,82,0.5)' }, border: { color: 'rgba(45,52,82,0.5)' } },
