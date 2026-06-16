@@ -125,10 +125,21 @@ async function fetchYahoo() {
     );
   }
 
-  const previous_price_usd = (() => {
-    const v = parseFloat(result.meta?.previousClose);
-    return isNaN(v) ? null : v;
-  })();
+  // Source A: meta.previousClose
+  // Source B: meta.chartPreviousClose — Yahoo populates this outside market hours
+  //           when previousClose may be null.
+  // Sources C (EIA history) and D (existing brent.json) are resolved in main()
+  // after the history fetch completes, since they need data not available here.
+  let previous_price_usd = null;
+  const prevCloseA = parseFloat(result.meta?.previousClose);
+  if (!isNaN(prevCloseA) && prevCloseA > 0) {
+    previous_price_usd = prevCloseA;
+  } else {
+    const prevCloseB = parseFloat(result.meta?.chartPreviousClose);
+    if (!isNaN(prevCloseB) && prevCloseB > 0) {
+      previous_price_usd = prevCloseB;
+    }
+  }
 
   // Date from the last element of the timestamps array (most recent session).
   // ASSUMPTION: result.timestamp is an array of Unix seconds.
@@ -452,34 +463,89 @@ async function main() {
     process.exit(1);
   }
 
-  // Derived calculations.
+  // ── Step 5: EIA 90-day history ───────────────────────────────────────────────
+  // Fetched HERE — before writing brent.json — so the second-most-recent history
+  // entry is available as Source C for the previous_price_usd fallback chain.
+  // Always uses EIA regardless of which source gave the current price.
+  // If EIA_API_KEY is absent, fetchEIAHistory() throws and we exit(1) because
+  // a missing key is a CI configuration error, not a transient failure.
+  let historyRows;
+  try {
+    historyRows = await fetchEIAHistory();
+  } catch (err) {
+    console.error('[Step 5] FAILED to fetch Brent history:', err.message);
+    process.exit(1);
+  }
+
+  // ── Resolve previous_price_usd through 4 sources ─────────────────────────────
+  // Sources A and B were already tried inside fetchYahoo(); brentRaw.previous_price_usd
+  // is non-null if either succeeded.  Try C then D only if still null.
+
+  let previous_price_usd = brentRaw.previous_price_usd;
+  let prevSource = previous_price_usd !== null
+    ? (brentRaw.source === 'Yahoo' ? 'Yahoo-meta' : 'EIA-response')
+    : null;
+
+  // Source C: second-most-recent entry in EIA history (index length-2, oldest→newest).
+  // historyRows is sorted oldest-to-newest after reversal in fetchEIAHistory().
+  if (previous_price_usd === null && Array.isArray(historyRows) && historyRows.length >= 2) {
+    const candidate = parseFloat(historyRows[historyRows.length - 2].price_usd);
+    if (!isNaN(candidate) && candidate > 0) {
+      previous_price_usd = candidate;
+      prevSource = 'EIA-history';
+    }
+  }
+
+  // Source D: price_usd from the existing brent.json on disk.
+  if (previous_price_usd === null) {
+    const brentPathForRead = path.join(DATA_DIR, 'brent.json');
+    try {
+      const existing = JSON.parse(fs.readFileSync(brentPathForRead, 'utf8'));
+      const candidate = parseFloat(existing.price_usd);
+      if (!isNaN(candidate) && candidate > 0) {
+        previous_price_usd = candidate;
+        prevSource = 'existing-brent.json';
+      }
+    } catch (_) {
+      // File absent or unreadable — no previous price available.
+      prevSource = 'none';
+    }
+  }
+
+  if (previous_price_usd === null) {
+    prevSource = 'none';
+    console.warn('[Brent] Could not determine previous_price_usd from any source.');
+  }
+
+  // ── Derived calculations ─────────────────────────────────────────────────────
   // EUR/USD rate from ECB: 1 EUR = eurUsdRate USD → 1 USD = 1/eurUsdRate EUR.
-  const price_eur = brentRaw.price_usd / eurUsdRate;
+  const price_usd = parseFloat(brentRaw.price_usd.toFixed(2));
+  const price_eur = parseFloat((brentRaw.price_usd / eurUsdRate).toFixed(2));
+  const prev_usd  = previous_price_usd !== null
+    ? parseFloat(previous_price_usd.toFixed(2))
+    : null;
 
   let change_pct = null;
-  if (
-    brentRaw.previous_price_usd !== null &&
-    brentRaw.previous_price_usd !== 0
-  ) {
-    change_pct =
-      ((brentRaw.price_usd - brentRaw.previous_price_usd) /
-        brentRaw.previous_price_usd) *
-      100;
+  if (price_usd && prev_usd && price_usd > 0 && prev_usd > 0) {
+    change_pct = Math.round(((price_usd - prev_usd) / prev_usd * 100) * 100) / 100;
   }
+
+  // Log before writing so a write failure still shows the resolved values.
+  console.log(
+    '[Brent] price:', price_usd,
+    'prev:', prev_usd,
+    'change:', change_pct + '%',
+    'prev_source:', prevSource
+  );
 
   const brentOutput = {
     date:               brentRaw.date,
-    price_usd:          parseFloat(brentRaw.price_usd.toFixed(2)),
-    price_eur:          parseFloat(price_eur.toFixed(2)),
-    previous_price_usd:
-      brentRaw.previous_price_usd !== null
-        ? parseFloat(brentRaw.previous_price_usd.toFixed(2))
-        : null,
-    change_pct:
-      // Rounded to 2 decimal places as specified.
-      change_pct !== null ? parseFloat(change_pct.toFixed(2)) : null,
-    eur_usd_rate: parseFloat(eurUsdRate.toFixed(4)),
-    source:       brentRaw.source,
+    price_usd,
+    price_eur,
+    previous_price_usd: prev_usd,
+    change_pct,
+    eur_usd_rate:       parseFloat(eurUsdRate.toFixed(4)),
+    source:             brentRaw.source,
     // `stale` is intentionally absent on a successful fetch
   };
 
@@ -493,18 +559,7 @@ async function main() {
     process.exit(1);
   }
 
-  // ── Step 5: EIA 90-day history ───────────────────────────────────────────────
-  // Always uses EIA directly — independent of which source gave the current
-  // price.  If EIA_API_KEY is absent, fetchEIAHistory() throws and we exit(1)
-  // because a missing key is a CI configuration error, not a transient failure.
-  let historyRows;
-  try {
-    historyRows = await fetchEIAHistory();
-  } catch (err) {
-    console.error('[Step 5] FAILED to fetch Brent history:', err.message);
-    process.exit(1);
-  }
-
+  // ── Write data/brent-history.json ────────────────────────────────────────────
   const historyOutput = {
     updated: new Date().toISOString().slice(0, 10), // "YYYY-MM-DD" UTC
     data:    historyRows,
