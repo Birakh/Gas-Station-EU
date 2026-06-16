@@ -8,6 +8,9 @@ on:
     - cron: "0 * * * *" # Runs every hour on the hour (UTC)
   workflow_dispatch: # Allows manual trigger from the Actions tab
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true # Opts into Node 24 runtime for all Actions immediately
+
 jobs:
   fetch-and-commit:
     runs-on: ubuntu-latest
@@ -15,15 +18,15 @@ jobs:
     steps:
       # Step 1: Check out the full repo history so git operations (diff, push) work correctly
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
         with:
           fetch-depth: 0 # Full history needed for git operations
 
-      # Step 2: Set up Node 20, which includes native fetch() — no npm install needed for the script
+      # Step 2: Set up Node 24, which includes native fetch() — no npm install needed for the script
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4.4.0
         with:
-          node-version: 20 # Node 20 has native fetch, no npm install needed
+          node-version: 24 # Node 24 is now the GitHub Actions default as of June 16 2026
 
       # Step 3: Run the price-fetching script; writes output files into data/
       # EIA_API_KEY is stored as a repository secret and injected here as an env var
