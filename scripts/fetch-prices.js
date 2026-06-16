@@ -10,7 +10,8 @@
 //   FALLBACK: EIA API                     — 3-8 day lag but reliable
 //
 // Fetch order for brent-history.json (90-day chart):
-//   Always EIA — historical lag is irrelevant for a multi-month chart
+//   PRIMARY:  Yahoo Finance range=3mo — same request as current price, no lag
+//   FALLBACK: EIA API                 — used only if Yahoo returns <30 points
 //
 // Station prices are fetched directly by the browser — not handled here.
 
@@ -61,7 +62,7 @@ async function fetchText(url, options = {}) {
   return response.text();
 }
 
-// ─── Step 1 (primary): Yahoo Finance — current Brent price ───────────────────
+// ─── Step 1 (primary): Yahoo Finance — current Brent price + 3mo history ─────
 //
 // NOTE: This uses Yahoo Finance's unofficial /v8/finance/chart endpoint.
 // It is not part of any published API contract and may change without notice.
@@ -70,29 +71,33 @@ async function fetchText(url, options = {}) {
 // The endpoint works from Node.js server-side (GitHub Actions) without
 // an API key.  It does not work from browsers due to CORS restrictions.
 //
+// range=3mo fetches ~90 days of daily OHLC bars alongside the current price,
+// so a single request serves both the price badge and the history chart.
+//
 // ASSUMPTION: Response shape (only the fields we use are listed):
 //   {
 //     "chart": {
 //       "result": [{
-//         "timestamp": [1748908800, 1749168000, ...],   // Unix seconds, 5 values for range=5d
-//         "indicators": { "quote": [{ "close": [...] }] },
+//         "timestamp": [1748908800, ...],           // Unix seconds, one per trading day
+//         "indicators": { "quote": [{ "close": [96.45, 96.89, ...] }] },
 //         "meta": {
-//           "regularMarketPrice": 96.89,   // current session price (number)
-//           "previousClose":      96.42    // prior session close (number)
+//           "regularMarketPrice": 96.89,            // current session price (number)
+//           "previousClose":      96.42,            // prior session close (number)
+//           "chartPreviousClose": 96.42             // alt field used outside market hours
 //         }
 //       }]
 //     }
 //   }
 //
-// We read price from meta.regularMarketPrice (not indicators.quote[].close)
-// because meta reflects the live session price rather than the last close bar.
+// We read the current price from meta.regularMarketPrice (not indicators.quote[].close)
+// because meta reflects the live session price rather than the last completed close bar.
 
 async function fetchYahoo() {
   console.log('[Step 1] Fetching Brent crude from Yahoo Finance (primary)…');
 
   const url =
     'https://query1.finance.yahoo.com/v8/finance/chart/BZ=F' +
-    '?interval=1d&range=5d';
+    '?interval=1d&range=3mo';
 
   let json;
   try {
@@ -128,7 +133,7 @@ async function fetchYahoo() {
   // Source A: meta.previousClose
   // Source B: meta.chartPreviousClose — Yahoo populates this outside market hours
   //           when previousClose may be null.
-  // Sources C (EIA history) and D (existing brent.json) are resolved in main()
+  // Sources C (history) and D (existing brent.json) are resolved in main()
   // after the history fetch completes, since they need data not available here.
   let previous_price_usd = null;
   const prevCloseA = parseFloat(result.meta?.previousClose);
@@ -156,7 +161,38 @@ async function fetchYahoo() {
 
   console.log(`[Yahoo] period=${date}, price_usd=${price_usd}`);
 
-  return { date, price_usd, previous_price_usd, source: 'Yahoo' };
+  // ── Parse history from the same response ────────────────────────────────────
+  // ASSUMPTION: timestamps[] and indicators.quote[0].close[] are parallel arrays
+  // of equal length.  Null close entries occur for non-trading days in the
+  // range; they are filtered out before writing.
+  let history = null;
+  const closes = result.indicators?.quote?.[0]?.close;
+  if (Array.isArray(timestamps) && Array.isArray(closes) && timestamps.length === closes.length) {
+    const parsed = timestamps
+      .map((ts, i) => ({
+        date:      new Date(ts * 1000).toISOString().slice(0, 10),
+        price_usd: closes[i] != null ? Math.round(closes[i] * 100) / 100 : null,
+      }))
+      .filter(d => d.price_usd !== null)
+      .sort((a, b) => a.date.localeCompare(b.date)); // oldest → newest
+
+    if (parsed.length > 0) {
+      history = parsed;
+      console.log(
+        '[Yahoo History]', history.length,
+        'days,', history[0].date, '→', history[history.length - 1].date
+      );
+    } else {
+      console.warn('[Step 1] Yahoo Finance: history array parsed to 0 entries after filtering.');
+    }
+  } else {
+    console.warn(
+      '[Step 1] Yahoo Finance: timestamps and closes arrays are missing or mismatched — ' +
+      `timestamps.length=${timestamps?.length}, closes.length=${closes?.length}`
+    );
+  }
+
+  return { date, price_usd, previous_price_usd, source: 'Yahoo', history };
 }
 
 // ─── Step 1 (fallback): EIA v2 — current Brent price ─────────────────────────
@@ -303,17 +339,13 @@ async function fetchECBRate() {
   return rate;
 }
 
-// ─── Step 5: EIA v2 — 90-day Brent history ───────────────────────────────────
+// ─── Step 5 (fallback): EIA v2 — 90-day Brent history ───────────────────────
 //
-// Always uses EIA regardless of which source provided the current price.
-// Historical lag (3-8 days) does not matter for a chart showing 90 days of data.
+// Used ONLY when Yahoo Finance returns fewer than 30 history data points.
+// In the normal case Yahoo provides history via the same range=3mo request
+// that fetches the current price, making this call unnecessary.
 //
-// This function tries all EIA_SERIES_IDS internally so it is not coupled to
-// whichever source (Yahoo Finance or EIA) succeeded for the current price.
-//
-// ASSUMPTION: response shape:
-//   { response: { data: [ { period: "YYYY-MM-DD", value: "123.45" }, … ] } }
-// `value` is a string — parseFloat() is used on every row.
+// This function tries all EIA_SERIES_IDS internally so it is self-contained.
 
 async function fetchEIAHistory() {
   const apiKey = process.env.EIA_API_KEY;
@@ -463,18 +495,37 @@ async function main() {
     process.exit(1);
   }
 
-  // ── Step 5: EIA 90-day history ───────────────────────────────────────────────
-  // Fetched HERE — before writing brent.json — so the second-most-recent history
-  // entry is available as Source C for the previous_price_usd fallback chain.
-  // Always uses EIA regardless of which source gave the current price.
-  // If EIA_API_KEY is absent, fetchEIAHistory() throws and we exit(1) because
-  // a missing key is a CI configuration error, not a transient failure.
+  // ── Step 5: History — Yahoo primary, EIA fallback ────────────────────────────
+  // Yahoo already returned history in brentRaw.history (parsed from the same
+  // range=3mo request).  Use it directly when it has ≥30 data points.
+  // Fall back to EIA only when Yahoo history is absent or too sparse.
+  // Note: when EIA is the current-price source, brentRaw.history is undefined;
+  //       we always fall through to fetchEIAHistory() in that case.
+
   let historyRows;
-  try {
-    historyRows = await fetchEIAHistory();
-  } catch (err) {
-    console.error('[Step 5] FAILED to fetch Brent history:', err.message);
-    process.exit(1);
+  let historySource;
+
+  const yahooHistory = brentRaw.history; // array or null/undefined
+  if (Array.isArray(yahooHistory) && yahooHistory.length >= 30) {
+    historyRows   = yahooHistory;
+    historySource = 'Yahoo';
+    console.log(`[Step 5] Using Yahoo history (${historyRows.length} points).`);
+  } else {
+    if (yahooHistory !== null && yahooHistory !== undefined) {
+      console.warn(
+        `[Step 5] Yahoo history has only ${yahooHistory?.length ?? 0} points — ` +
+        'falling back to EIA.'
+      );
+    } else {
+      console.log('[Step 5] No Yahoo history available — using EIA.');
+    }
+    try {
+      historyRows   = await fetchEIAHistory();
+      historySource = 'EIA';
+    } catch (err) {
+      console.error('[Step 5] FAILED to fetch Brent history:', err.message);
+      process.exit(1);
+    }
   }
 
   // ── Resolve previous_price_usd through 4 sources ─────────────────────────────
@@ -486,13 +537,12 @@ async function main() {
     ? (brentRaw.source === 'Yahoo' ? 'Yahoo-meta' : 'EIA-response')
     : null;
 
-  // Source C: second-most-recent entry in EIA history (index length-2, oldest→newest).
-  // historyRows is sorted oldest-to-newest after reversal in fetchEIAHistory().
+  // Source C: second-most-recent entry in history (oldest→newest, so index length-2).
   if (previous_price_usd === null && Array.isArray(historyRows) && historyRows.length >= 2) {
     const candidate = parseFloat(historyRows[historyRows.length - 2].price_usd);
     if (!isNaN(candidate) && candidate > 0) {
       previous_price_usd = candidate;
-      prevSource = 'EIA-history';
+      prevSource = `${historySource}-history`;
     }
   }
 
@@ -562,6 +612,7 @@ async function main() {
   // ── Write data/brent-history.json ────────────────────────────────────────────
   const historyOutput = {
     updated: new Date().toISOString().slice(0, 10), // "YYYY-MM-DD" UTC
+    source:  historySource,
     data:    historyRows,
   };
 
