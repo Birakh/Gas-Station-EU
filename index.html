@@ -1450,9 +1450,34 @@
       document.getElementById('brent-eur').textContent = typeof data.price_eur === 'number' ? '\u20ac' + data.price_eur.toFixed(2) : '\u2013';
       var chEl = document.getElementById('brent-change');
       if (typeof data.change_pct === 'number') {
-        chEl.textContent = (data.change_pct > 0 ? '+' : '') + data.change_pct.toFixed(2) + '%';
-        chEl.className = data.change_pct > 0.01 ? 'pos' : data.change_pct < -0.01 ? 'neg' : 'neu';
-      } else { chEl.textContent = '\u2013'; chEl.className = 'neu'; }
+        // Reset any inline font-size left by the brent-unavailable fallback in fetchAllData().
+        chEl.style.fontSize = '';
+        var rounded = data.change_pct.toFixed(2);
+        // -0.00 is a floating-point artefact for tiny negatives in (-0.01, 0) — normalise to neutral zero
+        // so the displayed text never shows a minus sign on what rounds to zero.
+        if (rounded === '-0.00') { rounded = '0.00'; }
+        if (data.change_pct > 0.01) {
+          // Clearly positive: green, up arrow, explicit + prefix.
+          chEl.textContent = '\u2191 +' + rounded + '%';
+          chEl.className = 'pos';
+        } else if (data.change_pct < -0.01) {
+          // Clearly negative: red, down arrow. toFixed already supplies the minus sign.
+          chEl.textContent = '\u2193 ' + rounded + '%';
+          chEl.className = 'neg';
+        } else {
+          // Neutral band (±0.01 or normalised zero): grey, no arrow.
+          // Values that round to ±0.01 stay here — too small to signal a direction.
+          var prefix = data.change_pct > 0 ? '+' : '';
+          chEl.textContent = prefix + rounded + '%';
+          chEl.className = 'neu';
+        }
+      } else {
+        // Null / non-number: clear any inline style override left by the unavailable-data
+        // fallback, then show an em dash in the neutral grey state.
+        chEl.style.fontSize = '';
+        chEl.textContent = '\u2013';
+        chEl.className = 'neu';
+      }
       // FIX 6: no new Date() here — formatBrentDate() handles Date construction.
       if (data.timestamp) {
         footerTs.textContent = formatBrentDate(data.timestamp);
