@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-19",
+  "updated": "2026-07-20",
   "source": "Yahoo",
   "data": [
     {
@@ -251,8 +251,8 @@
       "price_usd": 88.1
     },
     {
-      "date": "2026-07-19",
-      "price_usd": 90.8
+      "date": "2026-07-20",
+      "price_usd": 90.25
     }
   ]
 }
