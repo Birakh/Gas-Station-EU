@@ -1,366 +1,262 @@
 {
   "updated": "2026-08-07",
-  "source": "EIA",
+  "source": "Yahoo",
   "data": [
     {
-      "date": "2026-03-25",
-      "price_usd": 109.14
-    },
-    {
-      "date": "2026-03-26",
-      "price_usd": 113.39
-    },
-    {
-      "date": "2026-03-27",
-      "price_usd": 121.47
-    },
-    {
-      "date": "2026-03-30",
-      "price_usd": 121.88
-    },
-    {
-      "date": "2026-03-31",
-      "price_usd": 126.69
-    },
-    {
-      "date": "2026-04-01",
-      "price_usd": 119.56
-    },
-    {
-      "date": "2026-04-02",
-      "price_usd": 127.61
-    },
-    {
-      "date": "2026-04-07",
-      "price_usd": 138.21
-    },
-    {
-      "date": "2026-04-08",
-      "price_usd": 122.11
-    },
-    {
-      "date": "2026-04-09",
-      "price_usd": 119.03
-    },
-    {
-      "date": "2026-04-10",
-      "price_usd": 119.07
-    },
-    {
-      "date": "2026-04-13",
-      "price_usd": 123.28
-    },
-    {
-      "date": "2026-04-14",
-      "price_usd": 118.69
-    },
-    {
-      "date": "2026-04-15",
-      "price_usd": 114.93
-    },
-    {
-      "date": "2026-04-16",
-      "price_usd": 116.63
-    },
-    {
-      "date": "2026-04-17",
-      "price_usd": 98.63
-    },
-    {
-      "date": "2026-04-20",
-      "price_usd": 103.4
-    },
-    {
-      "date": "2026-04-21",
-      "price_usd": 106.14
-    },
-    {
-      "date": "2026-04-22",
-      "price_usd": 113.44
-    },
-    {
-      "date": "2026-04-23",
-      "price_usd": 113.25
-    },
-    {
-      "date": "2026-04-24",
-      "price_usd": 111.86
-    },
-    {
-      "date": "2026-04-27",
-      "price_usd": 113.89
-    },
-    {
-      "date": "2026-04-28",
-      "price_usd": 117.62
-    },
-    {
-      "date": "2026-04-29",
-      "price_usd": 124.16
-    },
-    {
-      "date": "2026-04-30",
-      "price_usd": 124.24
-    },
-    {
-      "date": "2026-05-01",
-      "price_usd": 118.26
-    },
-    {
-      "date": "2026-05-05",
-      "price_usd": 114.51
-    },
-    {
-      "date": "2026-05-06",
-      "price_usd": 103.7
-    },
-    {
       "date": "2026-05-07",
-      "price_usd": 101.82
+      "price_usd": 100.06
     },
     {
       "date": "2026-05-08",
-      "price_usd": 103.48
+      "price_usd": 101.29
     },
     {
       "date": "2026-05-11",
-      "price_usd": 106.11
+      "price_usd": 104.21
     },
     {
       "date": "2026-05-12",
-      "price_usd": 111.37
+      "price_usd": 107.77
     },
     {
       "date": "2026-05-13",
-      "price_usd": 110.28
+      "price_usd": 105.63
     },
     {
       "date": "2026-05-14",
-      "price_usd": 110.91
+      "price_usd": 105.72
     },
     {
       "date": "2026-05-15",
-      "price_usd": 113.96
+      "price_usd": 109.26
     },
     {
       "date": "2026-05-18",
-      "price_usd": 116.73
+      "price_usd": 112.1
     },
     {
       "date": "2026-05-19",
-      "price_usd": 114.64
+      "price_usd": 111.28
     },
     {
       "date": "2026-05-20",
-      "price_usd": 108.93
+      "price_usd": 105.02
     },
     {
       "date": "2026-05-21",
-      "price_usd": 105.84
+      "price_usd": 102.58
     },
     {
       "date": "2026-05-22",
-      "price_usd": 106.9
+      "price_usd": 103.54
     },
     {
       "date": "2026-05-26",
-      "price_usd": 102.75
+      "price_usd": 99.58
     },
     {
       "date": "2026-05-27",
-      "price_usd": 97.11
+      "price_usd": 94.29
     },
     {
       "date": "2026-05-28",
-      "price_usd": 95.47
+      "price_usd": 93.71
     },
     {
       "date": "2026-05-29",
-      "price_usd": 92.88
+      "price_usd": 92.05
     },
     {
       "date": "2026-06-01",
-      "price_usd": 98.29
+      "price_usd": 94.98
     },
     {
       "date": "2026-06-02",
-      "price_usd": 98.49
+      "price_usd": 96
     },
     {
       "date": "2026-06-03",
-      "price_usd": 101.69
+      "price_usd": 97.81
     },
     {
       "date": "2026-06-04",
-      "price_usd": 98.98
+      "price_usd": 95.03
     },
     {
       "date": "2026-06-05",
-      "price_usd": 97.29
+      "price_usd": 93.09
     },
     {
       "date": "2026-06-08",
-      "price_usd": 97.46
+      "price_usd": 94.25
     },
     {
       "date": "2026-06-09",
-      "price_usd": 94.15
+      "price_usd": 91.45
     },
     {
       "date": "2026-06-10",
-      "price_usd": 95.73
+      "price_usd": 93.1
     },
     {
       "date": "2026-06-11",
-      "price_usd": 92.84
+      "price_usd": 90.38
     },
     {
       "date": "2026-06-12",
-      "price_usd": 88.64
+      "price_usd": 87.33
     },
     {
       "date": "2026-06-15",
-      "price_usd": 84.36
+      "price_usd": 83.17
     },
     {
       "date": "2026-06-16",
-      "price_usd": 80.5
+      "price_usd": 78.96
     },
     {
       "date": "2026-06-17",
-      "price_usd": 80.33
+      "price_usd": 79.55
     },
     {
       "date": "2026-06-18",
-      "price_usd": 79.35
-    },
-    {
-      "date": "2026-06-19",
-      "price_usd": 80.46
+      "price_usd": 79.85
     },
     {
       "date": "2026-06-22",
-      "price_usd": 76.49
+      "price_usd": 77.9
     },
     {
       "date": "2026-06-23",
-      "price_usd": 75.69
+      "price_usd": 77.08
     },
     {
       "date": "2026-06-24",
-      "price_usd": 72.09
-    },
-    {
-      "date": "2026-06-25",
       "price_usd": 73.74
     },
     {
+      "date": "2026-06-25",
+      "price_usd": 75.26
+    },
+    {
       "date": "2026-06-26",
-      "price_usd": 70.16
+      "price_usd": 71.99
     },
     {
       "date": "2026-06-29",
-      "price_usd": 71.59
+      "price_usd": 73.15
     },
     {
       "date": "2026-06-30",
-      "price_usd": 70.46
+      "price_usd": 72.92
     },
     {
       "date": "2026-07-01",
-      "price_usd": 69.24
+      "price_usd": 71.57
     },
     {
       "date": "2026-07-02",
-      "price_usd": 68.53
-    },
-    {
-      "date": "2026-07-03",
-      "price_usd": 68.68
+      "price_usd": 71.8
     },
     {
       "date": "2026-07-06",
-      "price_usd": 69.56
+      "price_usd": 71.99
     },
     {
       "date": "2026-07-07",
-      "price_usd": 71.78
+      "price_usd": 74.16
     },
     {
       "date": "2026-07-08",
-      "price_usd": 76.5
+      "price_usd": 78.02
     },
     {
       "date": "2026-07-09",
-      "price_usd": 74.46
+      "price_usd": 76.3
     },
     {
       "date": "2026-07-10",
-      "price_usd": 74.34
+      "price_usd": 76.01
     },
     {
       "date": "2026-07-13",
-      "price_usd": 81.62
+      "price_usd": 83.3
     },
     {
       "date": "2026-07-14",
-      "price_usd": 83.69
+      "price_usd": 84.73
     },
     {
       "date": "2026-07-15",
-      "price_usd": 83.08
+      "price_usd": 84.95
     },
     {
       "date": "2026-07-16",
-      "price_usd": 81.23
+      "price_usd": 84.23
     },
     {
       "date": "2026-07-17",
-      "price_usd": 85.01
+      "price_usd": 88.1
     },
     {
       "date": "2026-07-20",
-      "price_usd": 86.99
+      "price_usd": 89.22
     },
     {
       "date": "2026-07-21",
-      "price_usd": 93.85
+      "price_usd": 91.01
     },
     {
       "date": "2026-07-22",
-      "price_usd": 94.12
+      "price_usd": 94.07
     },
     {
       "date": "2026-07-23",
-      "price_usd": 105.32
+      "price_usd": 100.69
     },
     {
       "date": "2026-07-24",
-      "price_usd": 100.31
+      "price_usd": 96.78
     },
     {
       "date": "2026-07-27",
-      "price_usd": 91.82
+      "price_usd": 88.36
     },
     {
       "date": "2026-07-28",
-      "price_usd": 85.51
+      "price_usd": 84.09
     },
     {
       "date": "2026-07-29",
-      "price_usd": 91.95
+      "price_usd": 90.74
     },
     {
       "date": "2026-07-30",
-      "price_usd": 91.91
+      "price_usd": 89.03
     },
     {
       "date": "2026-07-31",
-      "price_usd": 96.95
+      "price_usd": 90.12
     },
     {
       "date": "2026-08-03",
-      "price_usd": 88.9
+      "price_usd": 83.77
+    },
+    {
+      "date": "2026-08-04",
+      "price_usd": 79.36
+    },
+    {
+      "date": "2026-08-05",
+      "price_usd": 79.45
+    },
+    {
+      "date": "2026-08-06",
+      "price_usd": 82.49
+    },
+    {
+      "date": "2026-08-07",
+      "price_usd": 83.81
     }
   ]
 }
