@@ -1,9 +1,9 @@
 {
   "date": "2026-08-12",
-  "price_usd": 88.85,
-  "price_eur": 76.96,
+  "price_usd": 88.97,
+  "price_eur": 77.06,
   "previous_price_usd": 107.77,
-  "change_pct": -17.56,
+  "change_pct": -17.44,
   "eur_usd_rate": 1.1545,
   "source": "Yahoo"
 }
