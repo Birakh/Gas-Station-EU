@@ -3,10 +3,6 @@
   "source": "Yahoo",
   "data": [
     {
-      "date": "2026-05-15",
-      "price_usd": 109.26
-    },
-    {
       "date": "2026-05-18",
       "price_usd": 112.1
     },
