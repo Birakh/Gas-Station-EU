@@ -3,10 +3,6 @@
   "source": "Yahoo",
   "data": [
     {
-      "date": "2026-06-01",
-      "price_usd": 94.98
-    },
-    {
       "date": "2026-06-02",
       "price_usd": 96
     },
@@ -259,8 +255,12 @@
       "price_usd": 90.49
     },
     {
+      "date": "2026-09-01",
+      "price_usd": 94.65
+    },
+    {
       "date": "2026-09-02",
-      "price_usd": 95.97
+      "price_usd": 95.55
     }
   ]
 }
