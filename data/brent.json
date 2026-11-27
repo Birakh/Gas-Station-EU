@@ -1,9 +1,9 @@
 {
   "date": "2026-11-27",
-  "price_usd": 92.61,
-  "price_eur": 84.38,
-  "previous_price_usd": 87.84,
-  "change_pct": 5.43,
-  "eur_usd_rate": 1.0975,
+  "price_usd": 89.98,
+  "price_eur": 82.12,
+  "previous_price_usd": 89.7,
+  "change_pct": 0.31,
+  "eur_usd_rate": 1.0957,
   "source": "Yahoo"
 }
